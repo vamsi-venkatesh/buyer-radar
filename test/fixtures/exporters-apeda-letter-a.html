@@ -1,0 +1,1099 @@
+<!-- FIXTURE: real page, fetched 2026-09-11 from
+     https://agriexchange.apeda.gov.in/AgriDirectory/Exporter/Exporters with the
+     project User-Agent. This is a public Government of India registry of
+     registered exporters; it publishes trading name, address, product category,
+     state and PIN, and no phone and no email. Page script blocks have been
+     removed - the parser reads the table, not the page JavaScript. Nothing here
+     may be shown as lead data; it exists so the row parser is tested on the
+     real markup. -->
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Meta Tags for Agri Exchange Portal -->
+    <meta name="description" content="Agri Exchange is an online trade portal by APEDA, Govt. of India, offering a global platform for buyers and sellers in Agri business to negotiate and transact deals. Provides up-to-date agricultural statistics and market information.">
+    <meta name="keywords" content="Agri Exchange, APEDA, Agricultural trade, online trading, Agri business, export statistics, global trade, agricultural commodities, SPS measures, MRLs, Country Profile">
+    <meta name="author" content="APEDA, Govt. of India">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph Meta Tags for Social Media -->
+    <meta property="og:title" content="Agri Exchange - A Global Agri Business Trade Portal">
+    <meta property="og:description" content="A first-of-its-kind online trade portal by APEDA, offering global trading opportunities and up-to-date agricultural market statistics.">
+    <meta property="og:image" content="https://agrixchange.apeda.in/TemplateGreenYellow/assets/img/llogo.png">
+    <meta property="og:url" content="https://agrixchange.apeda.in/">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agri Exchange - A Global Agri Business Trade Portal">
+    <meta name="twitter:description" content="Join the Agri Exchange platform for global agricultural trade, supported by UNCTAD and the Ministry of Agriculture, India.">
+    <meta name="twitter:image" content="https://agrixchange.apeda.in/TemplateGreenYellow/assets/img/llogo.png">
+
+    <title>List of Registered Exporters </title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+    <!-- Favicons -->
+    <link href="/TemplateGreenYellow/assets/img/favicon.png" rel="icon">
+    <link href="/TemplateGreenYellow/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="/TemplateGreenYellow/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/TemplateGreenYellow/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="/TemplateGreenYellow/assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="/TemplateGreenYellow/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+    <link href="/TemplateGreenYellow/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" integrity="sha256-zaSoHBhwFdle0scfGEFUCwggPN7F+ip9XRglo8IWb4w=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" integrity="sha256-XLNUEfzPGHBeStES2DbLUURZ3e793BablwzJlYj6W2Q=" crossorigin="anonymous" />
+
+    <style>
+        .select2-container--bootstrap-5 .select2-selection {
+            min-height: 30px !important;
+            margin-top: 25px !important;
+            border-bottom: 1px solid #c4c4c4 !important;
+            border-radius: 5px !important;
+            overflow: none !important;
+            background-color: #fff0 !important;
+            border: 1px solid #ced4da !important;
+            border-left: none !important;
+            border-right: none !important;
+            border-top: none !important;
+            /*    max-height: 40px;  */
+            color: black !important;
+            -moz-user-focus: initial;
+            height: 40px;
+        }
+
+        .select2-selection__rendered {
+            max-height: 34px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .select2 select2-container select2-container--bootstrap-5 select2-container--below select2-container--focus {
+            display: inline-block;
+            padding-left: 8px;
+        }
+
+        .accordion-header {
+            margin-bottom: 0 !important;
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+            /* padding: var(--bs-accordion-btn-padding-y) var(--bs-accordion-btn-padding-x) !important; */
+            font-size: 1rem !important;
+            color: var(--bs-accordion-btn-color) !important;
+            text-align: left !important;
+            background-color: var(--bs-accordion-btn-bg) !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            /*overflow-anchor: none !important;*/
+            transition: var(--bs-accordion-transition) !important;
+            font-weight: bold !important;
+        }
+    </style>
+
+
+    <link href="/TemplateGreenYellow/assets/css/maininnerpages.css?id=11/09/2026" rel="stylesheet">
+    <style>
+        .accordion-button:not(.collapsed)::after {
+            background-image: url('/TemplateGreenYellow/assets/img/uparrow.png') !important;
+            transform: unset;
+        }
+
+        .accordion-button::after {
+            background-image: url('/TemplateGreenYellow/assets/img/uparrow.png') !important;
+            transform: var(--bs-accordion-btn-icon-transform);
+        }
+
+        .has-error input {
+            border: 1px groove red;
+        }
+
+        .has-error select {
+            border: 1px groove red;
+        }
+
+        .has-error textarea {
+            border: 1px groove red;
+        }
+
+        .validationMessage {
+            color: red;
+        }
+
+    </style>
+
+   
+    <style>
+        /* Initial styles for notification dropdown */
+        #notification-icon {
+            color: inherit;
+        }
+
+        .dropdown-menu a {
+            color: inherit;
+            background-color: inherit;
+        }
+    </style>
+
+    <!-- Google tag (gtag.js) -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+   
+    <link href="/css/new.css" rel="stylesheet" />
+    <link href="/css/color-switcher.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous" />
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+</head>
+
+<body class="index-page">
+
+    <div b-1bo1zh6di5 class="header" id="myHeader">
+
+        <div b-1bo1zh6di5 class="row mb-2 p-2  w-100 m-0" style="background-color: #edeaea; border-bottom: 1px solid #ccc;padding: 0px !important;">
+            <div b-1bo1zh6di5 class="col-12">
+                <ul b-1bo1zh6di5 class="nav sub-nav1" style="float:right;">
+
+                    <li b-1bo1zh6di5 class="nav-item">
+
+                        <div b-1bo1zh6di5 class="color-change" style="margin-top: 2px;">
+                            <a b-1bo1zh6di5 href="javascript:void(0)" title="Color toggle button" style="position: relative;top: 5px;">
+                                <img src="/images/color-change.svg" alt="Color toggle">
+                            </a>
+                        </div>
+                    </li>
+                    <li b-1bo1zh6di5 class="nav-item dropdown">
+                            <button b-1bo1zh6di5 class="nav-link dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="false"
+                                    id="dropdownMenuButton1">
+                                Sign In
+                            </button>
+                        <ul b-1bo1zh6di5 class="dropdown-menu">
+                            <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="/Home/ExporterLogin">Exporters</a></li>
+                            <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="/Home/Login">Importers</a></li>
+                             <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="/Home/EmbassyLogin">Indian Missions Abroad</a></li> 
+                            <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="/cms">APEDA Internal User</a></li>
+
+                        </ul>
+                    </li>
+
+                    <li b-1bo1zh6di5 class="nav-item">
+                        <a b-1bo1zh6di5 class="nav-link" href="/Home/Sitemap">Sitemap</a>
+                    </li>
+                    <li b-1bo1zh6di5 class="nav-item">
+                        <a b-1bo1zh6di5 class="nav-link" href="/Home/Faqs">FAQ</a>
+                    </li>
+                    <li b-1bo1zh6di5 class="nav-item dropdown">
+                        <a b-1bo1zh6di5 class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                           aria-expanded="false" style="padding: 10px;"><i b-1bo1zh6di5 class="fa-brands fa-accessible-icon"></i></a>
+                        <ul b-1bo1zh6di5 class="dropdown-menu bg-dark text-white">
+                            <li b-1bo1zh6di5 class="d-flex justify-content-center align-items-center gap-3 px-3">
+                                <a b-1bo1zh6di5 id="btn-decrease"><span b-1bo1zh6di5>A-</span></a>
+                                <a b-1bo1zh6di5 id="btn-orig"><span b-1bo1zh6di5>A</span></a>
+                                <a b-1bo1zh6di5 id="btn-increase">A+</a>
+                                <a b-1bo1zh6di5 href="#">
+                                    <img src="/images/screenreader.png" title="Screen Reader">
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+         <header b-1bo1zh6di5 id="header" class="header d-flex align-items-center">
+
+
+            <div b-1bo1zh6di5 class="container-fluid align-items-center justify-content-between" style="padding: 0px 20px !important;">
+              <div b-1bo1zh6di5 class="row">
+                    <div b-1bo1zh6di5 class="col-md-4">
+                        <div b-1bo1zh6di5 class="title d-flex">
+                            <a b-1bo1zh6di5 href="/" class="logo">
+                              
+                                <h1 b-1bo1zh6di5 class="sitename"><img b-1bo1zh6di5 class="w-100" src="/TemplateGreenYellow/assets/img/APEDA-Logo.png"></h1>
+                            </a>
+
+                        </div>
+                    </div>
+                    <div b-1bo1zh6di5 class="col-md-5 ps-sm-4 d-none d-sm-block">
+                         
+                    </div>
+
+                    <div b-1bo1zh6di5 class="col-md-3 mt-2 mb-2  d-none d-sm-block">
+                        <div b-1bo1zh6di5 style="position: relative;">
+                            <a b-1bo1zh6di5 href="/" class="logo right-logo">
+                                <h1 b-1bo1zh6di5 class="sitename"><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/llogo.png" style="width: auto;float:right;"></h1>
+                            </a>
+
+
+                            <div b-1bo1zh6di5 class="dropdown" style="float:left; display:none;">
+                                <button b-1bo1zh6di5 class="btn btn-primary dropdown-toggle" type="button" id="lang" data-bs-toggle="dropdown" aria-expanded="false" style="background:none; color: #000; border: 1px solid #bfbbbb;">
+                                    <i b-1bo1zh6di5 class="bi bi-translate"></i> Eng
+                                </button>
+                                <ul b-1bo1zh6di5 class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="#">Exporters</a></li>
+                                    <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="#">Importers</a></li>
+                                    <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="#">Indian Missions Abroad</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div b-1bo1zh6di5 class="col-md-5 ps-sm-4 d-block d-sm-none">
+                    </div>
+
+                    <div b-1bo1zh6di5 class="col-md-3 d-block d-sm-none">
+                        <div b-1bo1zh6di5 style="position: relative;" class="mt-2">
+                            <a b-1bo1zh6di5 href="/" class="logo right-logo">
+                                <h1 b-1bo1zh6di5 class="sitename"><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/llogo.png" style="width: auto;float:right;margin-top: 8px;"></h1>
+                            </a>
+
+
+                            <div b-1bo1zh6di5 class="dropdown" style="float:left; display:none;">
+                                <button b-1bo1zh6di5 class="btn btn-primary dropdown-toggle" type="button" id="lang" data-bs-toggle="dropdown" aria-expanded="false"
+                                        style="background:none; color: #000; border: 1px solid #bfbbbb;">
+                                    <i b-1bo1zh6di5 class="bi bi-translate"></i> Eng
+                                </button>
+                                <ul b-1bo1zh6di5 class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="#">Exporters</a></li>
+                                    <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="#">Importers</a></li>
+                                    <li b-1bo1zh6di5><a b-1bo1zh6di5 class="dropdown-item" href="#">Indian Missions Abroad</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+               
+
+            </div>
+
+
+        </header>
+
+        <div b-1bo1zh6di5 class="searchmob">
+
+            <div b-1bo1zh6di5 class="row gy-4" id="marketInteliSearchMob">
+
+              
+            </div>
+        </div>
+
+        <nav b-1bo1zh6di5 id="nav-bar" class="navmenu navbar navbar-expand-lg">
+            <ul b-1bo1zh6di5>
+                <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Home/aboutagriexchange">About Us</a></li>
+                <li b-1bo1zh6di5 class="dropdown">
+                    <a b-1bo1zh6di5 href="#"><span b-1bo1zh6di5>Indian Export Analytics</span> <i b-1bo1zh6di5 class="bi bi-chevron-down toggle-dropdown"></i></a>
+                    <ul b-1bo1zh6di5>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/India/GenerateAPEDAProductReport/Index">Build your own Report  </a>  </li>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/India/generatereport/Index">Build your own Report - (Principal Commodities)</a></li>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/IndiaExport/Home/Index">All Export Destinations</a></li>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/India/ExportAnalyticalReport/Index">India Export Analytical Report</a></li>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/Production/India/Index">India Production</a></li>
+                        <li b-1bo1zh6di5>
+                            <a b-1bo1zh6di5 href="/Production/Indiacat/Index">India Production State Wise</a>
+                        </li>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/India/port/Index">Export Statistics-State/Port</a></li>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/India/Home/QuickReports">Quick Reports </a></li>
+                    </ul>
+
+                </li>
+                <li b-1bo1zh6di5 class="dropdown">
+                    <a b-1bo1zh6di5 href="#"><span b-1bo1zh6di5>Global Trade Analytics</span> <i b-1bo1zh6di5 class="bi bi-chevron-down toggle-dropdown"></i></a>
+                    <ul b-1bo1zh6di5>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/international/generateYourReport/Index">Build your own Report</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/International/Home/Index">All Export Destinations</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/International/Home/globalanalytical">India vs Global Peers</a> </li>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/production/international/index">International Production</a></li>
+                    </ul>
+                </li>
+                <li b-1bo1zh6di5 class="dropdown">
+                    <a b-1bo1zh6di5 href="#"><span b-1bo1zh6di5>Market Intelligence</span> <i b-1bo1zh6di5 class="bi bi-chevron-down toggle-dropdown"></i></a>
+                    <ul b-1bo1zh6di5>
+                       
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Reports/Marketreport/Market">Market Report</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Market/spsmeasures/Index">SPS Notifications</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Market/TBTNotification/Index">TBT Notifications</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Market/MarketNews/Index">Market News</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Reports/Marketreport/IR_Standards">Import Regulations</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Reports/Marketreport/ImportTariffs">Import Tariffs</a></li>
+                        <li b-1bo1zh6di5 class="dropdown">
+                            <a b-1bo1zh6di5 href="javascript:void(0);">Country Profile</a>
+                            <ul b-1bo1zh6di5>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NNQNV">
+                                        United Arab Emirates
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NNPRN">
+                                        Saudi Arabia
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NMOQR">
+                                        Malaysia
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NMMOT">
+                                        Bangladesh
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=MRQOP">
+                                        United States
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NMQPT">
+                                        Vietnam
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NNONV">
+                                        Kuwait
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NMNUV">
+                                        Iran
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NPQON">
+                                        United Kingdom
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a href="/Reports/MarketReport/CountryInformations?CTRYv=NMNUT">
+                                        Indonesia
+                                    </a>
+                                </li>
+                                <li b-1bo1zh6di5>
+                                    <a b-1bo1zh6di5 href="/Reports/Marketreport/countrysearch" style="text-align: right;">... View more country profiles</a>
+                                </li>
+                            </ul>
+
+
+                        </li>
+                    </ul>
+                </li>
+                <li b-1bo1zh6di5 class="dropdown">
+                    <a b-1bo1zh6di5 href="#"><span b-1bo1zh6di5>Trade Leads</span> <i b-1bo1zh6di5 class="bi bi-chevron-down toggle-dropdown"></i></a>
+                    <ul b-1bo1zh6di5>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Seller/SellLead">Sell Leads</a></li>                       
+                            <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/Buyer/BuyLeads">Buy Leads</a></li>
+
+                            <li b-1bo1zh6di5>
+                                <a b-1bo1zh6di5 href="/Home/BuyerRegistration">Register as an Importer</a>
+                            </li>
+                       
+                    </ul>
+                </li>
+                <li b-1bo1zh6di5 class="dropdown">
+                    <a b-1bo1zh6di5 href="#"><span b-1bo1zh6di5>Directory</span> <i b-1bo1zh6di5 class="bi bi-chevron-down toggle-dropdown"></i></a>
+                    <ul b-1bo1zh6di5>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/AgriDirectory/Exporter/Exporters">Exporters</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/AgriDirectory/SProvider/Index">Packhouses</a></li>
+                        <li b-1bo1zh6di5><a b-1bo1zh6di5 href="/AgriDirectory/SProvider/peanutunit">Peanut Units</a></li>
+                        <li b-1bo1zh6di5> <a b-1bo1zh6di5 href="/AgriDirectory/SProvider/meatunits">Meat Units</a></li>
+                    </ul>
+                </li>
+                <li b-1bo1zh6di5 class="dropdown">
+                    <a b-1bo1zh6di5 href="#" id="notification-icon" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/notification.png" alt="Notifications" style="width: 18px; height: 18px;">
+                    </a>
+                    <ul b-1bo1zh6di5 class="dropdown-menu dropdown-menu-right" id="populate-notification" aria-labelledby="notification-icon" style="right: 0; left: auto;width: 351px; max-height:300px; overflow-y:scroll;">
+                    </ul>
+                </li>
+            </ul>
+            <i b-1bo1zh6di5 class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+        </nav>
+
+    </div>
+    <marquee b-1bo1zh6di5 direction="left" style="color:red;background-color:white;height:25px;font-size:18px;margin: 1% 0 0 0;"><b b-1bo1zh6di5>Important Notice:</b> Due to maintenance activity in the Data Centre, the services of APEDA online Traceability systems, Website and Trade Portal may experience intermittent disruptions on 11th September, 2026 from 08:00 PM to 12th September, 2026 06:00 AM. Any inconvenience caused is regretted.</marquee>
+    
+    <main b-1bo1zh6di5 class="main" style="min-height:460px;">
+        
+<style>
+
+
+    #tbldata, #prodbind, #tbldatabyletter {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    #tbldata, #tr, #prodbind, #tbldatabyletter {
+        border: 1px solid black;
+        padding: 10px;
+    }
+
+        #tbldata td {
+            text-align: left;
+        }
+
+    #tr {
+        padding: 10px;
+        text-align: left;
+    }
+
+    #tr {
+        background-color: #f2f2f2;
+    }
+
+    #tbldata, #tbldatabyletter td {
+        text-align: left;
+    }
+
+
+
+
+    .alphabet-table {
+        width: 70%;
+        border-collapse: collapse;
+    }
+
+        .alphabet-table td {
+            text-align: center;
+            padding: 1px;
+        }
+
+    .alphabet-link {
+        display: block;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        text-decoration: none;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+
+        .alphabet-link:hover {
+            background-color: #f0f0f0;
+        }
+
+    .selected-letter {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .pagination-container .pagination li {
+        display: inline-block;
+        list-style: none;
+        vertical-align: middle;
+    }
+
+    .pagination-container {
+        padding: 0;
+    }
+
+    .pagination {
+        border: none;
+    }
+
+
+
+    .box-container {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .box {
+        width: calc(33.33% - 10px);
+        margin: 5px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .box-container .box.col-md-4 {
+        position: relative;
+    }
+
+        .box-container .box.col-md-4 button.btn.btn-outline-warning.viewall.commontxt {
+            position: absolute;
+            bottom: 8px;
+            right: 15px;
+        }
+
+    #icon {
+        padding-right: 8px;
+    }
+
+    .row {
+        width: 100%;
+        /*padding-right:0px;*/
+        padding-left: 15px;
+    }
+</style>
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+
+
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-left">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item">Directory</li>
+                    <li class="breadcrumb-item"><strong>Exporters</strong></li>
+                </ol>
+            </div>
+            <div class="col-sm-6">
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+<div class="container">
+    <div class="row gy-4">
+        <div class="col-lg-12 order-2 order-lg-1" data-aos-delay="100">
+            <div class="accordion" id="accordionExample">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        Data Filter
+
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+
+                        <form id="formsearch">
+                            <input type="hidden" id="charVal" name="charVal" value="A" />
+                            <div class="row gy-5">
+
+
+                                <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
+                                    <div class="floating-label mt-4">
+                                        <input class="floating-input" type="text" placeholder=" " maxlength="30" id="expName" name="expName" value="">
+                                        <span class="highlight"></span>
+                                        <label>Search Exporter by Name (like):</label>
+                                    </div>
+
+
+                                </div>
+                                <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
+                                    <div class="floating-label mt-4">
+                                        <input class="floating-input" type="text" placeholder=" " maxlength="30" id="expState" name="expState" value="">
+                                        <span class="highlight"></span>
+                                        <label>Search Exporter by State(like):</label>
+                                    </div>
+
+
+                                </div>
+
+                                <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
+                                    <div class="floating-label mt-4">
+                                        <select class="floating-select" id="expType" name="expType">
+                                            <option value="" selected="selected">Select Exporter Type</option>
+                                            <option value="1">Merchant</option>
+                                            <option value="2">Manufacturer</option>
+                                            <option value="4">Manufacturer cum Merchant</option>
+                                        </select>
+                                        <span class="highlight"></span>
+                                        <label></label>
+                                    </div>
+
+
+                                </div>
+
+
+
+                                <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
+                                </div>
+
+                            </div>
+                            <button class="btn btn-primary mt-3 srchbtn " style="float: right;margin-left:10px;" type="submit" id="submitBtn">
+                                <i class="bi bi-search" style="padding-right: 10px;"></i> Search
+                            </button>
+                        </form>
+
+
+
+
+
+                    </div>
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="row flex w-full intab">
+
+            <div class="col-md-12">
+
+
+                <div class="content">
+                    <p>Generally speaking, countries export goods primarily to satisfy international demand for the goods that are intensively produced within its boundary. Countries may also export to dispose its surplus good that are not consumed domestically, in that sense a country can import goods which cannot be produced domestically in exchange of exported goods and reap the benefit of trade through comparative advantage. The seller of such goods and services is referred to an "exporter" who is based in the country of export. Make Use this Exporter Directory to boost your Agro Business from India. Agri Exchange provides the facility to the importers to track the presence of the exporters of the product of their interest in the exporters Directory which is accessible by the Agri business houses round the globe. Do register in this exporters Directory to boost your Business.</p>
+                </div>
+
+                <div class="content subhead">
+                    <p><b>Source: APEDA Registered Members</b></p>
+                </div>
+
+
+                <div>
+                    <div>
+
+                        <span class="subhead" colspan="4">You can also search exporter by clicking below on an alphabet with which exporter name starts</span>
+                        <input type="hidden" id="selectedLetter" name="selectedLetter" />
+                    </div>
+
+                    <table class="alphabet-table" id="alphabet-table">
+
+                        <tr>
+
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('A')">
+                                        A
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('B')">
+                                        B
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('C')">
+                                        C
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('D')">
+                                        D
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('E')">
+                                        E
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('F')">
+                                        F
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('G')">
+                                        G
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('H')">
+                                        H
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('I')">
+                                        I
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('J')">
+                                        J
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('K')">
+                                        K
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('L')">
+                                        L
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('M')">
+                                        M
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('N')">
+                                        N
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('O')">
+                                        O
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('P')">
+                                        P
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('Q')">
+                                        Q
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('R')">
+                                        R
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('S')">
+                                        S
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('T')">
+                                        T
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('U')">
+                                        U
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('V')">
+                                        V
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('W')">
+                                        W
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('X')">
+                                        X
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('Y')">
+                                        Y
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);" class="alphabet-link" onclick="setSelectedLetter('Z')">
+                                        Z
+                                    </a>
+                                </td>
+                        </tr>
+                    </table>
+                    <div id="loader" class="d-none">
+                        <img src="/images/loaders/loader.gif" />
+                    </div>
+                </div>
+                <div class="row" id="tbltextbox">
+                    <div id="tbldata" class="box-container" style="display: none;">
+                    </div>
+                </div>
+
+
+                <div class="row mt-2" id="tblletter">
+
+                    <div id="tbldatabyletter" class="box-container">
+                        <div class="row">
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; A AGRO
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>GROUND FLOOR, KUBER GREENS COMMERCIAL COMPLEX, DUR MVR 39, Bachat Bank, Purai, DURG</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>food products</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Chhattisgarh</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>491107</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('LDPPS4364A')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; F ENTERPRISES
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>1 st Floor, Gala No 111, TAP BLDGASMEETA TEXTILE, ADDL KALYAN BHIWANDI ROAD, BHIWANDI, Thane BHIWANDI THANE</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>FRESH FRUITS AND VEGETABLES, FLORICULTURE &amp; SEEDS, PROCESSED FRUITS &amp; VEGETABLES, OTHER PROCESSED FOODS, CEREALS</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Maharashtra</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>421311</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('ABAPI2747K')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; J AGRICULTURE AND FOOD ENTERPRISES PRIVATE LIMITED
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>1-2-105,Rythu bazar, patigally,phulongPhullong, Nizamabad Nizamabad</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>Fresh fruits and vegetables and vegetable seeds</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Telangana</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>503001</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('AAZCA6816A')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; M IAGE SERVICES LLP
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>Shop No.2, Jay Ambe, Chawl No. 1, Shree Siddhi Vinayak Welfare Society, Durga Nagar, Rashid Compound, Dhaniv Baug, Nallasopara East, Palghar MUMBAI</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>Floriculture,Fruits and Vegetable Seeds,Herbal &amp;amp; Medicinal ,Fresh Onions,Other Fresh Vegetables,Dried Nuts (Walnuts),Fresh Mangoes,Fresh Grapes,Other Fresh Fruits,Dried &amp;amp; Preserved Vegetables,Mango Pulp,Pickle &amp;amp; Chutney,Other Processed Fruits Vegetables,Dairy Products,Natural Honey,HPS Groundnuts,Gaurgum,Jaggery &amp;amp; Confectionery,Cocoa Products,Cereal Preparations,Alcoholic &amp;amp; Non Alcoholic Beverages,Miscellaneous Preparations,Non Basmati Rice,Basmati Rice,Wheat,Other Coarse Grains</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Maharashtra</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>401209</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('ABEFA5863G')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; P ASSOCIATES
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>CHOWDESHWARI ARCADE , 1ST FLOOR,11TH CROSS ROADRAJAJINAGAR, NEAR METRO STATION . BANGALORE</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>RICE, FLOUR, FRESH AND FROZEN FRUITS AND VEGETALBES, OTHER COARSE GRAINS, DRY FRUITS, DALS AND PULSES</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Karnataka</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>560086</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('ACCFA7484L')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; P INTERNATIONAL COMPANY
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>50/ 3RD FLOOR INDIRA VIHARMUKHERJEE  NAGAR DELHI</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>Miscellaneous Preparations ,Dairy Products,  De-oiled Rice Bran, Fresh Onions, Pickle &amp; Chutney, Other Processed Fruits &amp; Vegetables, Basmati Rice</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Delhi</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>110009</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('ABRFA0879P')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; T UDHYOG
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>E-244/X SHAHEEN BAGH, ABUL FAZAL ENCLAVE-II, JAMIA NAGAR, OKHLA, NEW DELHI-110025 NEW DELHI</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>ALL PRODUCTS</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Delhi</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>110025</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('CMIPA8934R')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; U ENTERPRISES
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>No.10/22, Ground Floor, Mylai Periya Thambi Street, Broadway Chennai</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>Floriculture,Fruits and Vegetable Seeds,Herbal &amp;amp; Medicinal ,Fresh Onions,Other Fresh Vegetables,Dried Nuts (Walnuts),Fresh Mangoes,Fresh Grapes,Other Fresh Fruits,Dried &amp;amp; Preserved Vegetables,Mango Pulp,Pickle &amp;amp; Chutney,Other Processed Fruits Vegetables,Dairy Products,Natural Honey,HPS Groundnuts,Gaurgum,Jaggery &amp;amp; Confectionery,Cocoa Products,Cereal Preparations,Miscellaneous Preparations,Non Basmati Rice,Basmati Rice,Wheat,Other Coarse Grains,De-Oiled Rice Bran</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Tamil Nadu</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>600001</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('ACAFA0857H')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; Y CORPORATION
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>B1,NILE,FLAT NO.602, NYATI ETHOS,UNDRI PUNE</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>ALL APEDA SCHEDULED PRODUCTS</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Maharashtra</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>411060</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('AXPPM5506K')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A &amp; Z INTERNATIONAL
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>SHOP NO.F-64, APMC MASALA MARKET,  SECTOR-19, MARKET-I, PHASE-II, VASHI, NAVI MUMBAI</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>Floriculture,Fruits and Vegetable Seeds,Herbal &amp;amp; Medicinal ,Fresh Onions,Other Fresh Vegetables,Dried Nuts (Walnuts),Fresh Mangoes,Fresh Grapes,Other Fresh Fruits,Dried &amp;amp; Preserved Vegetables,Mango Pulp,Pickle &amp;amp; Chutney,Other Processed Fruits Vegetables,Buffalo Meat,Sheep/Goat Meat,Poultry Products,Dairy Products,Animal Casings,Processed Meat,Natural Honey,Meat of Other Aminal,HPS Groundnuts,Gaurgum,Jaggery &amp;amp; Confectionery,Cocoa Products,Cereal Preparations,Alcoholic &amp;amp; Non Alcoholic Beverages,Miscellaneous Preparations,Non Basmati Rice,Basmati Rice,Wheat,Other Coarse Grains,De-Oiled Rice Bran</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Maharashtra</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>400705</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('GGGPS7932R')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A 1 GLOBAL TRADERS
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>VILLAGE GHANAURI KALANNEAR SHIV MANDIR TEHSIL DHURI DHURI</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>MUSTARD OIL MANGO PULP SPICES PICKLES PROCESSED FOODS FOX NUT</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Punjab</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>148024</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('APIPN9534P')">Click here to contact</button>
+                                    </div>
+                                </div>
+                                <div class="box col-md-4">
+                                    <p style="font-weight: 600;">
+                                        <span class="fas fa-user" id="icon"></span>
+                                        A 2  Z SOLUTIONS
+                                    </p>
+                                    <p><span class="fas fa-map-marker-alt" id="icon"></span>NO.14, CHITLAPAKKAM THIRD MAIN RAOD  CHITLAPAKKAM, Contact No: 32969147 CHENNAI</p>
+                                    <p><span class="fa-solid fa-box-open" id="icon"></span>Herbal &amp;amp; Medicinal ,Fresh Onions,Other Fresh Vegetables,Fresh Mangoes,Mango Pulp,Pickle &amp;amp; Chutney,Non Basmati Rice,Basmati Rice,Other Coarse Grains</p>
+                                    <p><span class="fas fa-map" id="icon"></span>Tamil Nadu</p>
+                                    <p><span class="fas fa-map-pin" id="icon"></span>600064</p>
+                                    <div style="text-align: right;">
+                                        <button type="button" style="width:160px;" class="btn btn-outline-warning viewall commontxt" onclick="sendData('0408018313')">Click here to contact</button>
+                                    </div>
+                                </div>
+                        </div>
+
+                    </div>
+                    <div class="pagination-container"><ul class="pagination mt-2"><li class="active page-item"><span class="page-link">1</span></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=2">2</a></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=3">3</a></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=4">4</a></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=5">5</a></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=6">6</a></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=7">7</a></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=8">8</a></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=9">9</a></li><li class="page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=10">10</a></li><li class="PagedList-ellipses page-item"><a class="PagedList-skipToNext page-link" href="/AgriDirectory/Exporter/Exporters?page=11" rel="next">…</a></li><li class="PagedList-skipToNext page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=2" rel="next">Next</a></li><li class="PagedList-skipToLast page-item"><a class="page-link" href="/AgriDirectory/Exporter/Exporters?page=478">Last</a></li></ul></div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+    </main>
+
+    <footer b-1bo1zh6di5 id="footer" class="footer dark-background">
+        <div b-1bo1zh6di5 class="footer-top">
+            <div b-1bo1zh6di5 class="container-fluid">
+                <div b-1bo1zh6di5 class="row gy-4">
+                    <div b-1bo1zh6di5 class="col-lg-4 col-md-6 footer-about">
+
+                        <div b-1bo1zh6di5 class="footer-contact">
+                            <p b-1bo1zh6di5 style="
+    font-size: 32px;
+    color:#ffffff;
+    font-weight: bold;
+">
+                                Agri<span b-1bo1zh6di5 style="
+    color: #9BCA3D;
+">X</span>change
+                            </p>
+                            <p b-1bo1zh6di5 style="
+    font-size: 14px;
+    padding-bottom: 22px;
+    color: #FFF;
+    font-family: Source Sans Pro;
+    font-weight: 400;
+">Agricultural and Processed Food Products <br b-1bo1zh6di5>Export Development Authority (APEDA)<br b-1bo1zh6di5>Ministry of Commerce &amp; Industry, Govt. of India</p>
+
+
+                        </div>
+                        <div b-1bo1zh6di5>
+                        </div>
+                    </div>
+
+                    <div b-1bo1zh6di5 class="col-lg-4 col-md-6 footer-links" style="padding-top: 0px!important;">
+                        <h4 b-1bo1zh6di5>Follow Us</h4>
+                        <a b-1bo1zh6di5 href="https://x.com/APEDADOC" target="_blank"><i b-1bo1zh6di5><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/x.png"></i></a>
+                        <a b-1bo1zh6di5 href="https://www.facebook.com/apedamoc/" target="_blank"><i b-1bo1zh6di5><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/facebook-fill.png"></i></a>
+                        <a b-1bo1zh6di5 href="https://www.instagram.com/apedamoc/" target="_blank"><i b-1bo1zh6di5><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/instagram-fill.png"></i></a>
+                        <a b-1bo1zh6di5 href="https://www.linkedin.com/in/apedadoc/" target="_blank"><i b-1bo1zh6di5><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/in.png"></i></a>
+                        <a b-1bo1zh6di5 href="https://www.youtube.com/APEDAMOC" target="_blank"><i b-1bo1zh6di5><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/ri-youtube-line.png"></i></a>
+                    </div>
+
+                    <div b-1bo1zh6di5 class="col-lg-4 col-md-4 footer-links footerbgimg" style="padding-top: 0px!important; font-size:14px;">
+                        <h4 b-1bo1zh6di5>Contact Us</h4>
+                        <p b-1bo1zh6di5><i b-1bo1zh6di5 style="padding-right: 6px;"></i>3rd Floor, NCUI Building 3, Siri Institutional Area, <br b-1bo1zh6di5 />August Kranti Marg, (Opp. Asiad Village) New Delhi - 110 016, India</p>
+                        <p b-1bo1zh6di5><i b-1bo1zh6di5 style="padding-right: 6px;"><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/vector.png" style="padding-right: 6px;"></i> 91-11-41486013/ 20863919/ 20867008</p>
+                        <p b-1bo1zh6di5> <i b-1bo1zh6di5 style="padding-right: 6px;"><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/ri-mail-line.png"></i>  agriexchange[AT]apeda[DOT]gov[DOT]in</p>                       
+                        <i b-1bo1zh6di5 style="padding-right: 6px;"><img b-1bo1zh6di5 src="/TemplateGreenYellow/assets/img/report.png"></i> <a b-1bo1zh6di5 href="/Home/ReportanError">Report an error</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div b-1bo1zh6di5 class="copyright text-center">
+            <div b-1bo1zh6di5 class="container-fluid d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
+
+                <div b-1bo1zh6di5 class="d-flex flex-column align-items-center align-items-lg-start">
+                    <div b-1bo1zh6di5>
+                        © 2024 All Rights Reserved
+                    </div>
+
+                </div>
+
+                <div b-1bo1zh6di5 class="social-links order-first order-lg-last mb-3 mb-lg-0">
+                    <a b-1bo1zh6di5 href="/Home/Privacy">Privacy Policy</a>|
+                    <a b-1bo1zh6di5 href="/Home/Disclaimer">Disclaimer</a>
+
+                </div>
+
+            </div>
+        </div>
+
+    </footer>
+
+    <!-- Scroll Top -->
+    <a b-1bo1zh6di5 href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i b-1bo1zh6di5 class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Preloader -->
+    <div b-1bo1zh6di5 id="myHeader"></div>
+
+    <!-- Vendor JS Files -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+
+
+    <!-- Main JS File -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+
+    <style>
+        .dropdown-toggle::after {
+            display: none;
+        }
+    </style>
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+    <!-- script block removed from this fixture: the parser reads the table, not the page JavaScript -->
+
+   
+</body>
+
+</html>
+
+

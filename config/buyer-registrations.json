@@ -1,0 +1,36 @@
+{
+  "_about": "Buyers who publish a way for a new supplier to introduce himself: quick-commerce and fresh-grocery platforms, cash-and-carry and modern-trade chains, agri B2B marketplaces, hotel-group vendor portals and airline caterers. Written by hand; each URL is fetched by the registrations source to confirm it is still live, and the date of that check is recorded. A `contact` is filled only from what the page itself publishes - never assumed.",
+  "_schema": {
+    "name": "the buyer",
+    "url": "the public supplier-onboarding or vendor-registration page",
+    "buys": "what they buy that the supplier could provide",
+    "how": "what the page asks a new supplier to do",
+    "contact": "only if the page publishes one; null otherwise",
+    "city": "where the buying office sits, where it is stated",
+    "type": "quick_commerce | fresh_grocery | cash_and_carry | modern_trade | agri_b2b | hotel_group | caterer"
+  },
+  "entries": [
+    { "name": "Ninjacart", "url": "https://ninjacart.com/", "buys": "fresh fruit and vegetables in bulk from farmers and traders for retailers and restaurants", "how": "supplier onboarding through the website and the regional collection centres", "contact": null, "city": "Bengaluru", "type": "agri_b2b" },
+    { "name": "Zomato Hyperpure", "url": "https://www.hyperpure.com/", "buys": "vegetables, fruit, staples and dairy supplied to restaurants", "how": "supplier enquiry form on the site; sourcing team reviews and visits", "contact": null, "city": "Gurugram", "type": "agri_b2b" },
+    { "name": "BigBasket", "url": "https://www.bigbasket.com/", "buys": "fruit and vegetables, staples and packaged food for online grocery", "how": "vendor connect / supplier registration through the corporate pages", "contact": null, "city": "Bengaluru", "type": "fresh_grocery" },
+    { "name": "Blinkit", "url": "https://blinkit.com/partner", "buys": "fresh produce and packaged grocery for dark stores", "how": "brand and supplier partnership form", "contact": null, "city": "Gurugram", "type": "quick_commerce" },
+    { "name": "Zepto", "url": "https://www.zeptonow.com/", "buys": "fruit, vegetables and grocery for ten-minute delivery stores", "how": "seller and supplier enquiry through the corporate site", "contact": null, "city": "Mumbai", "type": "quick_commerce" },
+    { "name": "Swiggy Instamart", "url": "https://partner.swiggy.com/", "buys": "fresh produce and grocery for Instamart stores", "how": "partner portal registration", "contact": null, "city": "Bengaluru", "type": "quick_commerce" },
+    { "name": "Otipy (Crofarm Agriproducts)", "url": "https://www.otipy.com/", "buys": "farm-fresh fruit and vegetables for next-morning delivery", "how": "supplier and farmer onboarding through the site", "contact": null, "city": "Gurugram", "type": "fresh_grocery" },
+    { "name": "WayCool Foods and Products", "url": "https://waycool.in/", "buys": "fruit, vegetables and staples sourced for retail and food service", "how": "supplier enquiry through the contact page", "contact": null, "city": "Chennai", "type": "agri_b2b" },
+    { "name": "DeHaat (Green Agrevolution)", "url": "https://agrevolution.in/", "buys": "farm produce aggregated for institutional buyers", "how": "partner and supplier enquiry form", "contact": null, "city": "Patna", "type": "agri_b2b" },
+    { "name": "Jumbotail", "url": "https://www.jumbotail.com/", "buys": "grocery and fresh categories for kirana retailers", "how": "seller registration on the marketplace", "contact": null, "city": "Bengaluru", "type": "agri_b2b" },
+    { "name": "Udaan", "url": "https://udaan.com/", "buys": "fruit, vegetables and staples for its B2B marketplace", "how": "seller registration on the platform", "contact": null, "city": "Bengaluru", "type": "agri_b2b" },
+    { "name": "METRO Cash and Carry India", "url": "https://www.metro.co.in/", "buys": "fresh fruit and vegetables for its wholesale distribution centres", "how": "supplier enquiry through the corporate site", "contact": null, "city": "Bengaluru", "type": "cash_and_carry" },
+    { "name": "Reliance Retail", "url": "https://relianceretail.com/", "buys": "fresh produce for Reliance Fresh, Smart and JioMart", "how": "supplier registration through the corporate supplier portal", "contact": null, "city": "Mumbai", "type": "modern_trade" },
+    { "name": "Avenue Supermarts (DMart)", "url": "https://www.dmartindia.com/", "buys": "fruit, vegetables and grocery for DMart stores", "how": "vendor enquiry through the corporate site", "contact": null, "city": "Mumbai", "type": "modern_trade" },
+    { "name": "Spencer's Retail", "url": "https://www.spencersretail.com/", "buys": "fresh produce and grocery for Spencer's stores", "how": "vendor registration through the corporate pages", "contact": null, "city": "Kolkata", "type": "modern_trade" },
+    { "name": "More Retail", "url": "https://www.moreretail.in/", "buys": "fruit and vegetables for More supermarkets and hypermarkets", "how": "supplier enquiry through the corporate site", "contact": null, "city": "Bengaluru", "type": "modern_trade" },
+    { "name": "Indian Hotels Company (Taj)", "url": "https://www.ihcltata.com/", "buys": "fresh produce for hotel food and beverage operations", "how": "vendor registration through the corporate procurement pages", "contact": null, "city": "Mumbai", "type": "hotel_group" },
+    { "name": "EIH Limited (Oberoi Hotels)", "url": "https://www.eihltd.com/", "buys": "fresh produce for Oberoi and Trident hotels", "how": "vendor and supplier enquiry through the corporate site", "contact": null, "city": "Delhi", "type": "hotel_group" },
+    { "name": "ITC Hotels", "url": "https://www.itchotels.com/", "buys": "fresh produce for ITC hotel food and beverage operations", "how": "supplier enquiry through the corporate site", "contact": null, "city": "Gurugram", "type": "hotel_group" },
+    { "name": "TajSATS Air Catering", "url": "https://www.tajsats.com/", "buys": "fresh produce for airline flight catering units", "how": "vendor enquiry through the corporate site", "contact": null, "city": "Mumbai", "type": "caterer" },
+    { "name": "Sodexo India", "url": "https://in.sodexo.com/", "buys": "fresh produce for corporate and institutional food services", "how": "supplier enquiry through the India corporate site", "contact": null, "city": "Mumbai", "type": "caterer" },
+    { "name": "Compass Group India", "url": "https://www.compass-group.co.in/", "buys": "fresh produce for contract catering sites", "how": "supplier enquiry through the India corporate site", "contact": null, "city": "Bengaluru", "type": "caterer" }
+  ]
+}

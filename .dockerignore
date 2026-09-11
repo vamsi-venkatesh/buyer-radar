@@ -1,0 +1,14 @@
+.git
+node_modules
+data
+runs
+digests
+exports
+reports
+outbox
+test
+.env
+.env.local
+eval
+demo
+docs/screenshots

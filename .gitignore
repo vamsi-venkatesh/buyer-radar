@@ -1,0 +1,29 @@
+node_modules/
+.env
+.env.*
+!.env.example
+
+# The deployment's own client profile. The example beside it is the fallback.
+config/client.json
+
+# Local crawl results: what answered this machine, on the day it ran.
+config/*.probe.json
+
+.env.local
+data/*.json
+runs/*.json
+digests/*.txt
+digests/*.json
+exports/*
+reports/*
+outbox/*
+!data/.gitkeep
+!runs/.gitkeep
+!digests/.gitkeep
+!exports/.gitkeep
+!reports/.gitkeep
+!outbox/.gitkeep
+.DS_Store
+
+# Demo output
+demo/.store/

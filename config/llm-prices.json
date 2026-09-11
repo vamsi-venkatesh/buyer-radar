@@ -1,0 +1,29 @@
+{
+  "_note": "Price table for the LLM stage's budget arithmetic. Prices are per 1,000,000 tokens in US dollars, converted to INR with the fixed rate below. The rate is deliberately fixed and stated rather than fetched: the budget cap is a spending guard, not an accounting ledger, and a guard that depends on a live FX call is a guard that fails when the network does.",
+  "rateInrPerUsd": 88.0,
+  "rateSource": "Fixed working rate chosen for this build, not a live quote. Change it here and every cost figure in the receipts changes with it.",
+  "rateChecked": "2026-09-11",
+  "models": {
+    "deepseek-chat": {
+      "inputUsdPerMillion": 0.27,
+      "outputUsdPerMillion": 1.1,
+      "source": "DeepSeek published API pricing for deepseek-chat, standard (non-discount) rate, cache-miss input.",
+      "checked": "2026-09-11",
+      "verified": false,
+      "verifyNote": "Written from prior knowledge of the published table. It was NOT fetched from the pricing page during this build, and DeepSeek has changed these numbers before. Check the live page before treating any cost figure as exact; the numbers only ever move the cap, never the behaviour."
+    },
+    "deepseek-reasoner": {
+      "inputUsdPerMillion": 0.55,
+      "outputUsdPerMillion": 2.19,
+      "source": "DeepSeek published API pricing for deepseek-reasoner, standard rate.",
+      "checked": "2026-09-11",
+      "verified": false,
+      "verifyNote": "Same caveat as deepseek-chat. The radar does not use this model by default."
+    }
+  },
+  "fallback": {
+    "inputUsdPerMillion": 1.0,
+    "outputUsdPerMillion": 3.0,
+    "note": "Used when a model is not in the table. Deliberately pessimistic: an unpriced model must exhaust the budget faster than a priced one, never slower."
+  }
+}

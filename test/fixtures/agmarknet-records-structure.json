@@ -1,0 +1,39 @@
+{
+  "_fixture_note": "SYNTHETIC fixture, not a captured API response. DATA_GOV_IN_KEY was not set on 2026-09-11, so no real response from data.gov.in resource 9ef84268-d588-465a-a308-a864a43d0070 could be captured. This file reproduces that resource's published field names so the record parser can be tested. The prices below are invented placeholders and must never be presented as market data.",
+  "index_name": "9ef84268-d588-465a-a308-a864a43d0070",
+  "records": [
+    {
+      "state": "Karnataka",
+      "district": "Bangalore",
+      "market": "Binny Mill (F&V), Bangalore",
+      "commodity": "Garlic",
+      "variety": "Average",
+      "arrival_date": "10/09/2026",
+      "min_price": "6000",
+      "max_price": "9000",
+      "modal_price": "7500"
+    },
+    {
+      "state": "Karnataka",
+      "district": "Bangalore",
+      "market": "Binny Mill (F&V), Bangalore",
+      "commodity": "Capsicum",
+      "variety": "Capsicum",
+      "arrival_date": "10/09/2026",
+      "min_price": "2000",
+      "max_price": "3200",
+      "modal_price": "2600"
+    },
+    {
+      "state": "Karnataka",
+      "district": "Kolar",
+      "market": "Kolar",
+      "commodity": "Tomato",
+      "variety": "Local",
+      "arrival_date": "10/09/2026",
+      "min_price": "800",
+      "max_price": "",
+      "modal_price": "1400"
+    }
+  ]
+}

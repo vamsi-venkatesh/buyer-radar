@@ -1,0 +1,29 @@
+{
+  "name": "buyer-radar",
+  "version": "0.1.0",
+  "description": "A daily lead-finding agent service for produce suppliers: public sources, rule-based scoring, a gated model stage, and a digest with verifiable receipts.",
+  "license": "MIT",
+  "author": "Vamsi Venkatesh <vamsi@vamsivenkatesh.com>",
+  "repository": { "type": "git", "url": "https://github.com/vamsi-venkatesh/buyer-radar.git" },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "validate": "node tools/validate.mjs",
+    "demo": "node demo/demo.mjs",
+    "run:city": "node src/run.mjs",
+    "digest": "node src/digest.mjs",
+    "register": "node src/register.mjs",
+    "dashboard": "node src/dashboard/server.mjs",
+    "cron": "node src/cron.mjs",
+    "report": "node src/report.mjs",
+    "eval:llm": "node eval/llm/run.mjs",
+    "mcp": "node src/mcp/server.mjs",
+    "tools": "node src/tools/cli.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

@@ -1,0 +1,1471 @@
+{
+  "meta": {
+    "title": "Buyer Radar - enrich prompt evaluation",
+    "date": "2026-09-11",
+    "lane": "stub",
+    "laneNote": "no API key was present, so a keyword reader stood in for the model. These numbers measure the harness and the floor, NOT the model, and the cost below is notional - nothing was spent and no request left the machine.",
+    "provider": "deepseek",
+    "model": "stub-keyword-reader",
+    "promptVersion": "enrich/2026-09-11a",
+    "note": "All 30 cases are synthetic pages written for this harness (eval/llm/fixtures.mjs). No business, tonnage, tender number or date in them is real, and none of it may be shown as data."
+  },
+  "summary": {
+    "n": 30,
+    "validAnswers": 30,
+    "jsonValidityRate": 1,
+    "accuracy": {
+      "segment": 0.933,
+      "size": 0.7,
+      "deadline": 1
+    },
+    "correct": {
+      "segment": 28,
+      "size": 21,
+      "deadline": 30
+    },
+    "wrong": {
+      "segment": [
+        {
+          "id": "fx01-wholesale-large",
+          "expected": "wholesale",
+          "actual": "caterer"
+        },
+        {
+          "id": "fx20-distributor-medium",
+          "expected": "distributor",
+          "actual": "institution"
+        }
+      ],
+      "size": [
+        {
+          "id": "fx03-wholesale-medium",
+          "expected": "medium",
+          "actual": "small"
+        },
+        {
+          "id": "fx08-hotel-large",
+          "expected": "large",
+          "actual": "medium"
+        },
+        {
+          "id": "fx09-hotel-medium",
+          "expected": "medium",
+          "actual": "small"
+        },
+        {
+          "id": "fx16-retailer-medium",
+          "expected": "medium",
+          "actual": "small"
+        },
+        {
+          "id": "fx18-manufacturer-medium",
+          "expected": "medium",
+          "actual": "small"
+        },
+        {
+          "id": "fx19-manufacturer-small",
+          "expected": "small",
+          "actual": "medium"
+        },
+        {
+          "id": "fx20-distributor-medium",
+          "expected": "medium",
+          "actual": "large"
+        },
+        {
+          "id": "fx24-institution-tender-school",
+          "expected": "medium",
+          "actual": "large"
+        },
+        {
+          "id": "fx29-news-restaurant-opening",
+          "expected": "medium",
+          "actual": "large"
+        }
+      ],
+      "deadline": []
+    },
+    "allFieldsCorrect": 20,
+    "tokens": {
+      "input": 27062,
+      "output": 1826,
+      "meanInput": 902,
+      "meanOutput": 61
+    },
+    "costInr": 2.8649,
+    "meanMs": 0,
+    "cacheHits": 0,
+    "perCase": [
+      {
+        "id": "fx01-wholesale-large",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "wholesale",
+            "actual": "caterer",
+            "correct": false
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx02-wholesale-small",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "wholesale",
+            "actual": "wholesale",
+            "correct": true
+          },
+          "size": {
+            "expected": "small",
+            "actual": "small",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx03-wholesale-medium",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "wholesale",
+            "actual": "wholesale",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "small",
+            "correct": false
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx04-restaurant-small",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "restaurant",
+            "actual": "restaurant",
+            "correct": true
+          },
+          "size": {
+            "expected": "small",
+            "actual": "small",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx05-restaurant-medium",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "restaurant",
+            "actual": "restaurant",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "medium",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx06-restaurant-large",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "restaurant",
+            "actual": "restaurant",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx07-restaurant-unknown-size",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "restaurant",
+            "actual": "restaurant",
+            "correct": true
+          },
+          "size": {
+            "expected": "unknown",
+            "actual": "unknown",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx08-hotel-large",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "hotel",
+            "actual": "hotel",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "medium",
+            "correct": false
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx09-hotel-medium",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "hotel",
+            "actual": "hotel",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "small",
+            "correct": false
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx10-hotel-unknown-size",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "hotel",
+            "actual": "hotel",
+            "correct": true
+          },
+          "size": {
+            "expected": "unknown",
+            "actual": "unknown",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx11-caterer-large",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "caterer",
+            "actual": "caterer",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx12-caterer-small",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "caterer",
+            "actual": "caterer",
+            "correct": true
+          },
+          "size": {
+            "expected": "small",
+            "actual": "small",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx13-caterer-medium",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "caterer",
+            "actual": "caterer",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "medium",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx14-retailer-small",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "retailer",
+            "actual": "retailer",
+            "correct": true
+          },
+          "size": {
+            "expected": "small",
+            "actual": "small",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx15-retailer-large",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "retailer",
+            "actual": "retailer",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx16-retailer-medium",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "retailer",
+            "actual": "retailer",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "small",
+            "correct": false
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx17-manufacturer-large",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "food_manufacturer",
+            "actual": "food_manufacturer",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx18-manufacturer-medium",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "food_manufacturer",
+            "actual": "food_manufacturer",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "small",
+            "correct": false
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx19-manufacturer-small",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "food_manufacturer",
+            "actual": "food_manufacturer",
+            "correct": true
+          },
+          "size": {
+            "expected": "small",
+            "actual": "medium",
+            "correct": false
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx20-distributor-medium",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "distributor",
+            "actual": "institution",
+            "correct": false
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "large",
+            "correct": false
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx21-distributor-large",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "distributor",
+            "actual": "distributor",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx22-institution-tender-hostel",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "institution",
+            "actual": "institution",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": "2026-09-24",
+            "actual": "2026-09-24",
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx23-institution-tender-hospital",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "institution",
+            "actual": "institution",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": "2026-10-02",
+            "actual": "2026-10-02",
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx24-institution-tender-school",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "institution",
+            "actual": "institution",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "large",
+            "correct": false
+          },
+          "deadline": {
+            "expected": "2026-09-30",
+            "actual": "2026-09-30",
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx25-institution-no-deadline",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "institution",
+            "actual": "institution",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "medium",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx26-not-a-business-error",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "other",
+            "actual": "other",
+            "correct": true
+          },
+          "size": {
+            "expected": "unknown",
+            "actual": "unknown",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx27-not-a-business-nav",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "other",
+            "actual": "other",
+            "correct": true
+          },
+          "size": {
+            "expected": "unknown",
+            "actual": "unknown",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx28-blog-about-prices",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "other",
+            "actual": "other",
+            "correct": true
+          },
+          "size": {
+            "expected": "unknown",
+            "actual": "unknown",
+            "correct": true
+          },
+          "deadline": {
+            "expected": null,
+            "actual": null,
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx29-news-restaurant-opening",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "restaurant",
+            "actual": "restaurant",
+            "correct": true
+          },
+          "size": {
+            "expected": "medium",
+            "actual": "large",
+            "correct": false
+          },
+          "deadline": {
+            "expected": "2026-09-19",
+            "actual": "2026-09-19",
+            "correct": true
+          }
+        }
+      },
+      {
+        "id": "fx30-news-hotel-opening",
+        "ok": true,
+        "reason": null,
+        "fields": {
+          "segment": {
+            "expected": "hotel",
+            "actual": "hotel",
+            "correct": true
+          },
+          "size": {
+            "expected": "large",
+            "actual": "large",
+            "correct": true
+          },
+          "deadline": {
+            "expected": "2026-10-01",
+            "actual": "2026-10-01",
+            "correct": true
+          }
+        }
+      }
+    ]
+  },
+  "results": [
+    {
+      "id": "fx01-wholesale-large",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "caterer",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Sri Lakshmi Vegetables Wholesale vegetable traders at Kalasipalya market since 1994. We move 35 to 40 tonnes of vegetabl"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 926,
+      "outputTokens": 61,
+      "costInr": 0.0976,
+      "ms": 0
+    },
+    {
+      "id": "fx02-wholesale-small",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "wholesale",
+        "size": "small",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Anjaneya Traders Single wholesale counter at Yeshwanthpur APMC. Father and two sons. We sell onion and potato by the sac"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 890,
+      "outputTokens": 62,
+      "costInr": 0.0947,
+      "ms": 0
+    },
+    {
+      "id": "fx03-wholesale-medium",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "wholesale",
+        "size": "small",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Nandi Fresh Mandi Wholesale supply of fresh vegetables to the south Bengaluru trade. Two godowns, 18 staff, about 6 tonn"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 899,
+      "outputTokens": 62,
+      "costInr": 0.0955,
+      "ms": 0
+    },
+    {
+      "id": "fx04-restaurant-small",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "restaurant",
+        "size": "small",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Udupi Tiffin Room A 32-seat vegetarian tiffin room in Basavanagudi. Idli, dosa, khara bath, filter coffee. One kitchen,"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 889,
+      "outputTokens": 59,
+      "costInr": 0.0939,
+      "ms": 0
+    },
+    {
+      "id": "fx05-restaurant-medium",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "restaurant",
+        "size": "medium",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Chulha House North Indian kitchen with three outlets in Bengaluru - Indiranagar, HSR Layout and Rajajinagar. About 300 c"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 905,
+      "outputTokens": 62,
+      "costInr": 0.0961,
+      "ms": 0
+    },
+    {
+      "id": "fx06-restaurant-large",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "restaurant",
+        "size": "large",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Coastal Bowl 22 restaurants across Karnataka and Tamil Nadu, with a commissary in Peenya that supplies all of them. Over"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 905,
+      "outputTokens": 59,
+      "costInr": 0.0953,
+      "ms": 1
+    },
+    {
+      "id": "fx07-restaurant-unknown-size",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "restaurant",
+        "size": "unknown",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Green Fork A restaurant in Bengaluru. Salads, bowls, and a short seasonal menu. Open daily. Reservations by phone."
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 877,
+      "outputTokens": 58,
+      "costInr": 0.0925,
+      "ms": 0
+    },
+    {
+      "id": "fx08-hotel-large",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "hotel",
+        "size": "medium",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "The Cubbon Crest A 220-room business hotel with three restaurants, a banquet hall for 600 and 24-hour room service. Occu"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 902,
+      "outputTokens": 61,
+      "costInr": 0.0955,
+      "ms": 0
+    },
+    {
+      "id": "fx09-hotel-medium",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "hotel",
+        "size": "small",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Hotel Malnad Residency 48 rooms near Majestic, with a 60-cover vegetarian restaurant on the ground floor. Breakfast is i"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 888,
+      "outputTokens": 58,
+      "costInr": 0.0935,
+      "ms": 0
+    },
+    {
+      "id": "fx10-hotel-unknown-size",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "hotel",
+        "size": "unknown",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Hotel Sapphire Inn Comfortable stay in Bengaluru. Air-conditioned rooms, in-house dining, airport pickup on request. Cal"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 887,
+      "outputTokens": 58,
+      "costInr": 0.0934,
+      "ms": 0
+    },
+    {
+      "id": "fx11-caterer-large",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "caterer",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Bhagya Caterers Wedding and function catering across Bengaluru for 28 years. We regularly serve 3,000 to 5,000 plates at"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 911,
+      "outputTokens": 61,
+      "costInr": 0.0963,
+      "ms": 0
+    },
+    {
+      "id": "fx12-caterer-small",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "caterer",
+        "size": "small",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Amma Kitchen Catering Home-style catering for small house functions, naming ceremonies and office lunches. Usually 40 to"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 890,
+      "outputTokens": 58,
+      "costInr": 0.0937,
+      "ms": 0
+    },
+    {
+      "id": "fx13-caterer-medium",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "caterer",
+        "size": "medium",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Sadhana Caterers Office and event catering in east Bengaluru. We run two daily corporate lunch contracts of about 250 pl"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 889,
+      "outputTokens": 58,
+      "costInr": 0.0936,
+      "ms": 0
+    },
+    {
+      "id": "fx14-retailer-small",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "retailer",
+        "size": "small",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Sri Ganesh Vegetable Stores Neighbourhood greengrocer in Jayanagar 4th Block. Fresh vegetables and greens, bought at the"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 898,
+      "outputTokens": 61,
+      "costInr": 0.0952,
+      "ms": 0
+    },
+    {
+      "id": "fx15-retailer-large",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "retailer",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "DailyBasket Supermarkets 60 stores across Bengaluru, Mysuru and Hubballi, with a 40,000 sq ft distribution centre at Nel"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 911,
+      "outputTokens": 61,
+      "costInr": 0.0963,
+      "ms": 0
+    },
+    {
+      "id": "fx16-retailer-medium",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "retailer",
+        "size": "small",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Corner Fresh Four fruit and vegetable outlets in north Bengaluru, plus a small online order desk. About 12 staff."
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 877,
+      "outputTokens": 60,
+      "costInr": 0.0931,
+      "ms": 0
+    },
+    {
+      "id": "fx17-manufacturer-large",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "food_manufacturer",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Kaveri Frozen Foods Pvt Ltd IQF processing plant at Dobbaspet with a 60 tonne per day intake of fresh vegetables. We fre"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 919,
+      "outputTokens": 64,
+      "costInr": 0.0978,
+      "ms": 0
+    },
+    {
+      "id": "fx18-manufacturer-medium",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "food_manufacturer",
+        "size": "small",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Konkan Masala Works We make curry pastes, chutneys and wet masalas at our Peenya unit. About 30 staff and a seasonal int"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 895,
+      "outputTokens": 64,
+      "costInr": 0.0957,
+      "ms": 0
+    },
+    {
+      "id": "fx19-manufacturer-small",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "food_manufacturer",
+        "size": "medium",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Ragi Roots Foods A two-person kitchen unit making ready-to-cook millet mixes and dehydrated vegetable powders. We batch"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 893,
+      "outputTokens": 64,
+      "costInr": 0.0955,
+      "ms": 0
+    },
+    {
+      "id": "fx20-distributor-medium",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "institution",
+        "size": "large",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Vindhya Food Distributors We buy from processors and deliver to hotels, restaurants and canteens in Bengaluru. Six refri"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 899,
+      "outputTokens": 59,
+      "costInr": 0.0947,
+      "ms": 0
+    },
+    {
+      "id": "fx21-distributor-large",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "distributor",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Southline Supply Co HoReCa distribution across four southern states. 40 vehicles, 9 depots, 1,800 active customer outlet"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 893,
+      "outputTokens": 62,
+      "costInr": 0.095,
+      "ms": 0
+    },
+    {
+      "id": "fx22-institution-tender-hostel",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "institution",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": "2026-09-24",
+        "deadlineDropped": null,
+        "evidence": [
+          "Tender notice: supply of fresh vegetables to hostel messes Sealed tenders are invited for the supply of fresh vegetables"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 939,
+      "outputTokens": 64,
+      "costInr": 0.0996,
+      "ms": 0
+    },
+    {
+      "id": "fx23-institution-tender-hospital",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "institution",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": "2026-10-02",
+        "deadlineDropped": null,
+        "evidence": [
+          "Supply of vegetables and provisions - patient diet The District Hospital invites rate contracts for the supply of vegeta"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 935,
+      "outputTokens": 64,
+      "costInr": 0.0992,
+      "ms": 0
+    },
+    {
+      "id": "fx24-institution-tender-school",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "institution",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": "2026-09-30",
+        "deadlineDropped": null,
+        "evidence": [
+          "Canteen vegetable supply - request for quotation Quotations are invited for supplying fresh vegetables to our school can"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 912,
+      "outputTokens": 64,
+      "costInr": 0.0972,
+      "ms": 0
+    },
+    {
+      "id": "fx25-institution-no-deadline",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "institution",
+        "size": "medium",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Staff canteen reopens after renovation The staff canteen at Sarkari Bhavan has reopened after a four-month renovation. I"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 926,
+      "outputTokens": 62,
+      "costInr": 0.0979,
+      "ms": 0
+    },
+    {
+      "id": "fx26-not-a-business-error",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "other",
+        "size": "unknown",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "404 - Page not found The page you asked for is not here. It may have been moved or deleted. Return to the home page"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 869,
+      "outputTokens": 57,
+      "costInr": 0.0916,
+      "ms": 0
+    },
+    {
+      "id": "fx27-not-a-business-nav",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "other",
+        "size": "unknown",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Cookie preferences We use cookies to improve your experience. Choose which categories you allow. Strictly necessary Anal"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 884,
+      "outputTokens": 58,
+      "costInr": 0.0932,
+      "ms": 0
+    },
+    {
+      "id": "fx28-blog-about-prices",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "other",
+        "size": "unknown",
+        "buys": [],
+        "quantity": null,
+        "deadline": null,
+        "deadlineDropped": null,
+        "evidence": [
+          "Why tomato prices swing every August A look at the rain, the transport cost and the two-week gap between crops that send"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 911,
+      "outputTokens": 58,
+      "costInr": 0.0955,
+      "ms": 0
+    },
+    {
+      "id": "fx29-news-restaurant-opening",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "restaurant",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": "2026-09-19",
+        "deadlineDropped": null,
+        "evidence": [
+          "Bhojan Ghar to open second outlet in Whitefield Bhojan Ghar, which runs a 90-cover restaurant in Koramangala, will open"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 922,
+      "outputTokens": 64,
+      "costInr": 0.0981,
+      "ms": 0
+    },
+    {
+      "id": "fx30-news-hotel-opening",
+      "ok": true,
+      "reason": null,
+      "value": {
+        "segment": "hotel",
+        "size": "large",
+        "buys": [
+          "vegetables"
+        ],
+        "quantity": null,
+        "deadline": "2026-10-01",
+        "deadlineDropped": null,
+        "evidence": [
+          "Grand Deccan to open 180-room hotel on 01-10-2026 The Grand Deccan group will open a 180-room property in Hyderabad on 0"
+        ],
+        "confidence": 0.8
+      },
+      "cacheHit": false,
+      "inputTokens": 921,
+      "outputTokens": 63,
+      "costInr": 0.0977,
+      "ms": 0
+    }
+  ],
+  "totals": {
+    "calls": 30,
+    "cacheHits": 0,
+    "costInr": 2.8649,
+    "budgetSkipped": 0,
+    "invalid": 0,
+    "errors": 0,
+    "notNeeded": 0,
+    "spentInr": 2.8649
+  }
+}

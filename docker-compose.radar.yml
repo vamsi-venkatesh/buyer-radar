@@ -1,0 +1,51 @@
+# Buyer Radar - the dashboard and the scheduler, from one image.
+#
+#   cp .env.example .env      # then fill it in; never commit it
+#   docker compose -f docker-compose.radar.yml up -d --build
+#
+# Both services share the same volumes, so the scheduler's run is what the
+# dashboard shows. Nothing here opens a port to the world except the dashboard's
+# own, and the dashboard refuses to start without RADAR_OWNER_TOKEN.
+
+services:
+  radar-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: buyer-radar:local
+    container_name: radar-dashboard
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RADAR_PORT: "4710"
+    # Bound to localhost: put a TLS reverse proxy in front rather than exposing
+    # an owner-token page directly to the internet.
+    ports:
+      - "127.0.0.1:4710:4710"
+    volumes:
+      - ./data:/app/data
+      - ./runs:/app/runs
+      - ./digests:/app/digests
+      - ./exports:/app/exports
+      - ./reports:/app/reports
+      - ./outbox:/app/outbox
+    command: ["node", "src/dashboard/server.mjs"]
+
+  radar-cron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: buyer-radar:local
+    container_name: radar-cron
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - radar-dashboard
+    volumes:
+      - ./data:/app/data
+      - ./runs:/app/runs
+      - ./digests:/app/digests
+      - ./exports:/app/exports
+      - ./reports:/app/reports
+      - ./outbox:/app/outbox
+    command: ["node", "src/cron.mjs"]

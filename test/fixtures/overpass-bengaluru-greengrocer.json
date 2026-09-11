@@ -1,0 +1,153 @@
+{
+  "_note": "Captured from a real Overpass API response for Bengaluru greengrocers on 2026-09-11, then anonymised: trading names, brand, phone numbers and identifiers are placeholders. Element kinds, tag keys, coordinates, the ODbL notice and the response envelope are as captured, which is what the parser is tested on. No value in this file may be shown as real data.",
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-09-11T10:33:51Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+    {
+      "type": "node",
+      "id": 10049313438,
+      "lat": 12.9181443,
+      "lon": 77.6523035,
+      "tags": {
+        "addr:floor": "G",
+        "check_date": "2024-09-18",
+        "level": "0",
+        "name": "Green Line Fruits & Vegetables",
+        "payment:cards": "no",
+        "payment:cash": "yes",
+        "payment:credit_cards": "no",
+        "payment:debit_cards": "no",
+        "payment:upi": "yes",
+        "phone": "+91 98000 00001",
+        "shop": "greengrocer",
+        "source": "survey",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10819508449,
+      "lat": 12.9350462,
+      "lon": 77.6249939,
+      "tags": {
+        "addr:housenumber": "39",
+        "addr:street": "8th Main Road",
+        "name": "Riverside Vegetables and Fruits",
+        "phone": "+919800000002",
+        "shop": "greengrocer"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11178123533,
+      "lat": 12.9591192,
+      "lon": 77.5683872,
+      "tags": {
+        "addr:housenumber": "246",
+        "addr:street": "2nd Cross",
+        "check_date": "2023-09-09",
+        "name": "Nandini Tenginakaayi Angadi",
+        "phone": "+91 98000 00003",
+        "shop": "greengrocer"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11734847625,
+      "lat": 12.9553004,
+      "lon": 77.7209048,
+      "tags": {
+        "name": "S. K. Fruits & Vegetables",
+        "phone": "+91 98000 00004",
+        "shop": "greengrocer"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12497646028,
+      "lat": 12.9374162,
+      "lon": 77.7488257,
+      "tags": {
+        "addr:floor": "G",
+        "check_date": "2025-11-16",
+        "check_date:opening_hours": "2025-11-16",
+        "contact:phone": "+91 98000 00005; +91 98000 00006",
+        "internet_access": "no",
+        "level": "0",
+        "name": "Panchavati Fruits and Vegetables",
+        "opening_hours:signed": "no",
+        "shop": "greengrocer",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 454141779,
+      "lat": 13.0197391,
+      "lon": 77.6368364,
+      "tags": {
+        "name": "Lakeview Vegetables and Fruits",
+        "shop": "greengrocer"
+      }
+    },
+    {
+      "type": "node",
+      "id": 945903493,
+      "lat": 12.9107877,
+      "lon": 77.6100543,
+      "tags": {
+        "brand": "CO-OP FRESH",
+        "name": "CO-OP FRESH",
+        "name:kn": "ಸಹಕಾರಿ ತಾಜಾ",
+        "shop": "greengrocer"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1317197138,
+      "lat": 12.9745701,
+      "lon": 77.6548127,
+      "tags": {
+        "brand": "CO-OP FRESH",
+        "name": "CO-OP FRESH",
+        "name:kn": "ಸಹಕಾರಿ ತಾಜಾ",
+        "shop": "greengrocer"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1328610703,
+      "lat": 12.9790062,
+      "lon": 77.6428583,
+      "tags": {
+        "addr:housenumber": "99",
+        "brand": "CO-OP FRESH",
+        "building": "yes",
+        "building:levels": "1",
+        "name": "CO-OP FRESH",
+        "name:kn": "ಸಹಕಾರಿ ತಾಜಾ",
+        "opening_hours": "09:30-13:30,16:30-20:30",
+        "organic": "no",
+        "shop": "greengrocer",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1328610729,
+      "lat": 12.9781116,
+      "lon": 77.6409869,
+      "tags": {
+        "addr:street": "100 Feet Road(S K Karim Khan Road)",
+        "brand": "CO-OP FRESH",
+        "name": "CO-OP FRESH",
+        "name:kn": "ಸಹಕಾರಿ ತಾಜಾ",
+        "shop": "greengrocer"
+      }
+    }
+  ]
+}

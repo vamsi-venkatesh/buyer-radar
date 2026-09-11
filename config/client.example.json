@@ -1,0 +1,173 @@
+{
+  "_note": "Every fact about the supplier this radar runs for. Copy to config/client.json (git-ignored) and edit; with no client.json this example is used, so the engine runs out of the box. Nothing here is a secret - secrets live in the environment.",
+
+  "business": {
+    "name": "Greenfield Produce",
+    "owner": "the owner",
+    "homeCity": "Bengaluru",
+    "headline": "peeled garlic up to 1,000 kg/day, broccoli, capsicum, exotic and regular vegetables",
+    "contactEmail": "radar@example.com",
+    "userAgent": "BuyerRadar/0.1 (radar@example.com)"
+  },
+
+  "digest": {
+    "title": "Buyer Radar",
+    "maxChars": 1500,
+    "topN": 10,
+    "sections": { "requirements": 6, "buyers": 6, "registrations": 4 }
+  },
+
+  "capacity": {
+    "_note": "What the supplier can actually fill. A requirement he cannot serve is not a better lead for being bigger. headlineCommodity gets its own ceiling because it is the line he is set up for.",
+    "headlineCommodity": "garlic",
+    "headlineCommodityKgPerDay": 1000,
+    "headlineCommodityWords": ["garlic", "lahsun", "bellulli"],
+    "kgPerDayMin": 20,
+    "kgPerDayMax": 5000
+  },
+
+  "cities": {
+    "_note": "bbox = [south, west, north, east] in WGS84 degrees. agmarknetState must match the state name data.gov.in uses, not the one you would write.",
+    "bengaluru": {
+      "name": "Bengaluru",
+      "state": "Karnataka",
+      "bbox": [12.85, 77.45, 13.1, 77.75],
+      "agmarknetState": "Karnataka"
+    },
+    "chennai": {
+      "name": "Chennai",
+      "state": "Tamil Nadu",
+      "bbox": [12.9, 80.1, 13.2, 80.32],
+      "agmarknetState": "Tamil Nadu"
+    },
+    "mumbai": {
+      "name": "Mumbai",
+      "state": "Maharashtra",
+      "bbox": [18.88, 72.77, 19.28, 72.99],
+      "agmarknetState": "Maharashtra"
+    },
+    "delhi": {
+      "name": "Delhi",
+      "state": "Delhi",
+      "bbox": [28.48, 76.98, 28.78, 77.4],
+      "agmarknetState": "NCT of Delhi"
+    },
+    "hyderabad": {
+      "name": "Hyderabad",
+      "state": "Telangana",
+      "bbox": [17.28, 78.3, 17.55, 78.62],
+      "agmarknetState": "Telangana"
+    }
+  },
+
+  "catalogue": {
+    "_note": "What the supplier sells, and the Agmarknet commodity name each item is priced from. Verified against live data.gov.in records on 2026-09-11. commodity: null means Agmarknet carries no mandi line for that item - the price sheet says 'no mandi quote' rather than guessing one. approx: true means the item is priced off a nearby line (zucchini off squash), and the price sheet marks it with a ~.",
+    "items": {
+      "peeled-garlic": { "label": "Peeled garlic", "commodity": "Garlic" },
+      "broccoli": { "label": "Broccoli", "commodity": null },
+      "green-capsicum": { "label": "Green capsicum", "commodity": "Capsicum" },
+      "red-capsicum": { "label": "Red capsicum", "commodity": "Capsicum" },
+      "yellow-capsicum": { "label": "Yellow capsicum", "commodity": "Capsicum" },
+      "asparagus": { "label": "Asparagus", "commodity": null },
+      "basil": { "label": "Basil", "commodity": "basil" },
+      "cherry-tomato": { "label": "Cherry tomato", "commodity": "Tomato", "approx": true },
+      "iceberg-lettuce": { "label": "Iceberg lettuce", "commodity": null },
+      "lettuce": { "label": "Lettuce", "commodity": null },
+      "red-lettuce": { "label": "Red lettuce", "commodity": null },
+      "romaine": { "label": "Romaine", "commodity": null },
+      "zucchini": { "label": "Zucchini", "commodity": "Squash(Chappal Kadoo)", "approx": true },
+      "yellow-zucchini": { "label": "Yellow zucchini", "commodity": "Squash(Chappal Kadoo)", "approx": true },
+      "leeks": { "label": "Leeks", "commodity": null },
+      "lemongrass": { "label": "Lemongrass", "commodity": null },
+      "baby-corn": { "label": "Baby corn", "commodity": "Baby Corn" },
+      "celery": { "label": "Celery", "commodity": null },
+      "mushrooms": { "label": "Mushrooms", "commodity": null },
+      "red-cabbage": { "label": "Red cabbage", "commodity": "Cabbage", "approx": true },
+      "chinese-cabbage": { "label": "Chinese cabbage", "commodity": "Cabbage", "approx": true },
+      "bok-choy": { "label": "Pak choi", "commodity": null },
+      "parsley": { "label": "Parsley", "commodity": null },
+      "red-radish": { "label": "Red radish", "commodity": "Raddish" },
+      "thai-ginger": { "label": "Thai ginger", "commodity": "Ginger(Green)", "approx": true },
+      "ginger": { "label": "Ginger", "commodity": "Ginger(Green)" },
+      "tomato": { "label": "Tomato", "commodity": "Tomato" },
+      "onion": { "label": "Onion", "commodity": "Onion" },
+      "potato": { "label": "Potato", "commodity": "Potato" },
+      "carrot": { "label": "Carrot", "commodity": "Carrot" },
+      "cauliflower": { "label": "Cauliflower", "commodity": "Cauliflower" },
+      "cabbage": { "label": "Cabbage", "commodity": "Cabbage" },
+      "beans": { "label": "Beans", "commodity": "Beans" },
+      "brinjal": { "label": "Brinjal", "commodity": "Brinjal" },
+      "cucumber": { "label": "Cucumber", "commodity": "Cucumbar(Kheera)" },
+      "coriander": { "label": "Coriander", "commodity": "Coriander(Leaves)" },
+      "curry-leaves": { "label": "Curry leaves", "commodity": null },
+      "green-chilli": { "label": "Green chilli", "commodity": "Green Chilli" },
+      "kale": { "label": "Kale", "commodity": null },
+      "turnip": { "label": "Turnip", "commodity": "Turnip" },
+      "seasonal-exotics": { "label": "Seasonal exotics", "commodity": null },
+      "seasonal-vegetables": { "label": "Seasonal vegetables", "commodity": null }
+    }
+  },
+
+  "keywords": {
+    "_note": "What makes a notice, a tender row or a bid worth opening. Matched case-insensitively on word boundaries - 'mess' anchored, or it matches inside 'message'.",
+    "requirement": [
+      "vegetable",
+      "vegetables",
+      "garlic",
+      "produce",
+      "perishable",
+      "mess",
+      "canteen",
+      "hostel supply",
+      "diet",
+      "kitchen supply"
+    ],
+    "tender": [
+      "vegetable",
+      "vegetables",
+      "garlic",
+      "fresh produce",
+      "green grocery",
+      "perishable",
+      "canteen supply",
+      "mess supply",
+      "hostel supply",
+      "hospital diet"
+    ],
+    "marketplace": ["vegetables", "garlic", "fresh produce", "canteen"]
+  },
+
+  "newsQueries": [
+    { "q": "new hotel opening {city}", "segment": "hotel" },
+    { "q": "new restaurant opening {city}", "segment": "restaurant" },
+    { "q": "\"canteen tender\"", "segment": "institution" },
+    { "q": "\"vegetable supply tender\"", "segment": "institution" },
+    { "q": "\"hostel mess tender\"", "segment": "institution" },
+    { "q": "wholesale vegetable market {city}", "segment": "wholesale" },
+    { "q": "food processing unit {city} garlic", "segment": "food_manufacturer" }
+  ],
+
+  "openers": {
+    "_note": "The line the owner reads out. One per segment, plus the two kinds that already know what to say. Plain, factual, no claim the supplier cannot back. The model rewrites these only when it has a concrete fact to put in line one; these are the floor and they are always correct.",
+    "bySegment": {
+      "wholesale": "Do you buy peeled garlic in bulk?",
+      "food_manufacturer": "We supply peeled garlic, 1,000 kg/day.",
+      "distributor": "Garlic, broccoli, capsicum - daily supply.",
+      "hotel": "Daily peeled garlic and vegetables. Rates?",
+      "restaurant": "Daily peeled garlic, broccoli, capsicum.",
+      "caterer": "Peeled garlic and vegetables for events.",
+      "retailer": "Wholesale broccoli, capsicum, garlic.",
+      "institution": "We can quote for your vegetable supply.",
+      "other": "We supply fresh vegetables daily. Rates?"
+    },
+    "requirement": "We can quote for {what}.",
+    "requirementFallback": "We can quote for your posted requirement.",
+    "registration": "You buy {what} - can we register as a supplier?",
+    "registrationFallback": "Can we register as a supplier?"
+  },
+
+  "excludeSegments": {
+    "_note": "Listings that identify themselves as one of these are dropped during normalisation, and no copy this project generates uses the wording. Each entry is a regular expression source, matched case-insensitively against the trading name and the listing's own tags.",
+    "patterns": ["cloud\\s*kitchen", "ghost\\s*kitchen", "virtual\\s*kitchen", "dark\\s*kitchen"]
+  }
+}
