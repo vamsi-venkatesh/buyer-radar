@@ -18,7 +18,9 @@
 //   opener      needed only for a lead the digest will actually show AND that
 //               has at least one concrete fact to build a line on.
 //   requirement needed only when the deterministic readers found no quantity,
-//               no deadline and no contact in the notice text.
+//               no deadline and no contact in the notice text - and ALWAYS for a
+//               publisher's article, which names no buyer and no buyer's site
+//               whatever a regex reads off it.
 
 import { DIGEST_SECTIONS } from '../config.mjs';
 
@@ -137,14 +139,29 @@ export function needsModel(purpose, lead = null, ctx = {}) {
   }
 
   // requirement
-  const found = [];
   const d = ctx.deterministic || {};
+  if (!ctx.hasText) return { needed: false, reason: 'there is no notice text to read' };
+
+  // A notice is published by the body that wants the vegetables, so everything
+  // on it - the quantity, the closing date, the officer's number - is that
+  // body's own. A news article is not: it is published by a newspaper, about
+  // somebody else. Nothing a regex can do to an article tells us which
+  // organisation has the requirement or where its own website is, and the phone
+  // number on the page belongs to the newsroom. That is a model's job, and no
+  // amount of deterministic reading replaces it.
+  if (ctx.needsOrganisation) {
+    return {
+      needed: true,
+      reason: 'the page is a publisher article: it may state a requirement, but nothing on it names the buyer or the buyer\'s own website',
+    };
+  }
+
+  const found = [];
   if (d.quantity) found.push('a quantity');
   if (d.deadline) found.push('a closing date');
   if (d.contact) found.push('a contact');
   if (found.length) {
     return { needed: false, reason: `the deterministic readers already found ${found.join(', ')} in the notice text` };
   }
-  if (!ctx.hasText) return { needed: false, reason: 'there is no notice text to read' };
   return { needed: true, reason: 'the deterministic readers found no quantity, no closing date and no contact in the notice text' };
 }

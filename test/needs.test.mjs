@@ -124,6 +124,24 @@ test('requirement: the model is asked only when the deterministic readers found 
   assert.equal(needsModel('requirement', lead(), { hasText: false, deterministic: {} }).needed, false);
 });
 
+test('requirement: a publisher article always needs the model, whatever a regex read off it', () => {
+  // The notice case: the body published it, so what is on it is that body's own.
+  const notice = needsModel('requirement', lead(), { hasText: true, deterministic: { quantity: '500 kg', deadline: '2026-09-30', contact: true } });
+  assert.equal(notice.needed, false);
+
+  // The same three facts, read off a newspaper's page about somebody else.
+  const article = needsModel('requirement', lead(), {
+    hasText: true,
+    needsOrganisation: true,
+    deterministic: { quantity: '500 kg', deadline: '2026-09-30', contact: true },
+  });
+  assert.equal(article.needed, true);
+  assert.match(article.reason, /names no buyer|names the buyer/);
+
+  // Still nothing to read is still nothing to pay for.
+  assert.equal(needsModel('requirement', lead(), { hasText: false, needsOrganisation: true }).needed, false);
+});
+
 test('an unknown purpose is refused rather than defaulted to yes', () => {
   const res = needsModel('summarise', lead(), { hasText: true });
   assert.equal(res.needed, false);
@@ -290,15 +308,13 @@ test('the openings lane resolves to the publisher, and records the reason when i
     robotsFor: async () => parseRobots('User-agent: *\nDisallow: /\n', 'buyerradar'),
     async fetchDoc(url) {
       fetched.push(url);
-      return {
-        ok: true,
-        kind: 'html',
-        url,
-        html: '<p>x</p>',
-        text:
-          'The institute has invited bids for the supply of 1,500 kg of vegetables a month to its hostel mess. ' +
-          'Last date for submission: 30.09.2026. Contact Person: Dr Anita Rao. Phone: 080-2293 2222.',
-      };
+      // The newspaper's page says what is wanted and gives the reporter's desk
+      // number; the institute's own page is where a purchase contact lives.
+      const article =
+        'The institute has invited bids for the supply of 1,500 kg of vegetables a month to its hostel mess. ' +
+        'Last date for submission: 30.09.2026. Reported by our correspondent.';
+      const site = 'Indian Institute of Science. Stores and Purchase. Contact Person: Dr Anita Rao. Phone: 080-2293 2222.';
+      return { ok: true, kind: 'html', url, html: '<p>x</p>', text: url.includes('iisc.example') ? site : article };
     },
   };
   const chain = new ReceiptChain('run_openings');
@@ -306,7 +322,20 @@ test('the openings lane resolves to the publisher, and records the reason when i
   const runner = {
     ask: async (req) => {
       asked.push(req.purpose);
-      return { ok: false, reason: 'error' };
+      return {
+        ok: true,
+        value: {
+          isRequirement: true,
+          organisation: 'Indian Institute of Science',
+          requirement: 'supply of 1,500 kg of vegetables a month to the hostel mess',
+          quantity: '1,500 kg a month',
+          deadline: '2026-09-30',
+          contactHint: 'Dr Anita Rao',
+          site: 'https://iisc.example',
+          evidence: ['invited bids for the supply of 1,500 kg of vegetables a month'],
+          confidence: 0.9,
+        },
+      };
     },
     notNeeded: ({ purpose, leadId, reason }) => chain.add('llm.not_needed', { purpose, leadId, reason }),
   };
@@ -324,15 +353,20 @@ test('the openings lane resolves to the publisher, and records the reason when i
 
   assert.equal(out.linksResolved, 1, 'the decodable id resolved to the publisher');
   assert.equal(out.linksUnresolved, 1, 'the opaque id did not, and Google refuses the redirect walk');
-  assert.deepEqual(fetched, ['https://www.deccanherald.com/iisc-mess-tender'], 'only the publisher is fetched');
+  assert.deepEqual(
+    fetched,
+    ['https://www.deccanherald.com/iisc-mess-tender', 'https://iisc.example'],
+    'the publisher for the article, then the buyer own site for the contact - and nothing else'
+  );
   assert.equal(out.articlesRead, 1);
-  assert.equal(asked.length, 0, 'the deterministic readers found enough, so nothing was paid for');
-  assert.equal(out.notNeeded, 1);
+  assert.equal(asked.length, 1, 'a publisher article always needs the model: it names the buyer, the regexes cannot');
+  assert.equal(out.notNeeded, 0);
   assert.equal(out.upgraded, 1);
 
   const upgraded = signals[0];
   assert.equal(upgraded.kind, 'requirement');
-  assert.equal(upgraded.phone, '+918022932222');
+  assert.equal(upgraded.phone, '+918022932222', 'the number came off the institute own site, not off the newspaper');
+  assert.equal(upgraded.extra.contactFoundOn, 'https://iisc.example');
   assert.equal(upgraded.extra.deadline, '2026-09-30');
   assert.equal(upgraded.extra.quantity, '1,500 kg');
 
@@ -341,9 +375,11 @@ test('the openings lane resolves to the publisher, and records the reason when i
   assert.match(skipped.reason, /carries no publisher URL/);
   assert.match(signals[1].extra.contactNotFound, /could not be resolved to the publisher/);
 
-  const notNeeded = chain.receipts.find((r) => r.type === 'llm.not_needed');
-  assert.equal(notNeeded.purpose, 'requirement');
-  assert.match(notNeeded.reason, /already found a quantity, a closing date, a contact/);
+  assert.equal(
+    chain.receipts.find((r) => r.type === 'llm.not_needed'),
+    undefined,
+    'nothing about a publisher article is answerable without the model'
+  );
 
   // The helper itself, on the same text.
   const read = deterministicReads(crawler.fetchDoc ? 'Last date for submission: 30.09.2026' : '', { todayIsoDate: '2026-09-11' });

@@ -23,7 +23,7 @@ import { extractContacts, contactLinksFrom, CONTACT_PATHS } from '../lib/contact
 import { bestQuantity, mentionsHeadlineCommodity, quantityFit } from '../lib/quantity.mjs';
 import { parseLinks } from '../lib/xml.mjs';
 import { findDeadline } from '../lib/dates.mjs';
-import { resolveNewsLink } from '../lib/news-link.mjs';
+import { resolveNewsLink, isGoogleNewsLink } from '../lib/news-link.mjs';
 import { needsModel } from '../llm/needs.mjs';
 import { tidy, todayIso } from '../lib/normalise.mjs';
 
@@ -31,13 +31,34 @@ export const name = 'openings';
 
 const NO_CHAIN = { add() {} };
 
-/** The signals worth a model call: a news item whose headline talks about demand. */
+/**
+ * The signals worth a model call: one whose headline talks about demand, or one
+ * whose own lane already matched it on more than the headline.
+ *
+ * The Google News lane searches for demand words and then keeps whatever comes
+ * back, so its headlines are filtered here. The publisher-feed lane has already
+ * matched the title AND the summary against its own two rules and written down
+ * which words matched, so re-testing its headline alone would throw away items
+ * whose demand is stated in the second sentence - "Chalet Hotels targets 5,500
+ * keys by FY30" says nothing in its headline and states the expansion below it.
+ */
 export function selectSignals(leads, { limit = OPENINGS.maxPerRun, promptVersion } = {}) {
   return leads
-    .filter((l) => l.kind === 'signal' && l.source === 'news' && l.source_url)
-    .filter((l) => OPENINGS.triggers.test(`${l.name} ${l.why_now || ''}`))
+    .filter((l) => l.kind === 'signal' && OPENINGS.signalSources.includes(l.source) && l.source_url)
+    .filter((l) => OPENINGS.triggers.test(`${l.name} ${l.why_now || ''}`) || Boolean(l.extra && l.extra.matchRule))
     .filter((l) => !(l.extra && l.extra.opening && l.extra.opening.promptVersion === promptVersion))
-    .sort((a, b) => b.score - a.score || String(a.id).localeCompare(String(b.id)))
+    // A signal whose link is already the publisher's article comes first, and
+    // not because it scores better. The limit is a budget, and a Google News
+    // item whose id is the opaque post-2024 form is a dead end we can name in
+    // advance: it will be skipped at the resolver. A run that spent eleven of
+    // its twelve slots on those and read one article is the reason this sort
+    // has two keys.
+    .sort(
+      (a, b) =>
+        (isGoogleNewsLink(a.source_url) ? 1 : 0) - (isGoogleNewsLink(b.source_url) ? 1 : 0) ||
+        b.score - a.score ||
+        String(a.id).localeCompare(String(b.id))
+    )
     .slice(0, limit);
 }
 
@@ -264,14 +285,20 @@ export async function upgradeSignals(
       chars: article.text.length,
     });
 
-    // Model only when needed. If the deterministic readers already pull a
-    // quantity, a closing date or a contact out of the article, the model is
-    // not what stands between us and a lead - reading it again would be paying
-    // for a second opinion on something we can see.
+    // Model only when needed - and here it is always needed while there is text
+    // to read. This page belongs to a newspaper, not to the buyer: it may say
+    // that a hospital is opening a 1,000-bed campus, but the only email on it is
+    // the reporter's and the only site it links is the paper's own. The model is
+    // asked who has the requirement and where their own website is, and the
+    // contact is then read off THAT site. A run of this lane before the rule was
+    // written upgraded three signals off the article text alone and put a
+    // journalist's address and a PR agency's address in the digest as the
+    // buyer's contact. Both were real addresses. Neither was the buyer.
     const found = deterministicReads(article.text, { todayIsoDate });
     const decision = needsModel('requirement', lead, {
       hasText: Boolean(article.text),
-      deterministic: { quantity: found.quantity, deadline: found.deadline, contact: found.contacts.complete },
+      needsOrganisation: true,
+      deterministic: { quantity: found.quantity, deadline: found.deadline, contact: false },
     });
     if (!decision.needed) {
       out.notNeeded += 1;
@@ -287,34 +314,13 @@ export async function upgradeSignals(
         promptVersion: null,
         readBy: 'the deterministic readers, with no model call',
       };
-      if (found.contacts.complete) {
-        applyRequirement(lead, {
-          answer: read,
-          contacts: found.contacts,
-          contactUrl: article.url,
-          site: null,
-          articleUrl: article.url,
-          todayIsoDate,
-        });
-        out.contactsFound += 1;
-        out.upgraded += 1;
-        chain.add('openings.upgraded', {
-          leadId: lead.id,
-          organisation: lead.name,
-          requirement: lead.extra.requirement,
-          deadline: found.deadline,
-          contactPhone: Boolean(found.contacts.phone),
-          contactEmail: Boolean(found.contacts.email),
-          readBy: read.readBy,
-        });
-        log(`openings: ${lead.id} upgraded from the article text alone, no model call`);
-      } else {
-        markNoContact(lead, {
-          reason: 'the article states a requirement the deterministic readers could read, but publishes no phone and no email',
-          answer: read,
-          promptVersion: null,
-        });
-      }
+      // No contact is taken off this page whatever the readers found on it: a
+      // phone number on a newspaper's article is the newspaper's.
+      markNoContact(lead, {
+        reason: decision.reason,
+        answer: read,
+        promptVersion: null,
+      });
       continue;
     }
 
