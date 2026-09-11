@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # `pg` is the only dependency and it is loaded lazily, so the suite runs
+      # against the JSON store with nothing installed. Installing anyway proves
+      # the manifest is not broken.
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Test
+        run: npm test
+
+      - name: Validate
+        run: npm run validate
+
+      # The demo replaces the network. If it ever makes a real request it throws,
+      # so this step is also the check that CI stays offline.
+      - name: Demo
+        run: npm run demo -- --seed
