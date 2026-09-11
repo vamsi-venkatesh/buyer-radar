@@ -54,6 +54,54 @@ export function parseRssItems(xml) {
   return items;
 }
 
+/**
+ * Parse an Atom document into the same plain item objects.
+ *
+ * Atom puts the article URL in an attribute rather than in the element body, so
+ * `<link rel="alternate" href="...">` - or the first link with no rel at all -
+ * is the one a reader would follow. `rel="self"` points back at the feed and is
+ * never the article.
+ */
+export function parseAtomEntries(xml) {
+  const items = [];
+  for (const m of String(xml).matchAll(/<entry[\s>][\s\S]*?<\/entry>/gi)) {
+    const block = m[0];
+    let link = '';
+    for (const l of block.matchAll(/<link\b[^>]*>/gi)) {
+      const tag = l[0];
+      const rel = (tag.match(/\brel="([^"]*)"/i) || [])[1] || '';
+      const href = (tag.match(/\bhref="([^"]*)"/i) || [])[1] || '';
+      if (!href) continue;
+      if (rel && rel.toLowerCase() !== 'alternate') continue;
+      link = decodeEntities(href);
+      break;
+    }
+    items.push({
+      title: tagValue(block, 'title'),
+      link: link || tagValue(block, 'id'),
+      pubDate: tagValue(block, 'published') || tagValue(block, 'updated'),
+      guid: tagValue(block, 'id'),
+      source: '',
+      sourceUrl: '',
+      description: tagValue(block, 'summary') || tagValue(block, 'content'),
+    });
+  }
+  return items;
+}
+
+/**
+ * Read a feed whichever of the two shapes it is published in.
+ *
+ * A publisher's own feed is RSS about four times out of five and Atom the rest
+ * of the time, and which one it is is not something we get to choose. Reading
+ * only `<item>` would have dropped every Atom publisher silently - a feed with
+ * items would have looked like a feed with none.
+ */
+export function parseFeedItems(xml) {
+  const rss = parseRssItems(xml);
+  return rss.length ? rss : parseAtomEntries(xml);
+}
+
 /** Read every input element on an HTML page as name/value/type. */
 export function parseInputs(html) {
   const out = [];

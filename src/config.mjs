@@ -149,13 +149,36 @@ export const GEM = {
 };
 
 export const OPENINGS = {
-  // A news signal has to say something about demand before it is worth a model
+  // The lanes whose signals this stage upgrades. `news` is the Google News
+  // headline lane; `publishers` is the direct-feed lane, whose signals already
+  // carry the publisher's own article URL and therefore need no resolving.
+  signalSources: ['news', 'publishers'],
+  // A signal has to say something about demand before it is worth a model
   // call. These are matched against the headline.
   triggers:
     /\b(open(?:s|ed|ing)?|launch(?:es|ed|ing)?|expan(?:d|ds|ded|sion)|tender|canteen|mess|hostel|contract|supply|inaugurat)/i,
   maxPerRun: 12, // model extractions per run; each one is a paid call
   contactPathsTried: 4,
   licence: 'Google News RSS (headline + link only), then the organisation\'s own website',
+};
+
+// Direct publisher feeds - the openings lane's article supply.
+//
+// The news lane finds headlines through Google News, and Google's article links
+// are a path its own robots.txt refuses to everybody. A publisher's own feed has
+// neither problem: the item links at the publisher's own article page, which we
+// then read under that publisher's robots.txt like any other page.
+export const PUBLISHERS = {
+  registry: 'config/publisher-feeds.json',
+  probeFile: 'config/publisher-feeds.probe.json',
+  pauseMs: 3000, // 1 request per 3 s per host, enforced by the source
+  httpTimeoutMs: 30000,
+  maxBytes: 4 * 1024 * 1024, // a city desk's feed with full-text descriptions
+  maxPerFeed: 8, // matching items carried per feed per run
+  maxItemAgeDays: 45, // an item older than this is history, not a lead
+  concurrency: 6, // distinct hosts fetched at once; the per-host pause stands
+  licence:
+    "Each publisher's own RSS/Atom feed, fetched directly. The feed gives the headline, the link and the summary; the article itself is read from the publisher's own page under that publisher's robots.txt.",
 };
 
 export const REGISTRATIONS = {

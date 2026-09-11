@@ -27,12 +27,13 @@
   },
 
   "cities": {
-    "_note": "bbox = [south, west, north, east] in WGS84 degrees. agmarknetState must match the state name data.gov.in uses, not the one you would write.",
+    "_note": "bbox = [south, west, north, east] in WGS84 degrees. agmarknetState must match the state name data.gov.in uses, not the one you would write. aliases lists the other names the city is written under - a newspaper writes Bangalore as often as Bengaluru, and the publisher-feed lane matches every name listed here.",
     "bengaluru": {
       "name": "Bengaluru",
       "state": "Karnataka",
       "bbox": [12.85, 77.45, 13.1, 77.75],
-      "agmarknetState": "Karnataka"
+      "agmarknetState": "Karnataka",
+      "aliases": ["Bangalore"]
     },
     "chennai": {
       "name": "Chennai",

@@ -8,6 +8,12 @@ config/client.json
 
 # Local crawl results: what answered this machine, on the day it ran.
 config/*.probe.json
+# ...except the publisher-feed probe, which is committed on purpose. It is the
+# record of what 67 candidate feeds answered and why 30 were dropped, it carries
+# no personal contact and no key, and test/publishers.test.mjs reads it to check
+# that every live feed was kept by a probe and that every dropped one names a
+# reason. The institutional probe stays out: those pages carry named officers.
+!config/publisher-feeds.probe.json
 
 .env.local
 data/*.json

@@ -1,0 +1,2217 @@
+{
+  "_about": "One real probe of every candidate feed. kept=false means the feed did not answer, carried no items, carried no usable article link, or robots.txt refuses us the feed or the article path on this date - those entries were removed from config/publisher-feeds.json and this file is the record of why. One thing here is not the byte the probe wrote: the crawler identity. The probe ran under the reference deployment's own User-Agent and that string names a private business, so it has been rewritten here to this repository's default. It changes no verdict - every robots.txt in this file answered out of its `*` group, which is the group any identity would have matched. Note on one field: matchingItems was counted with the keyword filter as it stood when the probe ran, which was before the same-day proximity rule (NEAR in src/sources/publishers.mjs) was added; it is left exactly as recorded and is therefore an upper bound on what today filter would keep. Every other number here is a fact about the network on 2026-09-11.",
+  "probedAt": "2026-09-11T15:31:05.971Z",
+  "finishedAt": "2026-09-11T15:31:46.124Z",
+  "userAgent": "BuyerRadar/0.1 (radar@example.com)",
+  "articlesFetched": true,
+  "summary": {
+    "probed": 67,
+    "answered": 46,
+    "withItems": 38,
+    "articleAllowed": 38,
+    "articleRefused": 0,
+    "feedRefused": 1,
+    "kept": 37,
+    "dropped": 30,
+    "articlesFetched": 38,
+    "articlesNotFetched": 0,
+    "itemsSeen": 3643,
+    "matchingItemsSeen": 26
+  },
+  "crawler": {
+    "requests": 60,
+    "robots": 22,
+    "blockedByRobots": 0,
+    "pdfs": 0,
+    "html": 38,
+    "hosts": 22,
+    "urls": 38
+  },
+  "entries": [
+    {
+      "name": "The Hindu - Bengaluru",
+      "publisher": "The Hindu",
+      "url": "https://www.thehindu.com/news/cities/bangalore/feeder/default.rss",
+      "category": "city_desk",
+      "city": "Bengaluru",
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 48910,
+      "ms": 803,
+      "items": 60,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Bengaluru lake lights stay on till 9 p.m., driving birds away",
+        "url": "https://www.thehindu.com/news/cities/bangalore/bengaluru-lake-lights-stay-on-till-9-pm-driving-birds-away/article71456463.ece",
+        "host": "www.thehindu.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/news/cities/bangalore/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/news/cities/bangalore/bengaluru-lake-lights-stay-on-till-9-pm-driving-birds-away/article71456463.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 11126,
+        "url": "https://www.thehindu.com/news/cities/bangalore/bengaluru-lake-lights-stay-on-till-9-pm-driving-birds-away/article71456463.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Hindu - Chennai",
+      "publisher": "The Hindu",
+      "url": "https://www.thehindu.com/news/cities/chennai/feeder/default.rss",
+      "category": "city_desk",
+      "city": "Chennai",
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 45177,
+      "ms": 410,
+      "items": 60,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Artist Shipra Bhattacharya brings five decades of her work to Chennai\u2019s Lalit Kala Akademi",
+        "url": "https://www.thehindu.com/entertainment/art/artist-shipra-bhattacharya-brings-five-decades-of-her-work-to-chennais-lalit-kala-akademi/article71451137.ece",
+        "host": "www.thehindu.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/news/cities/chennai/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/entertainment/art/artist-shipra-bhattacharya-brings-five-decades-of-her-work-to-chennais-lalit-kala-akademi/article71451137.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 14181,
+        "url": "https://www.thehindu.com/entertainment/art/artist-shipra-bhattacharya-brings-five-decades-of-her-work-to-chennais-lalit-kala-akademi/article71451137.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Hindu - Mumbai",
+      "publisher": "The Hindu",
+      "url": "https://www.thehindu.com/news/cities/mumbai/feeder/default.rss",
+      "category": "city_desk",
+      "city": "Mumbai",
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 49406,
+      "ms": 943,
+      "items": 60,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Mule accounts: the money trail of cyber fraudsters",
+        "url": "https://www.thehindu.com/business/mule-accounts-the-money-trail-of-cyber-fraudsters/article71454867.ece",
+        "host": "www.thehindu.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/news/cities/mumbai/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/business/mule-accounts-the-money-trail-of-cyber-fraudsters/article71454867.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 16283,
+        "url": "https://www.thehindu.com/business/mule-accounts-the-money-trail-of-cyber-fraudsters/article71454867.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Hindu - Delhi",
+      "publisher": "The Hindu",
+      "url": "https://www.thehindu.com/news/cities/Delhi/feeder/default.rss",
+      "category": "city_desk",
+      "city": "Delhi",
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 48857,
+      "ms": 939,
+      "items": 60,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Delhi building collapse: Absconding PG operator Shubham Tyagi surrenders before court",
+        "url": "https://www.thehindu.com/news/cities/Delhi/delhi-building-collapse-absconding-pg-operator-shubham-tyagi-surrenders-before-court/article71455910.ece",
+        "host": "www.thehindu.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/news/cities/Delhi/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/news/cities/Delhi/delhi-building-collapse-absconding-pg-operator-shubham-tyagi-surrenders-before-court/article71455910.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 9599,
+        "url": "https://www.thehindu.com/news/cities/Delhi/delhi-building-collapse-absconding-pg-operator-shubham-tyagi-surrenders-before-court/article71455910.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Hindu - Hyderabad",
+      "publisher": "The Hindu",
+      "url": "https://www.thehindu.com/news/cities/Hyderabad/feeder/default.rss",
+      "category": "city_desk",
+      "city": "Hyderabad",
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 42445,
+      "ms": 932,
+      "items": 60,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Telangana DGP C.V. Anand urges officials to join hands in saving forest lands",
+        "url": "https://www.thehindu.com/news/national/telangana/telangana-dgp-cv-anand-urges-officials-to-join-hands-in-saving-forest-lands/article71456416.ece",
+        "host": "www.thehindu.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/news/cities/Hyderabad/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/news/national/telangana/telangana-dgp-cv-anand-urges-officials-to-join-hands-in-saving-forest-lands/article71456416.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 9212,
+        "url": "https://www.thehindu.com/news/national/telangana/telangana-dgp-cv-anand-urges-officials-to-join-hands-in-saving-forest-lands/article71456416.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Hindu - Business",
+      "publisher": "The Hindu",
+      "url": "https://www.thehindu.com/business/feeder/default.rss",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 47171,
+      "ms": 935,
+      "items": 60,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "IndusInd Bank slapped with \u20b91 cr penalty by IRDAI for corporate agent norms violation",
+        "url": "https://www.thehindu.com/business/Industry/indusind-bank-slapped-with-1-cr-penalty-by-irdai-for-corporate-agent-norms-violation/article71457200.ece",
+        "host": "www.thehindu.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/business/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindu.com",
+        "path": "/business/Industry/indusind-bank-slapped-with-1-cr-penalty-by-irdai-for-corporate-agent-norms-violation/article71457200.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 8996,
+        "url": "https://www.thehindu.com/business/Industry/indusind-bank-slapped-with-1-cr-penalty-by-irdai-for-corporate-agent-norms-violation/article71457200.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Hindu BusinessLine - Agri Business",
+      "publisher": "The Hindu BusinessLine",
+      "url": "https://www.thehindubusinessline.com/economy/agri-business/feeder/default.rss",
+      "category": "agri_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 51144,
+      "ms": 910,
+      "items": 60,
+      "matchingItems": 1,
+      "firstItem": {
+        "title": "Govt may allow private investment in veterniary education",
+        "url": "https://www.thehindubusinessline.com/economy/agri-business/govt-may-allow-private-investment-in-veterniary-education/article71457094.ece",
+        "host": "www.thehindubusinessline.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindubusinessline.com",
+        "path": "/economy/agri-business/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindubusinessline.com",
+        "path": "/economy/agri-business/govt-may-allow-private-investment-in-veterniary-education/article71457094.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 9837,
+        "url": "https://www.thehindubusinessline.com/economy/agri-business/govt-may-allow-private-investment-in-veterniary-education/article71457094.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Hindu BusinessLine - Companies",
+      "publisher": "The Hindu BusinessLine",
+      "url": "https://www.thehindubusinessline.com/companies/feeder/default.rss",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 50333,
+      "ms": 62,
+      "items": 60,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "SC seeks FSSAI clarity on front-of-pack warning label implementation",
+        "url": "https://www.thehindubusinessline.com/companies/sc-seeks-fssai-clarity-on-front-of-pack-warning-label-implementation/article71455028.ece",
+        "host": "www.thehindubusinessline.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindubusinessline.com",
+        "path": "/companies/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindubusinessline.com",
+        "path": "/companies/sc-seeks-fssai-clarity-on-front-of-pack-warning-label-implementation/article71455028.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 10665,
+        "url": "https://www.thehindubusinessline.com/companies/sc-seeks-fssai-clarity-on-front-of-pack-warning-label-implementation/article71455028.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Hindu BusinessLine - Economy",
+      "publisher": "The Hindu BusinessLine",
+      "url": "https://www.thehindubusinessline.com/economy/feeder/default.rss",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 49107,
+      "ms": 51,
+      "items": 60,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "BRICS Summit 2026: In photos",
+        "url": "https://www.thehindubusinessline.com/economy/brics-summit-2026-in-photos/article71457245.ece",
+        "host": "www.thehindubusinessline.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.thehindubusinessline.com",
+        "path": "/economy/feeder/default.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.thehindubusinessline.com",
+        "path": "/economy/brics-summit-2026-in-photos/article71457245.ece",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 9703,
+        "url": "https://www.thehindubusinessline.com/economy/brics-summit-2026-in-photos/article71457245.ece"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Times of India - Bangalore",
+      "publisher": "The Times of India",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/-2128833038.cms",
+      "category": "city_desk",
+      "city": "Bengaluru",
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 23233,
+      "ms": 512,
+      "items": 20,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "HC awards increases compensation amount by five fold to deceased homemaker\u2019s family",
+        "url": "https://timesofindia.indiatimes.com/city/bengaluru/hc-awards-increases-compensation-amount-by-five-fold-to-deceased-homemakers-family/articleshow/134072725.cms",
+        "host": "timesofindia.indiatimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/rssfeeds/-2128833038.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/city/bengaluru/hc-awards-increases-compensation-amount-by-five-fold-to-deceased-homemakers-family/articleshow/134072725.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 14392,
+        "url": "https://timesofindia.indiatimes.com/city/bengaluru/hc-awards-increases-compensation-amount-by-five-fold-to-deceased-homemakers-family/articleshow/134072725.cms"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Times of India - Chennai",
+      "publisher": "The Times of India",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/-2950623.cms",
+      "category": "city_desk",
+      "city": "Chennai",
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 1116,
+      "ms": 259,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 200 but the body carries no RSS <item> and no Atom <entry>"
+    },
+    {
+      "name": "The Times of India - Mumbai",
+      "publisher": "The Times of India",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/-2128838597.cms",
+      "category": "city_desk",
+      "city": "Mumbai",
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 27855,
+      "ms": 133,
+      "items": 20,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "IMD Issues Yellow Alert for Mumbai With Rain Forecast on September 12-13",
+        "url": "https://timesofindia.indiatimes.com/city/mumbai/imd-issues-yellow-alert-for-mumbai-with-rain-forecast-on-september-12-13/articleshow/134075586.cms",
+        "host": "timesofindia.indiatimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/rssfeeds/-2128838597.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/city/mumbai/imd-issues-yellow-alert-for-mumbai-with-rain-forecast-on-september-12-13/articleshow/134075586.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 13245,
+        "url": "https://timesofindia.indiatimes.com/city/mumbai/imd-issues-yellow-alert-for-mumbai-with-rain-forecast-on-september-12-13/articleshow/134075586.cms"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Times of India - Delhi",
+      "publisher": "The Times of India",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/-2128839596.cms",
+      "category": "city_desk",
+      "city": "Delhi",
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 30426,
+      "ms": 110,
+      "items": 20,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "\u2018Pulled our hair, sarees\u2019: BRS leaders allege police assault, seek NCW, NHRC intervention",
+        "url": "https://timesofindia.indiatimes.com/city/delhi/pulled-our-hair-sarees-brs-leaders-allege-police-assault-seek-ncw-nhrc-intervention/articleshow/134073740.cms",
+        "host": "timesofindia.indiatimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/rssfeeds/-2128839596.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/city/delhi/pulled-our-hair-sarees-brs-leaders-allege-police-assault-seek-ncw-nhrc-intervention/articleshow/134073740.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 17949,
+        "url": "https://timesofindia.indiatimes.com/city/delhi/pulled-our-hair-sarees-brs-leaders-allege-police-assault-seek-ncw-nhrc-intervention/articleshow/134073740.cms"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Times of India - Hyderabad",
+      "publisher": "The Times of India",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/-2128816011.cms",
+      "category": "city_desk",
+      "city": "Hyderabad",
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 20069,
+      "ms": 120,
+      "items": 20,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Armoury heist: How ex-Havildar\u2019s grudge over termination led to weapon theft using motorcycle",
+        "url": "https://timesofindia.indiatimes.com/city/hyderabad/armoury-heist-how-ex-havildars-grudge-over-termination-led-to-weapon-theft-using-motorcycle/articleshow/134070737.cms",
+        "host": "timesofindia.indiatimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/rssfeeds/-2128816011.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/city/hyderabad/armoury-heist-how-ex-havildars-grudge-over-termination-led-to-weapon-theft-using-motorcycle/articleshow/134070737.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 15675,
+        "url": "https://timesofindia.indiatimes.com/city/hyderabad/armoury-heist-how-ex-havildars-grudge-over-termination-led-to-weapon-theft-using-motorcycle/articleshow/134070737.cms"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Times of India - Business",
+      "publisher": "The Times of India",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/1898055.cms",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 24864,
+      "ms": 63,
+      "items": 20,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "In 2010, India launched Aadhaar Card; 16 years later UIDAI says work underway to take Aadhaar global",
+        "url": "https://timesofindia.indiatimes.com/business/india-business/in-2010-india-launched-aadhaar-card-16-years-later-uidai-says-work-underway-to-take-aadhaar-global-to-benefit-nris-and-ocis/articleshow/134061418.cms",
+        "host": "timesofindia.indiatimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/rssfeeds/1898055.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://timesofindia.indiatimes.com",
+        "path": "/business/india-business/in-2010-india-launched-aadhaar-card-16-years-later-uidai-says-work-underway-to-take-aadhaar-global-to-benefit-nris-and-ocis/articleshow/134061418.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 17552,
+        "url": "https://timesofindia.indiatimes.com/business/india-business/in-2010-india-launched-aadhaar-card-16-years-later-uidai-says-work-underway-to-take-aadhaar-global-to-benefit-nris-and-ocis/articleshow/134061418.cms"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Indian Express - Bangalore",
+      "publisher": "The Indian Express",
+      "url": "https://indianexpress.com/section/cities/bangalore/feed/",
+      "category": "city_desk",
+      "city": "Bengaluru",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 208402,
+      "ms": 253,
+      "items": 200,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Drinking water poured into Dalit customer\u2019s cupped hands, Karnataka hotel owner booked",
+        "url": "https://indianexpress.com/article/cities/bangalore/drinking-water-poured-into-dalit-customers-cupped-hands-karnataka-hotel-owner-booked-10874135/",
+        "host": "indianexpress.com"
+      },
+      "feedRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/section/cities/bangalore/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/article/cities/bangalore/drinking-water-poured-into-dalit-customers-cupped-hands-karnataka-hotel-owner-booked-10874135/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 8555,
+        "url": "https://indianexpress.com/article/cities/bangalore/drinking-water-poured-into-dalit-customers-cupped-hands-karnataka-hotel-owner-booked-10874135/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Indian Express - Chennai",
+      "publisher": "The Indian Express",
+      "url": "https://indianexpress.com/section/cities/chennai/feed/",
+      "category": "city_desk",
+      "city": "Chennai",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 206515,
+      "ms": 226,
+      "items": 200,
+      "matchingItems": 1,
+      "firstItem": {
+        "title": "\u2018Girlfriend gives 0% interest, our FD gives 14.4%\u2019: Chennai Metro ad sparks political row",
+        "url": "https://indianexpress.com/article/cities/chennai/chennai-metro-ad-controversy-thamizachi-thangapandian-women-10866654/",
+        "host": "indianexpress.com"
+      },
+      "feedRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/section/cities/chennai/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/article/cities/chennai/chennai-metro-ad-controversy-thamizachi-thangapandian-women-10866654/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 9171,
+        "url": "https://indianexpress.com/article/cities/chennai/chennai-metro-ad-controversy-thamizachi-thangapandian-women-10866654/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Indian Express - Mumbai",
+      "publisher": "The Indian Express",
+      "url": "https://indianexpress.com/section/cities/mumbai/feed/",
+      "category": "city_desk",
+      "city": "Mumbai",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 233865,
+      "ms": 138,
+      "items": 200,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "She declared him \u2018dead\u2019 and sold his flat. A year later, he filed a complaint",
+        "url": "https://indianexpress.com/article/cities/mumbai/mumbai-woman-kills-husband-on-paper-sell-jointly-owned-flat-10873371/",
+        "host": "indianexpress.com"
+      },
+      "feedRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/section/cities/mumbai/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/article/cities/mumbai/mumbai-woman-kills-husband-on-paper-sell-jointly-owned-flat-10873371/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 9119,
+        "url": "https://indianexpress.com/article/cities/mumbai/mumbai-woman-kills-husband-on-paper-sell-jointly-owned-flat-10873371/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Indian Express - Delhi",
+      "publisher": "The Indian Express",
+      "url": "https://indianexpress.com/section/cities/delhi/feed/",
+      "category": "city_desk",
+      "city": "Delhi",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 235329,
+      "ms": 232,
+      "items": 200,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Drive against illegal constructions: MCD seals 54 jewellery stores in Chandni Chowk",
+        "url": "https://indianexpress.com/article/cities/delhi/drive-against-illegal-constructions-mcd-seals-54-jewellery-stores-in-chandni-chowk-10874129/",
+        "host": "indianexpress.com"
+      },
+      "feedRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/section/cities/delhi/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/article/cities/delhi/drive-against-illegal-constructions-mcd-seals-54-jewellery-stores-in-chandni-chowk-10874129/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 11248,
+        "url": "https://indianexpress.com/article/cities/delhi/drive-against-illegal-constructions-mcd-seals-54-jewellery-stores-in-chandni-chowk-10874129/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Indian Express - Hyderabad",
+      "publisher": "The Indian Express",
+      "url": "https://indianexpress.com/section/cities/hyderabad/feed/",
+      "category": "city_desk",
+      "city": "Hyderabad",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 212429,
+      "ms": 219,
+      "items": 200,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "They wanted more holidays. So they tried to kill a classmate",
+        "url": "https://indianexpress.com/article/cities/hyderabad/andhra-pradesh-school-classmate-murder-attempt-annamayya-district-holidays-10871313/",
+        "host": "indianexpress.com"
+      },
+      "feedRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/section/cities/hyderabad/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/article/cities/hyderabad/andhra-pradesh-school-classmate-murder-attempt-annamayya-district-holidays-10871313/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 10989,
+        "url": "https://indianexpress.com/article/cities/hyderabad/andhra-pradesh-school-classmate-murder-attempt-annamayya-district-holidays-10871313/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Indian Express - Business",
+      "publisher": "The Indian Express",
+      "url": "https://indianexpress.com/section/business/feed/",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 203166,
+      "ms": 228,
+      "items": 200,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "BRICS finance ministers, central bank chiefs flag concerns on unilateral tariffs",
+        "url": "https://indianexpress.com/article/business/brics-finance-ministers-central-bank-chiefs-flag-concerns-on-unilateral-tariffs-10874093/",
+        "host": "indianexpress.com"
+      },
+      "feedRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/section/business/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://indianexpress.com",
+        "path": "/article/business/brics-finance-ministers-central-bank-chiefs-flag-concerns-on-unilateral-tariffs-10874093/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 12413,
+        "url": "https://indianexpress.com/article/business/brics-finance-ministers-central-bank-chiefs-flag-concerns-on-unilateral-tariffs-10874093/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Financial Express - Industry",
+      "publisher": "The Financial Express",
+      "url": "https://www.financialexpress.com/business/industry/feed/",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 955032,
+      "ms": 612,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 200 but the body carries no RSS <item> and no Atom <entry>"
+    },
+    {
+      "name": "The Financial Express - Latest",
+      "publisher": "The Financial Express",
+      "url": "https://www.financialexpress.com/feed/",
+      "category": "business",
+      "city": null,
+      "status": 410,
+      "contentType": "text/xml; charset=utf-8",
+      "bytes": null,
+      "ms": 938,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 410"
+    },
+    {
+      "name": "Hindustan Times - Cities",
+      "publisher": "Hindustan Times",
+      "url": "https://www.hindustantimes.com/feeds/rss/cities/rssfeed.xml",
+      "category": "city_desk",
+      "city": null,
+      "status": 200,
+      "contentType": "application/xml;charset=utf-8",
+      "bytes": 100888,
+      "ms": 265,
+      "items": 100,
+      "matchingItems": 2,
+      "firstItem": {
+        "title": "HC seeks UP govt\u2019s reply on plea against Saharanpur mosque demolition",
+        "url": "https://www.hindustantimes.com/cities/lucknow-news/hc-seeks-up-govt-s-reply-on-plea-against-saharanpur-mosque-demolition-101789139532910.html",
+        "host": "www.hindustantimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.hindustantimes.com",
+        "path": "/feeds/rss/cities/rssfeed.xml",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.hindustantimes.com",
+        "path": "/cities/lucknow-news/hc-seeks-up-govt-s-reply-on-plea-against-saharanpur-mosque-demolition-101789139532910.html",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 10158,
+        "url": "https://www.hindustantimes.com/cities/lucknow-news/hc-seeks-up-govt-s-reply-on-plea-against-saharanpur-mosque-demolition-101789139532910.html"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Hindustan Times - Business",
+      "publisher": "Hindustan Times",
+      "url": "https://www.hindustantimes.com/feeds/rss/business/rssfeed.xml",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "application/xml;charset=utf-8",
+      "bytes": 24348,
+      "ms": 95,
+      "items": 23,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Crude oil jump, Iran war, Houthi attacks: Why the stock market plunged before recovery today",
+        "url": "https://www.hindustantimes.com/business/crude-oil-jump-iran-war-houthi-attacks-why-the-stock-market-plunged-before-recovery-today-bse-sensex-nse-nifty-101789115033796.html",
+        "host": "www.hindustantimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.hindustantimes.com",
+        "path": "/feeds/rss/business/rssfeed.xml",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.hindustantimes.com",
+        "path": "/business/crude-oil-jump-iran-war-houthi-attacks-why-the-stock-market-plunged-before-recovery-today-bse-sensex-nse-nifty-101789115033796.html",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 12552,
+        "url": "https://www.hindustantimes.com/business/crude-oil-jump-iran-war-houthi-attacks-why-the-stock-market-plunged-before-recovery-today-bse-sensex-nse-nifty-101789115033796.html"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Deccan Herald - Bengaluru",
+      "publisher": "Deccan Herald",
+      "url": "https://www.deccanherald.com/rss/bengaluru.rss",
+      "category": "city_desk",
+      "city": "Bengaluru",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": null,
+      "ms": 436,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 404"
+    },
+    {
+      "name": "Deccan Herald - Business",
+      "publisher": "Deccan Herald",
+      "url": "https://www.deccanherald.com/rss/business.rss",
+      "category": "business",
+      "city": null,
+      "status": 500,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": null,
+      "ms": 377,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 500"
+    },
+    {
+      "name": "The New Indian Express - Latest",
+      "publisher": "The New Indian Express",
+      "url": "https://www.newindianexpress.com/rss",
+      "category": "city_desk",
+      "city": null,
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": null,
+      "ms": 297,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 404"
+    },
+    {
+      "name": "Telangana Today",
+      "publisher": "Telangana Today",
+      "url": "https://telanganatoday.com/feed",
+      "category": "city_desk",
+      "city": "Hyderabad",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 1899630,
+      "ms": 352,
+      "items": 500,
+      "matchingItems": 3,
+      "firstItem": {
+        "title": "Bumrah returns to nets, tests Sooryavanshi with probing deliveries",
+        "url": "https://telanganatoday.com/bumrah-returns-to-nets-tests-sooryavanshi-with-probing-deliveries",
+        "host": "telanganatoday.com"
+      },
+      "feedRobots": {
+        "origin": "https://telanganatoday.com",
+        "path": "/feed",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://telanganatoday.com",
+        "path": "/bumrah-returns-to-nets-tests-sooryavanshi-with-probing-deliveries",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 4304,
+        "url": "https://telanganatoday.com/bumrah-returns-to-nets-tests-sooryavanshi-with-probing-deliveries"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "The Free Press Journal",
+      "publisher": "The Free Press Journal",
+      "url": "https://www.freepressjournal.in/stories.rss",
+      "category": "city_desk",
+      "city": "Mumbai",
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 941722,
+      "ms": 199,
+      "items": 151,
+      "matchingItems": 2,
+      "firstItem": {
+        "title": "Disha Salian Death Case: Father Satish Salian Records Statement At CBI Office In Mumbai",
+        "url": "https://www.freepressjournal.in/mumbai/disha-salian-death-case-father-satish-salian-records-statement-at-cbi-office-in-mumbai",
+        "host": "www.freepressjournal.in"
+      },
+      "feedRobots": {
+        "origin": "https://www.freepressjournal.in",
+        "path": "/stories.rss",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.freepressjournal.in",
+        "path": "/mumbai/disha-salian-death-case-father-satish-salian-records-statement-at-cbi-office-in-mumbai",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 3883,
+        "url": "https://www.freepressjournal.in/mumbai/disha-salian-death-case-father-satish-salian-records-statement-at-cbi-office-in-mumbai"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Mid-Day - Mumbai",
+      "publisher": "Mid-Day",
+      "url": "https://www.mid-day.com/rss/mumbai",
+      "category": "city_desk",
+      "city": "Mumbai",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": null,
+      "ms": 687,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 404"
+    },
+    {
+      "name": "Deccan Chronicle",
+      "publisher": "Deccan Chronicle",
+      "url": "https://www.deccanchronicle.com/rss_feed/",
+      "category": "city_desk",
+      "city": "Hyderabad",
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 438177,
+      "ms": 937,
+      "items": 580,
+      "matchingItems": 2,
+      "firstItem": {
+        "title": "Assembly Adopts Resolution Urging Centre To Include BC/OBC in National Census",
+        "url": "https://www.deccanchronicle.com/southern-states/telangana/assembly-adopts-resolution-urging-centre-to-include-bcobc-in-national-census-1986760",
+        "host": "www.deccanchronicle.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.deccanchronicle.com",
+        "path": "/rss_feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.deccanchronicle.com",
+        "path": "/southern-states/telangana/assembly-adopts-resolution-urging-centre-to-include-bcobc-in-national-census-1986760",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 3874,
+        "url": "https://www.deccanchronicle.com/southern-states/telangana/assembly-adopts-resolution-urging-centre-to-include-bcobc-in-national-census-1986760"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Mint - Industry",
+      "publisher": "Mint",
+      "url": "https://www.livemint.com/rss/industry",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "application/xml;charset=utf-8",
+      "bytes": 38836,
+      "ms": 307,
+      "items": 35,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Dollar deluge prompts \u20b91 trillion OMO; enough liquidity tools, says RBI governor",
+        "url": "https://www.livemint.com/industry/banking/dollar-deluge-prompts-1-trillion-omo-enough-liquidity-tools-says-rbi-governor-11789135583514.html",
+        "host": "www.livemint.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.livemint.com",
+        "path": "/rss/industry",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.livemint.com",
+        "path": "/industry/banking/dollar-deluge-prompts-1-trillion-omo-enough-liquidity-tools-says-rbi-governor-11789135583514.html",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 13331,
+        "url": "https://www.livemint.com/industry/banking/dollar-deluge-prompts-1-trillion-omo-enough-liquidity-tools-says-rbi-governor-11789135583514.html"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Mint - Companies",
+      "publisher": "Mint",
+      "url": "https://www.livemint.com/rss/companies",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "application/xml;charset=utf-8",
+      "bytes": 37530,
+      "ms": 146,
+      "items": 35,
+      "matchingItems": 2,
+      "firstItem": {
+        "title": "Meta\u2019s Muse $20 vs $100 AI plans: How much revenue can its paid AI agent really generate?",
+        "url": "https://www.livemint.com/companies/news/metas-muse-20-vs-100-ai-plans-how-much-revenue-can-its-paid-ai-agent-really-generate-11789130248665.html",
+        "host": "www.livemint.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.livemint.com",
+        "path": "/rss/companies",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.livemint.com",
+        "path": "/companies/news/metas-muse-20-vs-100-ai-plans-how-much-revenue-can-its-paid-ai-agent-really-generate-11789130248665.html",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 10683,
+        "url": "https://www.livemint.com/companies/news/metas-muse-20-vs-100-ai-plans-how-much-revenue-can-its-paid-ai-agent-really-generate-11789130248665.html"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Business Standard - Economy",
+      "publisher": "Business Standard",
+      "url": "https://www.business-standard.com/rss/economy-102.rss",
+      "category": "business",
+      "city": null,
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 160,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    },
+    {
+      "name": "Business Standard - Companies",
+      "publisher": "Business Standard",
+      "url": "https://www.business-standard.com/rss/companies-101.rss",
+      "category": "business",
+      "city": null,
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 112,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    },
+    {
+      "name": "Moneycontrol - Business",
+      "publisher": "Moneycontrol",
+      "url": "https://www.moneycontrol.com/rss/business.xml",
+      "category": "business",
+      "city": null,
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 298,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    },
+    {
+      "name": "The Economic Times - Food and Consumer Products",
+      "publisher": "The Economic Times",
+      "url": "https://economictimes.indiatimes.com/industry/cons-products/food/rssfeeds/13358050.cms",
+      "category": "agri_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 56700,
+      "ms": 524,
+      "items": 50,
+      "matchingItems": 3,
+      "firstItem": {
+        "title": "Alembic Pharma clears USFDA inspection at Vadodara bioequivalence facility with nil observations",
+        "url": "https://economictimes.indiatimes.com/industry/healthcare/biotech/pharmaceuticals/alembic-pharma-clears-usfda-inspection-at-vadodara-bioequivalence-facility-with-nil-observations/articleshow/134056005.cms",
+        "host": "economictimes.indiatimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://economictimes.indiatimes.com",
+        "path": "/industry/cons-products/food/rssfeeds/13358050.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://economictimes.indiatimes.com",
+        "path": "/industry/healthcare/biotech/pharmaceuticals/alembic-pharma-clears-usfda-inspection-at-vadodara-bioequivalence-facility-with-nil-observations/articleshow/134056005.cms",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 14636,
+        "url": "https://economictimes.indiatimes.com/industry/healthcare/biotech/pharmaceuticals/alembic-pharma-clears-usfda-inspection-at-vadodara-bioequivalence-facility-with-nil-observations/articleshow/134056005.cms"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "ET HospitalityWorld",
+      "publisher": "The Economic Times",
+      "url": "https://hospitality.economictimes.indiatimes.com/rss/topstories",
+      "category": "hospitality_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 11354,
+      "ms": 931,
+      "items": 10,
+      "matchingItems": 1,
+      "firstItem": {
+        "title": "New Porvorim flyover cuts Goa travel time, boosting tourism, logistics and hospitality growth prospects",
+        "url": "https://hospitality.economictimes.indiatimes.com/news/travel/new-porvorim-flyover-cuts-goa-travel-time-boosting-tourism-logistics-and-hospitality-growth-prospects/134044784",
+        "host": "hospitality.economictimes.indiatimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://hospitality.economictimes.indiatimes.com",
+        "path": "/rss/topstories",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://hospitality.economictimes.indiatimes.com",
+        "path": "/news/travel/new-porvorim-flyover-cuts-goa-travel-time-boosting-tourism-logistics-and-hospitality-growth-prospects/134044784",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 7624,
+        "url": "https://hospitality.economictimes.indiatimes.com/news/travel/new-porvorim-flyover-cuts-goa-travel-time-boosting-tourism-logistics-and-hospitality-growth-prospects/134044784"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "ET Retail",
+      "publisher": "The Economic Times",
+      "url": "https://retail.economictimes.indiatimes.com/rss/topstories",
+      "category": "hospitality_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "text/xml;charset=utf-8",
+      "bytes": 12145,
+      "ms": 405,
+      "items": 10,
+      "matchingItems": 1,
+      "firstItem": {
+        "title": "Tukaram Mundhe-led Maharashtra FDA raids 11 food units in Thane, seizes Rs 20.48 lakh material",
+        "url": "https://retail.economictimes.indiatimes.com/news/food-entertainment/food-services/tukaram-mundhe-led-maharashtra-fda-raids-11-food-units-in-thane-seizes-rs-20-48-lakh-material/134049587",
+        "host": "retail.economictimes.indiatimes.com"
+      },
+      "feedRobots": {
+        "origin": "https://retail.economictimes.indiatimes.com",
+        "path": "/rss/topstories",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://retail.economictimes.indiatimes.com",
+        "path": "/news/food-entertainment/food-services/tukaram-mundhe-led-maharashtra-fda-raids-11-food-units-in-thane-seizes-rs-20-48-lakh-material/134049587",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 6653,
+        "url": "https://retail.economictimes.indiatimes.com/news/food-entertainment/food-services/tukaram-mundhe-led-maharashtra-fda-raids-11-food-units-in-thane-seizes-rs-20-48-lakh-material/134049587"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Hotelier India",
+      "publisher": "Hotelier India",
+      "url": "https://www.hotelierindia.com/rss/news",
+      "category": "hospitality_trade",
+      "city": null,
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 305,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    },
+    {
+      "name": "Hospitality Biz India",
+      "publisher": "Hospitality Biz India",
+      "url": "https://hospitalitybizindia.com/feed/",
+      "category": "hospitality_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 47408,
+      "ms": 796,
+      "items": 10,
+      "matchingItems": 1,
+      "firstItem": {
+        "title": "Campari Group launches Espol\u00f2n Tequila in India",
+        "url": "https://hospitalitybizindia.com/news-track/campari-group-launches-espolon-tequila-in-india/",
+        "host": "hospitalitybizindia.com"
+      },
+      "feedRobots": {
+        "origin": "https://hospitalitybizindia.com",
+        "path": "/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://hospitalitybizindia.com",
+        "path": "/news-track/campari-group-launches-espolon-tequila-in-india/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 13979,
+        "url": "https://hospitalitybizindia.com/news-track/campari-group-launches-espolon-tequila-in-india/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Express Hospitality",
+      "publisher": "The Indian Express Group",
+      "url": "https://www.expresshospitality.com/feed/",
+      "category": "hospitality_trade",
+      "city": null,
+      "status": null,
+      "contentType": null,
+      "bytes": null,
+      "ms": 649,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "TypeError: fetch failed"
+    },
+    {
+      "name": "Restaurant India",
+      "publisher": "Restaurant India",
+      "url": "https://www.restaurantindia.in/feed",
+      "category": "hospitality_trade",
+      "city": null,
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": null,
+      "ms": 939,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 404"
+    },
+    {
+      "name": "FnB News",
+      "publisher": "FnB News",
+      "url": "https://www.fnbnews.com/feed",
+      "category": "agri_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 41044,
+      "ms": 2522,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 200 but the body carries no RSS <item> and no Atom <entry>"
+    },
+    {
+      "name": "BW Hotelier",
+      "publisher": "BW Businessworld",
+      "url": "https://bwhotelier.businessworld.in/rss",
+      "category": "hospitality_trade",
+      "city": null,
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 558,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    },
+    {
+      "name": "TravelBiz Monitor",
+      "publisher": "TravelBiz Monitor",
+      "url": "https://www.travelbizmonitor.com/feed",
+      "category": "hospitality_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 57026,
+      "ms": 3161,
+      "items": 10,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "Mauritius sees Indian arrivals grow by 14.5% in H1, 2026",
+        "url": "https://travelbizmonitor.com/top-stories/mauritius-sees-indian-arrivals-grow-by-14-5-in-h1-2026/",
+        "host": "travelbizmonitor.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.travelbizmonitor.com",
+        "path": "/feed",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://travelbizmonitor.com",
+        "path": "/top-stories/mauritius-sees-indian-arrivals-grow-by-14-5-in-h1-2026/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 12619,
+        "url": "https://travelbizmonitor.com/top-stories/mauritius-sees-indian-arrivals-grow-by-14-5-in-h1-2026/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Down To Earth - Agriculture",
+      "publisher": "Down To Earth",
+      "url": "https://www.downtoearth.org.in/rss/agriculture",
+      "category": "agri_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 952807,
+      "ms": 462,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 200 but the body carries no RSS <item> and no Atom <entry>"
+    },
+    {
+      "name": "Krishi Jagran",
+      "publisher": "Krishi Jagran",
+      "url": "https://krishijagran.com/rss/",
+      "category": "agri_trade",
+      "city": null,
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": null,
+      "ms": 895,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 404"
+    },
+    {
+      "name": "Agriculture Post",
+      "publisher": "Agriculture Post",
+      "url": "https://www.agriculturepost.com/feed/",
+      "category": "agri_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "application/rss+xml",
+      "bytes": 19351,
+      "ms": 3625,
+      "items": 10,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "CWC Pushes Single-Window Agri-Export Logistics from Farm Gate to Global Markets",
+        "url": "https://agriculturepost.com/agribusiness/cwc-pushes-single-window-agri-export-logistics-from-farm-gate-to-global-markets/",
+        "host": "agriculturepost.com"
+      },
+      "feedRobots": {
+        "origin": "https://www.agriculturepost.com",
+        "path": "/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://agriculturepost.com",
+        "path": "/agribusiness/cwc-pushes-single-window-agri-export-logistics-from-farm-gate-to-global-markets/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 9469,
+        "url": "https://agriculturepost.com/agribusiness/cwc-pushes-single-window-agri-export-logistics-from-farm-gate-to-global-markets/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "AgroSpectrum India",
+      "publisher": "AgroSpectrum",
+      "url": "https://agrospectrumindia.com/feed/",
+      "category": "agri_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "text/xml; charset=utf-8",
+      "bytes": 1550536,
+      "ms": 3860,
+      "items": 237,
+      "matchingItems": 3,
+      "firstItem": {
+        "title": "PI Industries launches CARVINT as it sharpens pest-control portfolio for chilli and cole crops",
+        "url": "https://agrospectrumindia.com/news/24/34790/pi-industries-launches-carvint-as-it-sharpens-pest-control-portfolio-for-chilli-and-cole-crops.html",
+        "host": "agrospectrumindia.com"
+      },
+      "feedRobots": {
+        "origin": "https://agrospectrumindia.com",
+        "path": "/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://agrospectrumindia.com",
+        "path": "/news/24/34790/pi-industries-launches-carvint-as-it-sharpens-pest-control-portfolio-for-chilli-and-cole-crops.html",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 8207,
+        "url": "https://agrospectrumindia.com/news/24/34790/pi-industries-launches-carvint-as-it-sharpens-pest-control-portfolio-for-chilli-and-cole-crops.html"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Krishak Jagat",
+      "publisher": "Krishak Jagat",
+      "url": "https://www.krishakjagat.org/feed/",
+      "category": "agri_trade",
+      "city": null,
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 143357,
+      "ms": 1825,
+      "items": 10,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "\u0917\u0941\u091c\u0930\u093e\u0924 \u092e\u0947\u0902 \u0906\u091c \u0938\u0947 \u092e\u0942\u0902\u0917\u092b\u0932\u0940, \u092e\u0942\u0902\u0917, \u0909\u0921\u093c\u0926 \u0914\u0930 \u0938\u094b\u092f\u093e\u092c\u0940\u0928 \u0915\u0940 MSP \u0916\u0930\u0940\u0926 \u0915\u0947 \u0932\u093f\u090f \u092a\u0902\u091c\u0940\u092f\u0928 \u0936\u0941\u0930\u0942",
+        "url": "https://www.krishakjagat.org/news/registration-for-msp-based-procurement-of-groundnut-moong-urad-and-soybean-begins-in-gujarat-today/",
+        "host": "www.krishakjagat.org"
+      },
+      "feedRobots": {
+        "origin": "https://www.krishakjagat.org",
+        "path": "/feed/",
+        "allowed": false,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.krishakjagat.org",
+        "path": "/news/registration-for-msp-based-procurement-of-groundnut-moong-urad-and-soybean-begins-in-gujarat-today/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 8095,
+        "url": "https://www.krishakjagat.org/news/registration-for-msp-based-procurement-of-groundnut-moong-urad-and-soybean-begins-in-gujarat-today/"
+      },
+      "kept": false,
+      "reason": "robots.txt disallows the feed path /feed/ for buyerradar"
+    },
+    {
+      "name": "Rural Voice",
+      "publisher": "Rural Voice",
+      "url": "https://ruralvoice.in/feed",
+      "category": "agri_trade",
+      "city": null,
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": null,
+      "ms": 1355,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 404"
+    },
+    {
+      "name": "The Print",
+      "publisher": "The Print",
+      "url": "https://theprint.in/feed/",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 1853,
+      "ms": 289,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 200 but the body carries no RSS <item> and no Atom <entry>"
+    },
+    {
+      "name": "Scroll.in",
+      "publisher": "Scroll.in",
+      "url": "https://scroll.in/feed",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 115011,
+      "ms": 1580,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 200 but the body carries no RSS <item> and no Atom <entry>"
+    },
+    {
+      "name": "The Wire",
+      "publisher": "The Wire",
+      "url": "https://thewire.in/rss",
+      "category": "business",
+      "city": null,
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 11192,
+      "ms": 405,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 200 but the body carries no RSS <item> and no Atom <entry>"
+    },
+    {
+      "name": "Tender News",
+      "publisher": "Tender News",
+      "url": "https://www.tendernews.com/rss",
+      "category": "tender",
+      "city": null,
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 1531,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    },
+    {
+      "name": "Indian Institute of Science",
+      "publisher": "Indian Institute of Science, Bengaluru",
+      "url": "https://iisc.ac.in/feed/",
+      "category": "institution",
+      "city": "Bengaluru",
+      "status": 404,
+      "contentType": "text/xml; charset=utf-8",
+      "bytes": null,
+      "ms": 1937,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 404"
+    },
+    {
+      "name": "IIT Hyderabad",
+      "publisher": "Indian Institute of Technology Hyderabad",
+      "url": "https://www.iith.ac.in/feed/",
+      "category": "institution",
+      "city": "Hyderabad",
+      "status": 404,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 574,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 404"
+    },
+    {
+      "name": "IIIT Hyderabad",
+      "publisher": "International Institute of Information Technology Hyderabad",
+      "url": "https://www.iiit.ac.in/feed/",
+      "category": "institution",
+      "city": "Hyderabad",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 70955,
+      "ms": 1968,
+      "items": 10,
+      "matchingItems": 3,
+      "firstItem": {
+        "title": "A research paper titled \u201cVRSpecML: A Profile for Realizing Domain-Specific Virtual Reality Systems,\u201d co-authored by Bavya Sri and Sai Anirudh Karre, with colla\u2026",
+        "url": "https://www.iiit.ac.in/vrspecml/",
+        "host": "www.iiit.ac.in"
+      },
+      "feedRobots": {
+        "origin": "https://www.iiit.ac.in",
+        "path": "/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.iiit.ac.in",
+        "path": "/vrspecml/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 3438,
+        "url": "https://www.iiit.ac.in/vrspecml/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "University of Hyderabad",
+      "publisher": "University of Hyderabad",
+      "url": "https://uohyd.ac.in/feed/",
+      "category": "institution",
+      "city": "Hyderabad",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 38766,
+      "ms": 1518,
+      "items": 10,
+      "matchingItems": 1,
+      "firstItem": {
+        "title": "Internet for Social Good: A Multi-stakeholder Understanding",
+        "url": "https://uohyd.ac.in/blog/internet-for-social-good-a-multi-stakeholder-understanding/",
+        "host": "uohyd.ac.in"
+      },
+      "feedRobots": {
+        "origin": "https://uohyd.ac.in",
+        "path": "/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://uohyd.ac.in",
+        "path": "/blog/internet-for-social-good-a-multi-stakeholder-understanding/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 3652,
+        "url": "https://uohyd.ac.in/blog/internet-for-social-good-a-multi-stakeholder-understanding/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Ashoka University",
+      "publisher": "Ashoka University",
+      "url": "https://www.ashoka.edu.in/feed/",
+      "category": "institution",
+      "city": "Delhi",
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 261,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    },
+    {
+      "name": "Christ University",
+      "publisher": "Christ (Deemed to be University), Bengaluru",
+      "url": "https://christuniversity.in/feed/",
+      "category": "institution",
+      "city": "Bengaluru",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 91363,
+      "ms": 1265,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 200 but the body carries no RSS <item> and no Atom <entry>"
+    },
+    {
+      "name": "Amrita Vishwa Vidyapeetham",
+      "publisher": "Amrita Vishwa Vidyapeetham",
+      "url": "https://www.amrita.edu/feed/",
+      "category": "institution",
+      "city": "Coimbatore",
+      "status": 200,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "bytes": 153877,
+      "ms": 5059,
+      "items": 12,
+      "matchingItems": 0,
+      "firstItem": {
+        "title": "The Scope of B. Tech. In Artificial Intelligence and Data Science for Future Pathways",
+        "url": "https://www.amrita.edu/scope-of-b-tech-in-artificial-intelligence-and-data-science/",
+        "host": "www.amrita.edu"
+      },
+      "feedRobots": {
+        "origin": "https://www.amrita.edu",
+        "path": "/feed/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "articleRobots": {
+        "origin": "https://www.amrita.edu",
+        "path": "/scope-of-b-tech-in-artificial-intelligence-and-data-science/",
+        "allowed": true,
+        "robotsTxt": "fetched",
+        "group": "*",
+        "agent": "buyerradar"
+      },
+      "article": {
+        "ok": true,
+        "status": 200,
+        "kind": "html",
+        "chars": 19999,
+        "url": "https://www.amrita.edu/scope-of-b-tech-in-artificial-intelligence-and-data-science/"
+      },
+      "kept": true,
+      "reason": null
+    },
+    {
+      "name": "Manipal Academy of Higher Education",
+      "publisher": "Manipal Academy of Higher Education",
+      "url": "https://manipal.edu/feed/",
+      "category": "institution",
+      "city": "Manipal",
+      "status": null,
+      "contentType": null,
+      "bytes": null,
+      "ms": 2012,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "TypeError: fetch failed"
+    },
+    {
+      "name": "SRM Institute of Science and Technology",
+      "publisher": "SRM Institute of Science and Technology",
+      "url": "https://www.srmist.edu.in/feed/",
+      "category": "institution",
+      "city": "Chennai",
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 869,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    },
+    {
+      "name": "Apollo Hospitals - News",
+      "publisher": "Apollo Hospitals",
+      "url": "https://www.apollohospitals.com/feed/",
+      "category": "institution",
+      "city": "Chennai",
+      "status": 403,
+      "contentType": "text/html",
+      "bytes": null,
+      "ms": 630,
+      "items": 0,
+      "matchingItems": 0,
+      "firstItem": null,
+      "feedRobots": null,
+      "articleRobots": null,
+      "article": null,
+      "kept": false,
+      "reason": "HTTP 403"
+    }
+  ]
+}

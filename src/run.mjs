@@ -49,9 +49,11 @@ Buyer Radar
   --city     one of: ${Object.keys(CITIES).join(', ')}
   --sources  comma list of: ${[...Object.keys(SOURCES), ...Object.keys(STAGES)].join(', ')}
              institutions, gem, registrations and exporters are the demand lane:
-             buyers who have POSTED a requirement. openings is not a fetch - it
-             upgrades the news signals this run already found into requirements
-             with a contact, inside the model stage.
+             buyers who have POSTED a requirement. publishers reads the direct
+             RSS/Atom feeds in config/publisher-feeds.json and is where the
+             openings lane's articles come from. openings is not a fetch - it
+             upgrades the news and publishers signals this run already found
+             into requirements with a contact, inside the model stage.
   --limit    maximum candidates carried into the register this run
   --deliver  comma list of: ${CHANNELS.join(', ')} - send the digest to the OWNER
   --dry      fetch, normalise and score, but write nothing
@@ -125,7 +127,10 @@ export async function run(
     const t0 = Date.now();
     let result;
     try {
-      result = await mod.fetch({ ...ctx, env, fetchImpl, todayIsoDate: todayIso() });
+      // `soFar` is the candidates the sources before this one produced. The
+      // publisher-feed lane uses it to drop a headline the news lane already
+      // holds, which is a thing it can only know from inside this loop.
+      result = await mod.fetch({ ...ctx, env, fetchImpl, todayIsoDate: todayIso(), soFar: candidates });
     } catch (err) {
       const reason = `${err.name}: ${err.message}`;
       log(`${sourceName}: ERROR ${reason}`);

@@ -6,6 +6,7 @@
 
 import * as overpass from './overpass.mjs';
 import * as news from './news.mjs';
+import * as publishers from './publishers.mjs';
 import * as cppp from './cppp.mjs';
 import * as agmarknet from './agmarknet.mjs';
 import * as institutions from './institutions.mjs';
@@ -15,7 +16,7 @@ import * as exporters from './exporters.mjs';
 import * as openings from './openings.mjs';
 
 /** Sources that go and fetch something. */
-export const SOURCES = { overpass, news, cppp, agmarknet, institutions, gem, registrations, exporters };
+export const SOURCES = { overpass, news, publishers, cppp, agmarknet, institutions, gem, registrations, exporters };
 
 /**
  * Lanes that are not a fetch. `openings` upgrades news signals the run already
