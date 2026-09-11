@@ -40,7 +40,7 @@ that breaks one will be declined however good the code is.
 ## Before you open a pull request
 
 ```bash
-npm test          # all 315 must pass
+npm test          # all 335 must pass
 npm run validate  # profile, registries, prompt versions, no committed secrets
 npm run demo -- --seed
 ```

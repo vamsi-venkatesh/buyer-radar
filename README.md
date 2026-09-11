@@ -42,8 +42,9 @@ flowchart TB
     S1["institutions<br/>tender notices"]
     S2["overpass<br/>OpenStreetMap"]
     S3["news<br/>Google News RSS"]
-    S4["agmarknet<br/>mandi prices"]
-    S5["exporters · registrations · gem"]
+    S4["publishers<br/>37 direct RSS/Atom feeds"]
+    S5["agmarknet<br/>mandi prices"]
+    S6["exporters · registrations · gem"]
   end
 
   sources --> N["normalise · dedup<br/>phone, then name + city"]
@@ -105,10 +106,18 @@ person who wrote the prompt, and none of them is a real page. It is enough to
 catch a prompt that has stopped returning JSON or has started guessing deadlines.
 It is not enough to claim the model is right about real businesses.
 
+Those numbers are not quoted from anywhere: the run that produced them is
+committed as [`eval/llm/results/2026-09-11.real.md`](eval/llm/results/2026-09-11.real.md),
+with the per-case answers, tokens and timings in the `.json` beside it. Both
+cases the model got wrong are named in it - `fx24` and `fx25`, each a school
+tender labelled `medium` and answered `large`.
+
 With no API key the harness runs a keyword reader in place of the model and says
 so in the first line of every summary. **A stub result measures the harness and
-sets a floor; it is never a measurement of the model.** The committed result in
-`eval/llm/results/` is a stub run, labelled as one.
+sets a floor; it is never a measurement of the model.** `eval/llm/results/` holds
+both: the real run above, and `2026-09-11.stub.md`, labelled as the stub it is.
+The stub scores 70% on size where the model scores 93.3%, which is the gap the
+model is being paid for.
 
 ### 3. Sealed receipts, and the recipe to check them
 
@@ -261,6 +270,7 @@ first-run checklist: [docs/deploy.md](docs/deploy.md).
 | `overpass` | OpenStreetMap business listings via the Overpass API | **ODbL.** Every row carries `licence: "ODbL"`, its openstreetmap.org URL and the attribution *Data (c) OpenStreetMap contributors, ODbL 1.0*. Anything published from it must carry that too. One request per city per category group, 2 s apart, and a 20 s wait when Overpass reports no free slot |
 | `institutions` | Tender and notice pages on 59 institutional buyers' own sites | Each page is published by the body itself. **robots.txt is read before the first page of every host and obeyed.** One request per 3 s per host, documents capped at 2 MB. The digest carries the title, the stated requirement and a link back - the document is never republished |
 | `news` | Google News RSS search, India edition | Headline, link and date only. The feed is fetched, because a feed is published to be read - but its links into `news.google.com/rss/articles/` are **never followed there**: that path is `Disallow`ed, so each item is resolved to the publisher's own URL and read under the publisher's robots.txt instead |
+| `publishers` | 37 direct RSS/Atom feeds published by Indian newspapers, trade titles and institutions, listed in `config/publisher-feeds.json` | Each feed is published by that masthead for readers, and is fetched **directly** at one request per 3 s per host under this project's own User-Agent. The item's link already **is** the publisher's article page, so no aggregator redirect is followed and none is ever stored. The article itself is read by the openings lane under **that publisher's** robots.txt. All 67 candidates were probed once for real; `config/publisher-feeds.probe.json` records what each answered and why 30 were dropped |
 | `agmarknet` | Daily mandi prices, data.gov.in | Government Open Data Licence - India. Needs a free key. Without it the source is **skipped with a recorded reason**; prices are never invented. The key is redacted out of every recorded URL |
 | `exporters` | The APEDA registered exporter directory | Public government registry, no login and no captcha on the directory. It publishes **no contact**, so this lane produces buyers with an address and no phone, and the row says so rather than leaving the field to look unread |
 | `registrations` | 22 buyers' public supplier-onboarding pages | Fetched **once a week, on Mondays** - an onboarding page does not change daily, and a section the owner can never act on differently is one he learns to skip |
@@ -294,6 +304,16 @@ does for nothing.
 **requirement** - needed only when the deterministic readers found **no**
 quantity, **no** closing date and **no** contact. When they found any of the
 three, the lane builds the requirement from what they read and makes no call.
+
+That rule holds for a **notice**, because the body that wants the vegetables
+published it: the quantity on it is that body's quantity and the number on it is
+that body's number. It does not hold for a **newspaper article**, which one
+organisation published about another. So a page the openings lane fetched from a
+publisher sets `needsOrganisation`, and the model is then needed **whatever** the
+regexes read off it - because the one thing that page will never tell a regex is
+which organisation has the requirement and where its own website is. The contact
+is read off **that** organisation's site or not at all: a phone number printed on
+a newspaper's page is the newspaper's.
 
 A cached answer is free, so the cache is checked first and only a call that would
 cost money is put to the rules.
@@ -413,9 +433,27 @@ deployment actually found in Bengaluru, including the days when the answer was
 
 ## Roadmap
 
-1. **An article supply for the openings lane.** Google's current RSS ids carry no
-   publisher URL, so 0 of 3 probed items resolved. The resolver is correct and
-   the supply is missing; a feed that carries publisher URLs fixes it.
+1. **The openings lane has its article supply, and it produced nothing.** The
+   supply is real: `config/publisher-feeds.json` holds **37 live publisher
+   feeds**, every one probed once for real, and their items link straight at the
+   publisher's own article page. Articles now reach the lane and are fetched from
+   their publishers under **those publishers' robots.txt** - not one refusal in
+   the whole probe - and the model reads the real article text.
+
+   What came back is the honest part. In the first real run of the lane the model
+   read **12 articles and produced 0 posted requirements.** Nothing broke: an
+   article reporting that a hotel group is opening 200 rooms or that a chain is
+   expanding into a second city is **awareness, not procurement**. It says a
+   buyer will exist; it does not say a requirement has been posted, and there is
+   nothing on the page for the lane to turn into one. The posted requirements
+   this product finds come from the `institutions` lane, where the buyer
+   published the notice himself.
+
+   So the open question is not the supply any more. It is whether reading
+   opening-and-expansion news is worth its model calls at all, or whether the
+   lane should keep those items as signals and spend only on the items that name
+   a tender. That is a decision about money, and it wants more than one run
+   behind it.
 2. **Correct the institutional registry.** 44 of 59 entries did not answer and
    most of the 404s are wrong paths a human could fix in an afternoon.
 3. **Read one real GeM response** and correct the parser and its documented
@@ -444,10 +482,10 @@ src/digest.mjs        the morning digest; src/report.mjs the weekly one
 src/deliver.mjs       delivery to the OWNER only - email and WhatsApp
 src/cron.mjs          the scheduler: one daily pass, no system cron
 src/lib/*.mjs         stores, receipts, crawler, PDF text, contacts, quantities
-config/               the client profile, the registries, the price table
+config/               the client profile, the registries and their probes, the price table
 demo/                 synthetic fixtures and the one-command demo
-eval/                 the labelled cases, the stub model, the scorer
-test/                 315 tests, node --test, saved and synthetic fixtures
+eval/                 the labelled cases, the stub model, the scorer, the results
+test/                 335 tests, node --test, saved and synthetic fixtures
 tools/                verify.mjs, validate.mjs, the probes, the fixture builders
 docs/adr/             six decisions, and why
 ```
@@ -458,7 +496,7 @@ output and are git-ignored.
 ## Tests
 
 ```bash
-npm test        # 315 tests
+npm test        # 335 tests
 npm run validate
 ```
 

@@ -4,6 +4,51 @@ All notable changes to this project are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **The `publishers` source.** 37 direct RSS/Atom feeds published by Indian
+  newspapers, trade titles and institutions, in `config/publisher-feeds.json`,
+  each carrying the publisher's own article URL - so the openings lane has
+  something it is allowed to read. All 67 candidates were probed once for real
+  and `config/publisher-feeds.probe.json` records what each answered and why 30
+  were dropped; `tools/probe-publisher-feeds.mjs` is the probe.
+- **Atom support.** `parseAtomEntries()` and `parseFeedItems()` in
+  `src/lib/xml.mjs`. About one publisher in five publishes Atom, and reading only
+  `<item>` made those feeds look empty rather than unread.
+- **A proximity rule on the keyword filter.** An item is kept only when its two
+  matching words sit within 140 characters (a requirement) or 90 (an opening) of
+  each other. Both words and the gap are written onto the candidate, so a receipt
+  says why it was kept.
+- **Publisher words come from the client profile.** The food-service half of the
+  filter is the engine's; the commodity half is read from the catalogue, the
+  headline commodity and the requirement keywords, so a non-produce supplier gets
+  a lane that matches what he actually sells. Cities may now list `aliases`, so a
+  paper writing "Bangalore" is still matched to Bengaluru.
+
+### Changed
+
+- **A publisher article always needs the model.** `needsModel('requirement', ...)`
+  now takes `needsOrganisation`, and the openings lane sets it for every article
+  it fetches. A notice is published by the buyer, so what is printed on it is the
+  buyer's; an article is published by a newspaper about somebody else, and a
+  phone number on it is the newsroom's. The contact is read off the
+  organisation's own site or not at all.
+- **A signal that can be read is spent on first.** `selectSignals()` sorts a
+  signal whose link is already a publisher's article ahead of a Google News item
+  whose opaque id is a known dead end, before score. The limit is a budget, and a
+  run had been spending eleven of its twelve slots on links that resolve to
+  nothing.
+- **Sources receive `soFar`**, the candidates the earlier sources produced, so
+  the publisher lane can drop a headline the news lane already holds.
+
+### Fixed
+
+- `eval/llm/results/` now carries the **real** DeepSeek run of 2026-09-11
+  alongside the stub, so the numbers in the README and the case study can be read
+  off the run rather than taken on trust.
+
 ## [0.1.0] - 2026-09-11
 
 First public release. The engine had been running as a private deployment for a

@@ -88,8 +88,10 @@ None was sent anywhere, because nothing in this codebase can send to a buyer.
 The enrichment prompt was then scored against 30 labelled synthetic pages:
 **JSON validity 100%, segment 100%, deadline 100%, size 93.3%, 28 of 30 with
 every field correct**, at a mean of 979 input and 90 output tokens, for Rs 3.30
-total. Thirty cases is a smoke test and not a benchmark - the caveat is in the
-README and it applies here too.
+total. That result is committed - `eval/llm/results/2026-09-11.real.md` and the
+`.json` beside it, with every case's answer, tokens and timing - so the numbers
+above can be read off the run rather than taken on trust. Thirty cases is a smoke
+test and not a benchmark; the caveat is in the README and it applies here too.
 
 The first attempt at that evaluation read 0 of 30, because the one-off container
 it ran in had no internet egress on the internal Docker network. That is recorded
