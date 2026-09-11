@@ -1,0 +1,21 @@
+{
+  "_note": "SYNTHETIC demo registry. Two invented institutional buyers on example.test, a reserved TLD that resolves nowhere. Their tender pages are served by demo/fixtures.mjs, never by the network. Neither body exists.",
+  "entries": [
+    {
+      "name": "Demo Institute of Technology",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "domain": "dit.example.test",
+      "tender_paths": ["https://dit.example.test/tenders/"],
+      "category": "university"
+    },
+    {
+      "name": "Demo City General Hospital",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "domain": "hospital.example.test",
+      "tender_paths": ["https://hospital.example.test/notices/"],
+      "category": "hospital"
+    }
+  ]
+}
