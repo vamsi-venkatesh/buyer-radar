@@ -1,4 +1,18 @@
-// Turning a news signal into a lead with a phone number.
+// Turning a news signal into a lead with a phone number - and refusing to pay
+// for the ones that cannot become one.
+//
+// Two tiers first, before anything is fetched. A `requirement_candidate` signal
+// uses procurement wording next to a produce word: somebody may have posted a
+// requirement, so its article is worth reading. An `awareness` signal reports an
+// opening or an expansion: worth keeping, and it cannot state a posted
+// requirement, so no article is fetched and no model is called for it
+// (`openings.awareness_only`). The first real run of this lane on a deployment
+// read 12 articles over 34 model calls and found a requirement in none of them;
+// all 12 were opening stories.
+//
+// Under the tier, two more guards: the requirement pre-check in needsModel(),
+// which refuses a model call for an article whose text never uses procurement
+// wording, and a per-run ceiling on article reads (OPENINGS_MAX_READS, 6).
 //
 // The news lane already finds articles: a hotel opening, a hostel mess tender, a
 // canteen contract. On its own that is a headline, and a headline is not
@@ -15,7 +29,7 @@
 // contact it stays a signal and the digest says "contact not found yet", which
 // is the truth and is more useful than a lead that cannot be called.
 
-import { OPENINGS, INSTITUTIONS } from '../config.mjs';
+import { OPENINGS, INSTITUTIONS, openingsMaxReads } from '../config.mjs';
 import { loadPrompt } from '../llm/prompts.mjs';
 import { requirementInput, parseRequirement, resolveSite } from '../llm/requirement.mjs';
 import { REQUIREMENT_MAX_TOKENS } from '../llm/limits.mjs';
@@ -25,6 +39,7 @@ import { parseLinks } from '../lib/xml.mjs';
 import { findDeadline } from '../lib/dates.mjs';
 import { resolveNewsLink, isGoogleNewsLink } from '../lib/news-link.mjs';
 import { needsModel } from '../llm/needs.mjs';
+import { matchItem } from './publishers.mjs';
 import { tidy, todayIso } from '../lib/normalise.mjs';
 
 export const name = 'openings';
@@ -32,8 +47,26 @@ export const name = 'openings';
 const NO_CHAIN = { add() {} };
 
 /**
- * The signals worth a model call: one whose headline talks about demand, or one
- * whose own lane already matched it on more than the headline.
+ * Which tier a signal belongs to, and therefore whether it is worth money.
+ *
+ * A lane that has already tiered its own item says so on the lead
+ * (`extra.matchTier`), because it matched the title AND the summary and this
+ * function only ever sees the headline. Anything else - a Google News headline,
+ * an older lead stored before the tiers existed - is tiered here from the words
+ * it carries, against the configured lists. A signal that matches neither rule
+ * is awareness: whatever made it eligible, nothing in it says a requirement has
+ * been posted.
+ */
+export function tierOf(lead) {
+  const stated = lead && lead.extra && lead.extra.matchTier;
+  if (stated === 'requirement_candidate' || stated === 'awareness') return stated;
+  const text = `${(lead && lead.name) || ''} ${(lead && lead.why_now) || ''} ${(lead && lead.extra && lead.extra.summary) || ''}`;
+  const match = matchItem(text);
+  return match.tier === 'requirement_candidate' ? 'requirement_candidate' : 'awareness';
+}
+
+/**
+ * The signals this lane will look at, requirement candidates first.
  *
  * The Google News lane searches for demand words and then keeps whatever comes
  * back, so its headlines are filtered here. The publisher-feed lane has already
@@ -41,9 +74,14 @@ const NO_CHAIN = { add() {} };
  * which words matched, so re-testing its headline alone would throw away items
  * whose demand is stated in the second sentence - "Chalet Hotels targets 5,500
  * keys by FY30" says nothing in its headline and states the expansion below it.
+ *
+ * `limit` is the paid budget and applies to requirement candidates only: they
+ * are the tier that costs an article read and a model call. Awareness signals
+ * come after them, unlimited, because the lane spends nothing on those - it
+ * records them and moves on.
  */
 export function selectSignals(leads, { limit = OPENINGS.maxPerRun, promptVersion } = {}) {
-  return leads
+  const eligible = leads
     .filter((l) => l.kind === 'signal' && OPENINGS.signalSources.includes(l.source) && l.source_url)
     .filter((l) => OPENINGS.triggers.test(`${l.name} ${l.why_now || ''}`) || Boolean(l.extra && l.extra.matchRule))
     .filter((l) => !(l.extra && l.extra.opening && l.extra.opening.promptVersion === promptVersion))
@@ -58,8 +96,11 @@ export function selectSignals(leads, { limit = OPENINGS.maxPerRun, promptVersion
         (isGoogleNewsLink(a.source_url) ? 1 : 0) - (isGoogleNewsLink(b.source_url) ? 1 : 0) ||
         b.score - a.score ||
         String(a.id).localeCompare(String(b.id))
-    )
-    .slice(0, limit);
+    );
+
+  const candidates = eligible.filter((l) => tierOf(l) === 'requirement_candidate').slice(0, limit);
+  const awareness = eligible.filter((l) => tierOf(l) !== 'requirement_candidate');
+  return [...candidates, ...awareness];
 }
 
 /**
@@ -203,6 +244,30 @@ export function markNoContact(lead, { reason, answer = null, promptVersion = nul
 }
 
 /**
+ * Keep an awareness signal as what it is: a signal, with a reason to act on it,
+ * and nothing bought.
+ *
+ * A hotel opening cannot contain a posted requirement, so no article is fetched
+ * for it and no model is asked about it. It is still a lead the owner may want
+ * to call in a month, so it keeps its `why_now` and says on its own record why
+ * nothing was read.
+ */
+export function markAwareness(lead, { reason = 'an opening or expansion story, not a posted requirement' } = {}) {
+  const date = (lead.extra && lead.extra.whyNowDate) || null;
+  const rule = lead.extra && lead.extra.matchRule;
+  if (!lead.why_now || rule === 'opening') {
+    lead.why_now = tidy(date ? `opening or expansion reported ${date}` : 'opening or expansion reported', 120);
+  }
+  lead.extra = {
+    ...lead.extra,
+    matchTier: 'awareness',
+    awarenessOnly: true,
+    awarenessReason: tidy(reason, 200),
+  };
+  return lead;
+}
+
+/**
  * What the deterministic readers get out of an article on their own.
  *
  * This is the input to the "model only when needed" rule for requirement
@@ -227,12 +292,26 @@ export function deterministicReads(text, { todayIsoDate = todayIso() } = {}) {
  */
 export async function upgradeSignals(
   leads,
-  { runner, crawler, chain = NO_CHAIN, settings, todayIsoDate = todayIso(), fetchImpl = globalThis.fetch, log = () => {} }
+  {
+    runner,
+    crawler,
+    chain = NO_CHAIN,
+    settings,
+    todayIsoDate = todayIso(),
+    fetchImpl = globalThis.fetch,
+    maxReads = openingsMaxReads(),
+    log = () => {},
+  }
 ) {
   const prompt = loadPrompt('requirement');
   const chosen = selectSignals(leads, { limit: OPENINGS.maxPerRun, promptVersion: prompt.version });
   const out = {
     considered: chosen.length,
+    requirementCandidates: chosen.filter((l) => tierOf(l) === 'requirement_candidate').length,
+    awarenessOnly: 0,
+    readCap: maxReads,
+    capReached: false,
+    cappedOut: 0,
     linksResolved: 0,
     linksUnresolved: 0,
     articlesRead: 0,
@@ -247,6 +326,45 @@ export async function upgradeSignals(
   };
 
   for (const lead of chosen) {
+    // Tier first, before anything is fetched. An opening or expansion story is
+    // awareness: it is worth knowing and it cannot contain a posted
+    // requirement, so it costs this lane one receipt and nothing else.
+    if (tierOf(lead) !== 'requirement_candidate') {
+      out.awarenessOnly += 1;
+      markAwareness(lead, { reason: 'the headline and summary state an opening or expansion, not a posted requirement' });
+      chain.add('openings.awareness_only', {
+        leadId: lead.id,
+        source: lead.source,
+        url: lead.source_url,
+        matchRule: (lead.extra && lead.extra.matchRule) || null,
+        matchedKeyword: (lead.extra && lead.extra.matchedKeyword) || null,
+        whyNow: lead.why_now,
+        reason: 'no article was fetched and no model was called: an opening or expansion cannot state a posted requirement',
+      });
+      continue;
+    }
+
+    // The paid ceiling for this run. Everything under it has already been
+    // narrowed to requirement candidates; this is what stops a day on which
+    // fifty of them arrive at once from becoming fifty article reads.
+    if (out.articlesRead >= maxReads) {
+      out.cappedOut += 1;
+      if (!out.capReached) {
+        out.capReached = true;
+        chain.add('openings.cap_reached', {
+          cap: maxReads,
+          articlesRead: out.articlesRead,
+          env: 'OPENINGS_MAX_READS',
+        });
+        log(`openings: article-read cap of ${maxReads} reached; the rest of this run's candidates are left unread`);
+      }
+      markNoContact(lead, {
+        reason: `this run's article-read cap of ${maxReads} was already spent (OPENINGS_MAX_READS)`,
+        promptVersion: prompt.version,
+      });
+      continue;
+    }
+
     // Read the publisher, not Google. The feed's link points at
     // news.google.com/rss/articles/..., which Google's own robots.txt refuses
     // to everybody; the publisher's page is the thing the item is about and the
@@ -297,6 +415,7 @@ export async function upgradeSignals(
     const found = deterministicReads(article.text, { todayIsoDate });
     const decision = needsModel('requirement', lead, {
       hasText: Boolean(article.text),
+      text: article.text,
       needsOrganisation: true,
       deterministic: { quantity: found.quantity, deadline: found.deadline, contact: false },
     });

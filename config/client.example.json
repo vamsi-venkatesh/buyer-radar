@@ -138,6 +138,14 @@
     "marketplace": ["vegetables", "garlic", "fresh produce", "canteen"]
   },
 
+  "signals": {
+    "_note": "How the publisher-feed and openings lanes tier a news item before anything is fetched. A produce word next to a `procurement` word is a requirement_candidate: the article is read and the model is asked. An `opening` word next to a `venue` word is awareness: the item is kept as a signal and nothing is fetched or spent on it. `near` is how many characters apart the two halves may sit and still count as one statement. Every list here is optional - left empty, the engine's own lists in src/lib/profile.mjs are used, because a tender is a tender whoever is bidding.",
+    "procurement": [],
+    "opening": [],
+    "venue": [],
+    "near": { "requirement": 140, "awareness": 90 }
+  },
+
   "newsQueries": [
     { "q": "new hotel opening {city}", "segment": "hotel" },
     { "q": "new restaurant opening {city}", "segment": "restaurant" },

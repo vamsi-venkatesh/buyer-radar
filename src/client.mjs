@@ -89,6 +89,16 @@ export function loadClient({ file = existsSync(CLIENT_FILE) ? CLIENT_FILE : EXAM
     cities,
     catalogue: { items },
     keywords: { requirement: [], tender: [], marketplace: [], ...raw.keywords },
+    // The words the publisher-feed and openings lanes tier a signal by. Every
+    // list is optional: src/lib/profile.mjs falls back to the engine's own,
+    // which are properties of the trade rather than of this supplier.
+    signals: {
+      procurement: [],
+      opening: [],
+      venue: [],
+      ...raw.signals,
+      near: { requirement: 140, awareness: 90, ...((raw.signals || {}).near || {}) },
+    },
     newsQueries: raw.newsQueries || [],
     openers: {
       requirement: 'We can quote for {what}.',

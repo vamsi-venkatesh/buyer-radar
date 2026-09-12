@@ -142,6 +142,34 @@ test('requirement: a publisher article always needs the model, whatever a regex 
   assert.equal(needsModel('requirement', lead(), { hasText: false, needsOrganisation: true }).needed, false);
 });
 
+test('requirement: no procurement wording in the text, no model call at any price', () => {
+  // The pre-check sits above every other requirement rule, the article rule
+  // included. An expansion story cannot state a posted requirement, and the
+  // first real run of the openings lane paid for 34 calls on 12 expansion
+  // stories to be told that 12 times.
+  const awareness =
+    'Chalet Hotels targets 5,500 keys by FY30 and will open new properties in Bengaluru and Hyderabad, the company said.';
+  const refused = needsModel('requirement', lead(), { hasText: true, text: awareness, needsOrganisation: true, deterministic: {} });
+  assert.equal(refused.needed, false);
+  assert.equal(refused.reason, 'no procurement wording');
+
+  // One word from the configured requirement list is enough to let the rules
+  // below decide on their own.
+  for (const text of [
+    'The university has invited quotations for the annual supply of vegetables to its hostel mess.',
+    'An e-tender was floated for the canteen contract.',
+    'EOI invited for vendor registration at the district hospital.',
+  ]) {
+    const allowed = needsModel('requirement', lead(), { hasText: true, text, needsOrganisation: true, deterministic: {} });
+    assert.equal(allowed.needed, true, text);
+  }
+
+  // The pre-check only applies to text it was given. A caller that passes none
+  // is answered by the rules that were there before it.
+  assert.equal(needsModel('requirement', lead(), { hasText: true, needsOrganisation: true, deterministic: {} }).needed, true);
+  assert.equal(needsModel('requirement', lead(), { hasText: false, text: awareness, deterministic: {} }).needed, false);
+});
+
 test('an unknown purpose is refused rather than defaulted to yes', () => {
   const res = needsModel('summarise', lead(), { hasText: true });
   assert.equal(res.needed, false);

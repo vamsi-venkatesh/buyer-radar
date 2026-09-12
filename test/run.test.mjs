@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseArgs, capCandidates } from '../src/run.mjs';
+import { openingsLine, parseArgs, capCandidates } from '../src/run.mjs';
 
 test('parseArgs reads the documented invocation', () => {
   const opts = parseArgs(['--city', 'bengaluru', '--sources', 'overpass,news,cppp', '--limit', '200']);
@@ -17,6 +17,30 @@ test('parseArgs reads the documented invocation', () => {
     stages: [],
     fetchSources: ['overpass', 'news', 'cppp'],
   });
+});
+
+test('the run summary says what the openings lane read, kept and capped', () => {
+  const line = openingsLine({
+    considered: 13,
+    requirementCandidates: 2,
+    awarenessOnly: 11,
+    articlesRead: 6,
+    readCap: 6,
+    capReached: true,
+    cappedOut: 1,
+    linksResolved: 0,
+    linksUnresolved: 2,
+    requirementsSeen: 1,
+    contactsFound: 1,
+    upgraded: 1,
+  });
+  assert.match(line, /13 signals \(2 requirement candidates, 11 awareness-only - no fetch, no model\)/);
+  assert.match(line, /6 articles read of a cap of 6 \(cap reached, 1 candidates left unread\)/);
+
+  const quiet = openingsLine({ considered: 3, requirementCandidates: 0, awarenessOnly: 3, articlesRead: 0, readCap: 6, capReached: false, cappedOut: 0, linksResolved: 0, linksUnresolved: 0, requirementsSeen: 0, contactsFound: 0, upgraded: 0 });
+  assert.match(quiet, /0 articles read of a cap of 6,/);
+  assert.ok(!/cap reached/.test(quiet));
+  assert.equal(openingsLine({ skipped: 'the model stage is off' }), 'the model stage is off');
 });
 
 test('parseArgs separates the openings stage from the fetch sources', () => {

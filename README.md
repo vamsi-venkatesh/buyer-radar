@@ -286,6 +286,7 @@ instead of drifting.
 | `DATA_GOV_IN_KEY` | - | Free key for mandi prices. Without it the source is skipped with a recorded reason and no price is invented |
 | `DEEPSEEK_API_KEY` / `LLM_*` | - | The model stage. No key, no stage, and every score is what the rules alone produce |
 | `GEM_ENABLED` | off | The GeM lane, off because its response shape has never been observed |
+| `OPENINGS_MAX_READS` | `6` | Articles the openings lane reads in one run, and therefore requirement calls it can make. `0` stops it reading any |
 | `RADAR_MCP_ACTOR` | `agent` | `owner` to let an MCP client write |
 
 Turn delivery on last, after reading a few days of `outbox/` files. Full
@@ -298,7 +299,7 @@ first-run checklist: [docs/deploy.md](docs/deploy.md).
 | `overpass` | OpenStreetMap business listings via the Overpass API | **ODbL.** Every row carries `licence: "ODbL"`, its openstreetmap.org URL and the attribution *Data (c) OpenStreetMap contributors, ODbL 1.0*. Anything published from it must carry that too. One request per city per category group, 2 s apart, and a 20 s wait when Overpass reports no free slot |
 | `institutions` | Tender and notice pages on 59 institutional buyers' own sites | Each page is published by the body itself. **robots.txt is read before the first page of every host and obeyed.** One request per 3 s per host, documents capped at 2 MB. The digest carries the title, the stated requirement and a link back - the document is never republished |
 | `news` | Google News RSS search, India edition | Headline, link and date only. The feed is fetched, because a feed is published to be read - but its links into `news.google.com/rss/articles/` are **never followed there**: that path is `Disallow`ed, so each item is resolved to the publisher's own URL and read under the publisher's robots.txt instead |
-| `publishers` | 37 direct RSS/Atom feeds published by Indian newspapers, trade titles and institutions, listed in `config/publisher-feeds.json` | Each feed is published by that masthead for readers, and is fetched **directly** at one request per 3 s per host under this project's own User-Agent. The item's link already **is** the publisher's article page, so no aggregator redirect is followed and none is ever stored. The article itself is read by the openings lane under **that publisher's** robots.txt. All 67 candidates were probed once for real; `config/publisher-feeds.probe.json` records what each answered and why 30 were dropped |
+| `publishers` | 37 direct RSS/Atom feeds published by Indian newspapers, trade titles and institutions, listed in `config/publisher-feeds.json` | Each feed is published by that masthead for readers, and is fetched **directly** at one request per 3 s per host under this project's own User-Agent. The item's link already **is** the publisher's article page, so no aggregator redirect is followed and none is ever stored. Every kept item is **tiered** - `requirement_candidate` or `awareness`, see [two tiers](#two-tiers-and-only-one-of-them-costs-money) - and only a requirement candidate's article is read by the openings lane, under **that publisher's** robots.txt. All 67 candidates were probed once for real; `config/publisher-feeds.probe.json` records what each answered and why 30 were dropped |
 | `agmarknet` | Daily mandi prices, data.gov.in | Government Open Data Licence - India. Needs a free key. Without it the source is **skipped with a recorded reason**; prices are never invented. The key is redacted out of every recorded URL |
 | `exporters` | The APEDA registered exporter directory | Public government registry, no login and no captcha on the directory. It publishes **no contact**, so this lane produces buyers with an address and no phone, and the row says so rather than leaving the field to look unread |
 | `registrations` | 22 buyers' public supplier-onboarding pages | Fetched **once a week, on Mondays** - an onboarding page does not change daily, and a section the owner can never act on differently is one he learns to skip |
@@ -309,6 +310,55 @@ first-run checklist: [docs/deploy.md](docs/deploy.md).
 and Swiggy. Their terms forbid this kind of collection - IndiaMART also answered
 403 when checked. Do not add them. See
 [ADR 4](docs/adr/0004-robots-and-terms.md).
+
+### Two tiers, and only one of them costs money
+
+The first real run of the openings lane on the reference deployment read **12
+publisher articles and made 34 model calls**. It found **0 articles stating a
+requirement** and produced **0 contacts**. Every one of the 12 was an opening or
+an expansion story: a hotel chain's key count for 2030, a restaurant's new
+outlet, a campus inauguration. An opening is awareness. It is not procurement,
+and no amount of model reading turns it into procurement.
+
+So the lane splits its signals in two before it spends anything:
+
+| Tier | What it is | What the lane does |
+| --- | --- | --- |
+| `requirement_candidate` | The title or the summary uses procurement wording within **140 characters** of a produce or food-service word | The article is fetched and the model is asked |
+| `awareness` | An opening or expansion word within **90 characters** of a place that will need vegetables | Kept as a `signal` with its `why_now`. **No article fetch. No model call.** Receipt `openings.awareness_only` |
+
+An awareness signal is not thrown away - a hotel that opens in October is a buyer
+in November - it is simply never paid for. The publisher-feed lane tiers its own
+items, because it matched the title **and** the summary, and writes the answer to
+`extra.matchTier`; anything else, a Google News headline included, is tiered in
+the openings lane from the words it carries. A signal that matches neither rule
+is awareness: whatever made it eligible, nothing in it says a requirement has
+been posted.
+
+Three guards, in this order, and each one is receipted:
+
+1. **the tier** - `openings.awareness_only`, and nothing is fetched;
+2. **the pre-check in `needsModel('requirement', ...)`** - the article was
+   fetched and uses no procurement wording anywhere in its text, so no model is
+   called: `llm.not_needed { reason: 'no procurement wording' }`. Both real
+   article fixtures in the test suite - a hotel expansion and a college
+   inauguration - fail this check, which is what those 34 calls bought;
+3. **the per-run cap** - `OPENINGS_MAX_READS`, **default 6** article reads and
+   therefore at most 6 requirement extractions in a run. When it is reached the
+   remaining candidates are left unread with the reason on their own record, and
+   `openings.cap_reached { cap, articlesRead }` is written once.
+
+The run summary and the dashboard's **Openings** column both print what happened:
+
+```
+openings     13 signals (2 requirement candidates, 11 awareness-only - no fetch, no model), 0 articles read of a cap of 6, ...
+```
+
+The word lists behind the two rules live in `src/lib/profile.mjs`. The trade's
+half is the engine's - a canteen is a canteen whoever fills it, and a tender is a
+tender whoever is bidding - and the supplier's half is read from the client
+profile, so a deployment that sells something else replaces `signals` in
+`config/client.json` and touches no source.
 
 ## Model policy
 
@@ -329,7 +379,16 @@ website, the requirement text, or a stated quantity or deadline. Without one the
 model would be paraphrasing the trading name, which the rule-based line already
 does for nothing.
 
-**requirement** - needed only when the deterministic readers found **no**
+**requirement** - first a hard pre-check that sits above every other rule here,
+the article rule included: the text has to use **procurement wording at all** -
+one word from the configured requirement list (`tender`, `e-tender`, `RFQ`,
+`EOI`, `expression of interest`, `supply of`, `empanelment`, `rate contract`,
+`annual supply`, `vendor registration`, ...) in `src/lib/profile.mjs`. A text
+that never says any of them does not contain a posted requirement and no model
+will find one in it, so the call is refused with
+`llm.not_needed { reason: 'no procurement wording' }`.
+
+Past that, it is needed only when the deterministic readers found **no**
 quantity, **no** closing date and **no** contact. When they found any of the
 three, the lane builds the requirement from what they read and makes no call.
 
@@ -477,11 +536,14 @@ deployment actually found in Bengaluru, including the days when the answer was
    this product finds come from the `institutions` lane, where the buyer
    published the notice himself.
 
-   So the open question is not the supply any more. It is whether reading
-   opening-and-expansion news is worth its model calls at all, or whether the
-   lane should keep those items as signals and spend only on the items that name
-   a tender. That is a decision about money, and it wants more than one run
-   behind it.
+   That question - whether reading opening-and-expansion news is worth its model
+   calls at all - is now answered in the code: it is not, and the lane keeps
+   those items as signals and spends only on the ones that name a tender. See
+   [two tiers, and only one of them costs
+   money](#two-tiers-and-only-one-of-them-costs-money). What the lane has
+   **still** not done is read a genuine posted requirement end to end. The first
+   day a tender article arrives from a publisher feed is the day the paid path
+   is tested for real.
 2. **Correct the institutional registry.** 44 of 59 entries did not answer and
    most of the 404s are wrong paths a human could fix in an afternoon.
 3. **Read one real GeM response** and correct the parser and its documented
@@ -502,6 +564,8 @@ src/model.mjs         Candidate -> Lead, scoring, dedup, merge, openers
 src/run.mjs           the pipeline and its CLI
 src/sources/*.mjs     one module per source, each exporting fetch(ctx)
 src/llm/              the model stage: client, cache, budget, needs, prompts
+src/lib/profile.mjs   the word lists behind the two signal tiers: the trade's
+                      half from the engine, the supplier's from the profile
 src/tools/            the tool registry, its JSON Schema validator, its CLI
 src/mcp/server.mjs    MCP over stdio, JSON-RPC 2.0, no dependencies
 src/dashboard/        the owner's dashboard: server-rendered HTML, no JavaScript
@@ -513,7 +577,7 @@ src/lib/*.mjs         stores, receipts, crawler, PDF text, contacts, quantities
 config/               the client profile, the registries and their probes, the price table
 demo/                 synthetic fixtures and the one-command demo
 eval/                 the labelled cases, the stub model, the scorer, the results
-test/                 335 tests, node --test, saved and synthetic fixtures
+test/                 345 tests, node --test, saved and synthetic fixtures
 tools/                verify.mjs, validate.mjs, the probes, the fixture builders
 docs/adr/             six decisions, and why
 ```
@@ -524,7 +588,7 @@ output and are git-ignored.
 ## Tests
 
 ```bash
-npm test        # 335 tests
+npm test        # 345 tests
 npm run validate
 ```
 

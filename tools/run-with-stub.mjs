@@ -11,7 +11,7 @@
 // This is a proof harness and is never the daily run. Nothing here is imported
 // by src/. The receipts say the model was the stub, because it was.
 
-import { parseArgs, run } from '../src/run.mjs';
+import { parseArgs, run, openingsLine } from '../src/run.mjs';
 import { stubAnswer } from '../eval/llm/stub-model.mjs';
 
 const STUB_MODEL = 'stub/keyword-reader';
@@ -54,7 +54,10 @@ async function main() {
   const s = result.summary;
   process.stderr.write(`\n--- stub run ---\nmodel        ${STUB_MODEL} (no paid call was made)\n`);
   process.stderr.write(`requirements ${s.requirements ?? 0} (${s.requirementsWithContact ?? 0} with a contact)\n`);
-  if (s.openings) process.stderr.write(`openings     ${JSON.stringify(s.openings)}\n`);
+  if (s.openings) {
+    process.stderr.write(`openings     ${openingsLine(s.openings)}\n`);
+    process.stderr.write(`openings     ${JSON.stringify(s.openings)}\n`);
+  }
   process.stderr.write(`digest       ${s.digestChars} chars\nbundle hash  ${result.bundle.hash}\n`);
 }
 

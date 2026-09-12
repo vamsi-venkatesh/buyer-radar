@@ -14,17 +14,20 @@
 // What this source does, and nothing more: fetch the feeds in
 // config/publisher-feeds.json - one request every 3 s per host, our own
 // User-Agent, the feed only - keep the items whose title or summary talks about
-// a requirement or an opening, and emit them as `signal` candidates carrying the
-// publisher's direct article URL. It reads no article itself: that is the
-// openings lane's job, under the crawler's robots rules.
+// a requirement or an opening, tier each one (`requirement_candidate` for a
+// posted requirement, `awareness` for an opening or an expansion), and emit them
+// as `signal` candidates carrying the publisher's direct article URL. It reads
+// no article itself: that is the openings lane's job, under the crawler's robots
+// rules, and only for the requirement candidates.
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ROOT } from '../lib/paths.mjs';
-import { PUBLISHERS, USER_AGENT, CITIES, CLIENT } from '../config.mjs';
+import { PUBLISHERS, USER_AGENT, CITIES } from '../config.mjs';
 import { parseFeedItems, stripTags } from '../lib/xml.mjs';
 import { mapPool } from '../lib/crawl.mjs';
 import { isExcluded, tidy, normaliseName, todayIso, daysBetween } from '../lib/normalise.mjs';
+import * as profile from '../lib/profile.mjs';
 import { sha256Hex } from '../lib/hash.mjs';
 
 export const name = 'publishers';
@@ -60,93 +63,22 @@ export function skipFromProbe(entry, probe) {
 
 // ------------------------------------------------------------------ matching
 //
-// Two rules, and an item has to satisfy one of them whole. A bare "tender" on a
-// city desk is a road contract far more often than it is a kitchen, and a bare
-// "opens" is a metro line; matching either on its own would fill the register
-// with articles nobody will read twice.
+// Two rules, two tiers, and an item has to satisfy one of them whole. A bare
+// "tender" on a city desk is a road contract far more often than it is a
+// kitchen, and a bare "opens" is a metro line; matching either on its own would
+// fill the register with articles nobody will read twice.
+//
+// The words themselves live in src/lib/profile.mjs: the trade's half is the
+// engine's, the supplier's half is read from the client profile, and a
+// deployment that wants different lists sets `signals` in config/client.json
+// rather than editing code.
 
-// The food-service half is a property of the trade, not of the supplier: a
-// canteen is a canteen whoever fills it, and every deployment wants those words.
-const FOOD_SERVICE = [
-  'vegetable', 'vegetables', 'fresh produce', 'fruits and vegetables',
-  'perishable', 'perishables', 'grocery', 'groceries', 'canteen', 'cafeteria',
-  'mess', 'hostel', 'kitchen', 'catering', 'caterer', 'caterers', 'diet',
-  'midday meal', 'mid-day meal', 'meals', 'food supply',
-];
-
-/**
- * The commodity half comes from the client profile, because it is the one thing
- * here that changes with the supplier. A radar run for a dairy has no use for
- * 'garlic' and every use for 'milk', and neither word belongs in the engine.
- *
- * Three places in the profile name what the supplier sells - the catalogue's own
- * labels, the headline commodity's words, and the requirement keywords - and all
- * three are read, because a deployment that fills in only one of them should
- * still get a lane that works.
- */
-function clientProduceWords() {
-  const words = [
-    ...CLIENT.catalogue.items.map((i) => i.label),
-    ...(CLIENT.capacity.headlineCommodityWords || []),
-    ...(CLIENT.keywords.requirement || []),
-  ];
-  const seen = new Set();
-  const out = [];
-  for (const raw of words) {
-    const w = String(raw || '').toLowerCase().trim();
-    if (w.length < 3 || seen.has(w)) continue;
-    seen.add(w);
-    out.push(w);
-  }
-  return out;
-}
-
-const PRODUCE = [...FOOD_SERVICE, ...clientProduceWords()];
-
-const PROCUREMENT = [
-  'tender', 'tenders', 'e-tender', 'etender', 'bid', 'bids', 'quotation',
-  'quotations', 'procure', 'procured', 'procurement', 'supply', 'supplies',
-  'supplier', 'suppliers', 'contract', 'contractor', 'rate contract',
-  'empanel', 'empanelment', 'outsourced',
-];
-
-const OPENING = [
-  'open', 'opens', 'opened', 'opening', 'launch', 'launches', 'launched',
-  'inaugurate', 'inaugurated', 'inauguration', 'expand', 'expands', 'expanded',
-  'expansion', 'unveil', 'unveils', 'set up', 'sets up', 'to come up',
-];
-
-const VENUE = [
-  'hotel', 'hotels', 'resort', 'resorts', 'restaurant', 'restaurants', 'cafe',
-  'eatery', 'bakery', 'food court', 'qsr', 'dining', 'banquet', 'canteen',
-  'cafeteria', 'mess', 'hostel', 'kitchen', 'catering', 'supermarket',
-  'hypermarket', 'grocery', 'hospital', 'university', 'college', 'campus',
-];
-
-/**
- * A word-boundary alternation over a phrase list, longest first.
- *
- * Longest first because alternation takes the first branch that matches: with
- * "vegetable" ahead of "vegetables" every plural item would report the singular,
- * which is a small lie in the receipt about what we actually saw. The word
- * boundaries are not a nicety either - without them "mess" matches inside
- * "message", and this project has already shipped a digest led by three notices
- * called "Director's message".
- */
-function phraseRe(list) {
-  return new RegExp(
-    `\\b(${[...list]
-      .sort((a, b) => b.length - a.length)
-      .map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'))
-      .join('|')})\\b`,
-    'i'
-  );
-}
-
-export const PRODUCE_RE = phraseRe(PRODUCE);
-export const PROCUREMENT_RE = phraseRe(PROCUREMENT);
-export const OPENING_RE = phraseRe(OPENING);
-export const VENUE_RE = phraseRe(VENUE);
+export const PRODUCE_RE = profile.PRODUCE_RE;
+export const REQUIREMENT_RE = profile.REQUIREMENT_RE;
+/** The old name for the requirement list, kept so nothing that imports it breaks. */
+export const PROCUREMENT_RE = profile.REQUIREMENT_RE;
+export const OPENING_RE = profile.OPENING_RE;
+export const VENUE_RE = profile.VENUE_RE;
 
 /**
  * How far apart the two halves of a rule may sit and still be about the same
@@ -158,7 +90,10 @@ export const VENUE_RE = phraseRe(VENUE);
  * apart and belonged to different clauses. A gap is a crude proxy for a clause,
  * and a crude proxy that drops that item is worth more than none.
  */
-export const NEAR = { demand: 140, opening: 90 };
+export const NEAR = { demand: profile.PROFILE.near.requirement, opening: profile.PROFILE.near.awareness };
+
+/** Which tier each rule belongs to. The tier is what decides whether we spend. */
+export const TIER_OF_RULE = { demand: 'requirement_candidate', opening: 'awareness' };
 
 function every(re, text) {
   const all = new RegExp(re.source, 'gi');
@@ -183,32 +118,49 @@ function nearestPair(a, b, maxGap) {
 }
 
 /**
- * Does this headline and summary say something the owner could sell into?
+ * Does this headline and summary say something the owner could sell into, and
+ * is it worth paying to read?
  *
- * Returns `{ ok, rule, keywords, gap }`. `rule` is 'demand' when somebody is
- * buying food - a produce or food-service word next to a procurement word - and
- * 'opening' when a place that will need vegetables is being opened or expanded.
- * Next to is literal: the two words have to sit within NEAR characters of each
- * other, or they are two words in one summary rather than one statement. The
- * words that matched and the gap between them are carried, so the receipt can
- * say why this item was kept.
+ * Returns `{ ok, rule, tier, keywords, gap }`. `rule` is 'demand' when somebody
+ * is buying food - a produce or food-service word next to a requirement word -
+ * and 'opening' when a place that will need vegetables is being opened or
+ * expanded. Next to is literal: the two words have to sit within NEAR characters
+ * of each other, or they are two words in one summary rather than one statement.
+ *
+ * `tier` is the part that costs money. 'requirement_candidate' says a posted
+ * requirement could be in this article, so the article is read and the model is
+ * asked. 'awareness' says an opening or an expansion was reported, which cannot
+ * contain a posted requirement: the item is kept as a signal and nothing is
+ * fetched or spent on it.
  */
 export function matchItem(text) {
   const s = String(text || '');
-  if (!s.trim()) return { ok: false, rule: null, keywords: [] };
-  if (isExcluded(s)) return { ok: false, rule: null, keywords: [], reason: 'excluded operating model' };
+  if (!s.trim()) return { ok: false, rule: null, tier: null, keywords: [] };
+  if (isExcluded(s)) return { ok: false, rule: null, tier: null, keywords: [], reason: 'excluded operating model' };
 
-  const demand = nearestPair(every(PRODUCE_RE, s), every(PROCUREMENT_RE, s), NEAR.demand);
+  const demand = nearestPair(every(PRODUCE_RE, s), every(REQUIREMENT_RE, s), NEAR.demand);
   if (demand) {
-    return { ok: true, rule: 'demand', keywords: [demand.first.word, demand.second.word], gap: demand.gap };
+    return {
+      ok: true,
+      rule: 'demand',
+      tier: TIER_OF_RULE.demand,
+      keywords: [demand.first.word, demand.second.word],
+      gap: demand.gap,
+    };
   }
 
   const opening = nearestPair(every(OPENING_RE, s), every(VENUE_RE, s), NEAR.opening);
   if (opening) {
-    return { ok: true, rule: 'opening', keywords: [opening.first.word, opening.second.word], gap: opening.gap };
+    return {
+      ok: true,
+      rule: 'opening',
+      tier: TIER_OF_RULE.opening,
+      keywords: [opening.first.word, opening.second.word],
+      gap: opening.gap,
+    };
   }
 
-  return { ok: false, rule: null, keywords: [] };
+  return { ok: false, rule: null, tier: null, keywords: [] };
 }
 
 const SEGMENT_RULES = [
@@ -311,7 +263,7 @@ export function parseFeed(
 ) {
   const out = [];
   const seen = new Set();
-  const stats = { items: 0, kept: 0, unmatched: 0, stale: 0, unusableLink: 0 };
+  const stats = { items: 0, kept: 0, requirementCandidates: 0, awareness: 0, unmatched: 0, stale: 0, unusableLink: 0 };
 
   for (const item of parseFeedItems(xml)) {
     stats.items += 1;
@@ -365,6 +317,7 @@ export function parseFeed(
         feedCategory: entry.category || null,
         matchedKeyword: match.keywords.join(' + '),
         matchRule: match.rule,
+        matchTier: match.tier,
         matchGap: match.gap ?? null,
         cityFrom: named ? 'the article names it' : entry.city ? 'the feed is that city desk' : null,
         summary: description || null,
@@ -375,6 +328,8 @@ export function parseFeed(
   }
 
   stats.kept = out.length;
+  stats.requirementCandidates = out.filter((c) => c.extra.matchTier === 'requirement_candidate').length;
+  stats.awareness = out.filter((c) => c.extra.matchTier === 'awareness').length;
   return { candidates: out, stats };
 }
 
@@ -551,6 +506,8 @@ export async function fetch(ctx) {
     feedsFailed: feeds.filter((f) => f.failed).length,
     itemsSeen: feeds.reduce((n, f) => n + f.items, 0),
     itemsMatched: raw.length,
+    requirementCandidates: kept.filter((c) => c.extra.matchTier === 'requirement_candidate').length,
+    awareness: kept.filter((c) => c.extra.matchTier === 'awareness').length,
     duplicatesDropped: dropped.length,
     candidates: kept.length,
     skipped,

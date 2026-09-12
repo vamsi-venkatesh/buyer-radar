@@ -958,7 +958,11 @@ test('only signals that say something about demand are worth a model call', () =
     ],
     { limit: 10, promptVersion: 'v1' }
   );
-  assert.deepEqual(chosen.map((l) => l.id), ['a', 'c'], 'b says nothing about demand, d was already read');
+  // Requirement candidates first, awareness after: 'c' is a posted tender and
+  // 'a' is an opening story the lane will keep without paying to read it.
+  assert.deepEqual(chosen.map((l) => l.id), ['c', 'a'], 'b says nothing about demand, d was already read');
+  assert.equal(openings.tierOf(chosen[0]), 'requirement_candidate');
+  assert.equal(openings.tierOf(chosen[1]), 'awareness');
 });
 
 test('the requirement prompt input carries the headline and the article, nothing else', () => {

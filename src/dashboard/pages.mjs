@@ -349,6 +349,31 @@ function llmCell(llm) {
   }`;
 }
 
+/**
+ * What the openings lane read, and what it decided not to read.
+ *
+ * The three numbers that matter are articles read, signals kept as awareness
+ * without a fetch or a model call, and whether the per-run cap stopped the
+ * lane. A lane that read nothing because everything was an opening story should
+ * say so here rather than look idle.
+ */
+function openingsCell(openings) {
+  if (!openings) return '<span class="muted">-</span>';
+  if (openings.skipped) return `<span class="muted">${esc(openings.skipped)}</span>`;
+  const bits = [
+    `${esc(openings.articlesRead ?? 0)} articles read`,
+    `${esc(openings.awarenessOnly ?? 0)} awareness-only`,
+    `cap ${esc(openings.readCap ?? '-')}`,
+  ];
+  return `${bits.join(' &middot; ')}<div class="muted">${esc(openings.requirementCandidates ?? 0)} requirement candidates of ${esc(
+    openings.considered ?? 0
+  )} signals, ${esc(openings.upgraded ?? 0)} upgraded</div>${
+    openings.capReached
+      ? `<div class="blocked">cap reached - ${esc(openings.cappedOut ?? 0)} candidates left unread</div>`
+      : ''
+  }`;
+}
+
 export function runsPage({ runs, webhook = null }) {
   const body = `
 <section>
@@ -356,7 +381,7 @@ export function runsPage({ runs, webhook = null }) {
   ${
     runs.length
       ? `<div class="scroll"><table>
-  <thead><tr><th>Run</th><th>City</th><th>Sources</th><th class="num">Candidates</th><th class="num">Leads</th><th>Model</th><th>Bundle</th></tr></thead>
+  <thead><tr><th>Run</th><th>City</th><th>Sources</th><th class="num">Candidates</th><th class="num">Leads</th><th>Model</th><th>Openings</th><th>Bundle</th></tr></thead>
   <tbody>${runs
     .map(
       (r) => `<tr>
@@ -372,6 +397,7 @@ export function runsPage({ runs, webhook = null }) {
     <td class="num">${esc(r.candidates ?? '-')}</td>
     <td class="num">${esc(r.leadsTotal ?? '-')}</td>
     <td>${llmCell(r.llm)}</td>
+    <td>${openingsCell(r.openings)}</td>
     <td><code class="muted">${esc(String(r.bundleHash || '').slice(0, 12))}</code>${
       r.hasBundle ? `<div><a href="${BASE}/runs/${esc(r.id)}/evidence.json">evidence</a></div>` : ''
     }</td>

@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { CITIES, EVIDENCE_SCHEMA, RUN, INSTITUTIONS } from './config.mjs';
+import { CITIES, EVIDENCE_SCHEMA, RUN, INSTITUTIONS, openingsMaxReads } from './config.mjs';
 import { RUNS_DIR } from './lib/paths.mjs';
 import { ReceiptChain } from './lib/receipts.mjs';
 import { openStore } from './lib/store.mjs';
@@ -222,10 +222,24 @@ export async function run(
           perHostPauseMs: INSTITUTIONS.pauseMs,
           timeoutMs: INSTITUTIONS.httpTimeoutMs,
         });
-        const upgraded = await openings.upgradeSignals(merged.leads, { runner, crawler, chain, settings, todayIsoDate: today, fetchImpl, log });
+        const upgraded = await openings.upgradeSignals(merged.leads, {
+          runner,
+          crawler,
+          chain,
+          settings,
+          todayIsoDate: today,
+          fetchImpl,
+          maxReads: openingsMaxReads(env),
+          log,
+        });
         openingsSummary = { ...upgraded, crawler: crawler.stats() };
         chain.add('openings.finished', {
           considered: upgraded.considered,
+          requirementCandidates: upgraded.requirementCandidates,
+          awarenessOnly: upgraded.awarenessOnly,
+          readCap: upgraded.readCap,
+          capReached: upgraded.capReached,
+          cappedOut: upgraded.cappedOut,
           linksResolved: upgraded.linksResolved,
           linksUnresolved: upgraded.linksUnresolved,
           articlesRead: upgraded.articlesRead,
@@ -369,6 +383,28 @@ export async function run(
   }
 }
 
+/**
+ * The openings lane in one line: what it read, what it kept without reading,
+ * and whether the per-run cap stopped it.
+ *
+ * Articles read and awareness-only are the two numbers that say whether the
+ * lane is spending on the right things. A run that considered 13 signals, read
+ * 0 articles and kept 11 as awareness spent nothing on stories that could not
+ * have contained a requirement - which is the whole point of the tiers.
+ */
+export function openingsLine(openings) {
+  if (!openings) return '';
+  if (openings.skipped) return String(openings.skipped);
+  return (
+    `${openings.considered} signals (${openings.requirementCandidates ?? 0} requirement candidates, ` +
+    `${openings.awarenessOnly ?? 0} awareness-only - no fetch, no model), ` +
+    `${openings.articlesRead} articles read of a cap of ${openings.readCap ?? '-'}` +
+    `${openings.capReached ? ` (cap reached, ${openings.cappedOut ?? 0} candidates left unread)` : ''}, ` +
+    `${openings.linksResolved ?? 0} links resolved to a publisher (${openings.linksUnresolved ?? 0} not), ` +
+    `${openings.requirementsSeen} state a requirement, ${openings.contactsFound} contacts found, ${openings.upgraded} upgraded`
+  );
+}
+
 async function main() {
   let opts;
   try {
@@ -395,13 +431,7 @@ async function main() {
   }
   process.stderr.write(`leads total  ${s.leadsTotal} (phone ${s.leadsWithPhone}, email ${s.leadsWithEmail})\n`);
   process.stderr.write(`requirements ${s.requirements ?? 0} posted (${s.requirementsWithContact ?? 0} with a contact), ${s.registrations ?? 0} registration routes\n`);
-  if (s.openings) {
-    process.stderr.write(
-      s.openings.skipped
-        ? `openings     ${s.openings.skipped}\n`
-        : `openings     ${s.openings.considered} signals, ${s.openings.linksResolved ?? 0} links resolved to a publisher (${s.openings.linksUnresolved ?? 0} not), ${s.openings.articlesRead} articles read, ${s.openings.requirementsSeen} state a requirement, ${s.openings.contactsFound} contacts found, ${s.openings.upgraded} upgraded\n`
-    );
-  }
+  if (s.openings) process.stderr.write(`openings     ${openingsLine(s.openings)}\n`);
   process.stderr.write(`digest       ${s.digestChars} chars, ${result.digest.shown} leads shown\n`);
   if (s.llm) {
     process.stderr.write(

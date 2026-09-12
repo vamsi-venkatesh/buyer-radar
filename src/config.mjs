@@ -157,10 +157,25 @@ export const OPENINGS = {
   // call. These are matched against the headline.
   triggers:
     /\b(open(?:s|ed|ing)?|launch(?:es|ed|ing)?|expan(?:d|ds|ded|sion)|tender|canteen|mess|hostel|contract|supply|inaugurat)/i,
-  maxPerRun: 12, // model extractions per run; each one is a paid call
+  maxPerRun: 12, // signals considered per run
+  // Articles read - and therefore model calls made - by this lane in one run.
+  // The first real run of this lane on a deployment read 12 articles over 34
+  // calls and found no requirement in any of them, because all 12 were opening
+  // stories. The tiers stop most of that; this is the ceiling under them, and
+  // OPENINGS_MAX_READS moves it without a code change.
+  maxReads: 6,
   contactPathsTried: 4,
   licence: 'Google News RSS (headline + link only), then the organisation\'s own website',
 };
+
+/** The per-run article-read cap, from OPENINGS_MAX_READS, or the default above. */
+export function openingsMaxReads(env = process.env) {
+  const raw = env && env.OPENINGS_MAX_READS;
+  if (raw === undefined || raw === null || String(raw).trim() === '') return OPENINGS.maxReads;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return OPENINGS.maxReads;
+  return Math.floor(n);
+}
 
 // Direct publisher feeds - the openings lane's article supply.
 //

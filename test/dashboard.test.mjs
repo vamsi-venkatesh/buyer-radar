@@ -334,6 +334,41 @@ test('the register shows what the model read, its quotes, and whether the score 
   assert.match(res.text, /&lt;script&gt;alert\(1\)&lt;\/script&gt; we run 120 rooms/);
 });
 
+test('the runs page says what the openings lane read and what it refused to read', async (t) => {
+  const runs = [
+    {
+      id: 'run_c',
+      city: 'bengaluru',
+      sources: ['publishers', 'openings'],
+      startedAt: '2026-09-11T01:00:00.000Z',
+      summary: {
+        candidates: 20,
+        leadsTotal: 18,
+        openings: {
+          considered: 14,
+          requirementCandidates: 8,
+          awarenessOnly: 6,
+          articlesRead: 6,
+          readCap: 6,
+          capReached: true,
+          cappedOut: 2,
+          upgraded: 1,
+        },
+      },
+      bundleHash: 'c'.repeat(64),
+    },
+  ];
+  const { auth } = await withServer(t, { store: fixtureStore({ runs }) });
+  const res = await auth('/runs');
+
+  assert.equal(res.status, 200);
+  assert.match(res.text, /6 articles read/);
+  assert.match(res.text, /6 awareness-only/);
+  assert.match(res.text, /cap 6/);
+  assert.match(res.text, /8 requirement candidates of 14 signals/);
+  assert.match(res.text, /cap reached - 2 candidates left unread/);
+});
+
 test('the runs page reports what the model stage cost, or why it did not run', async (t) => {
   const runs = [
     { id: 'run_a', city: 'bengaluru', sources: ['news'], startedAt: '2026-09-11T01:00:00.000Z', summary: { candidates: 10, leadsTotal: 8, llm: { enabled: true, provider: 'deepseek', model: 'deepseek-chat', calls: 5, notNeeded: 4, cacheHits: 2, costInr: 0.1865, budgetSkipped: 1, invalid: 0, errors: 0, enriched: 3, openers: 2 } }, bundleHash: 'a'.repeat(64) },

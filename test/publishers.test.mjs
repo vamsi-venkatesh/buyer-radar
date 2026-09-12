@@ -17,7 +17,9 @@ import * as openings from '../src/sources/openings.mjs';
 import { parseFeedItems, parseAtomEntries } from '../src/lib/xml.mjs';
 import { createCrawler } from '../src/lib/crawl.mjs';
 import { htmlToText } from '../src/llm/page.mjs';
-import { OPENINGS } from '../src/config.mjs';
+import * as news from '../src/sources/news.mjs';
+import { OPENINGS, CITIES, openingsMaxReads } from '../src/config.mjs';
+import { loadProfile } from '../src/lib/profile.mjs';
 
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const read = (f) => readFile(path.join(FIXTURES, f), 'utf8');
@@ -267,7 +269,10 @@ test('the openings lane picks up a publisher signal as readily as a news one', (
     ],
     { limit: 10, promptVersion: 'v1' }
   );
-  assert.deepEqual(chosen.map((l) => l.id), ['a', 'b']);
+  // Requirement candidates first - 'b' is a posted tender - then awareness.
+  assert.deepEqual(chosen.map((l) => l.id), ['b', 'a']);
+  assert.equal(openings.tierOf(chosen[0]), 'requirement_candidate');
+  assert.equal(openings.tierOf(chosen[1]), 'awareness');
   assert.ok(OPENINGS.signalSources.includes('publishers'));
 
   // The budget goes to the links that can be read. A Google News item scoring
@@ -284,58 +289,109 @@ test('the openings lane picks up a publisher signal as readily as a news one', (
     extra: {},
   });
   const order = openings.selectSignals(
-    [google('g1', 99), { ...make('p1', 'publishers', 'Hotel opens in Bengaluru'), score: 10 }, google('g2', 98)],
+    [
+      google('g1', 99),
+      { ...make('p1', 'publishers', 'Tender floated for supply of vegetables to the hostel mess'), score: 10 },
+      google('g2', 98),
+    ],
     { limit: 2, promptVersion: 'v1' }
   );
   assert.deepEqual(order.map((l) => l.id), ['p1', 'g1']);
 });
 
-test('REAL: a publisher signal is read from the publisher\'s page, with no request to Google', async () => {
-  const html = await read('publishers-article-hospitality.html');
+test('REAL: an expansion story is kept as an awareness signal - no article fetched, no model called', async () => {
   const { candidates } = publishers.parseFeed(await read('publishers-feed-et-hospitalityworld.xml'), { entry: ET_HOSPITALITY, maxAgeDays: null });
   const candidate = candidates.find((c) => /Chalet Hotels/i.test(c.name));
   assert.ok(candidate, 'the fixture carries the item whose page was saved');
+  assert.equal(candidate.extra.matchTier, 'awareness', 'an expansion is awareness, not a posted requirement');
   const lead = leadFrom(candidate, 'l1');
+
+  const receipts = [];
+  const out = await openings.upgradeSignals([lead], {
+    runner: {
+      notNeeded() { throw new Error('an awareness signal never reaches the model gate'); },
+      ask: async () => { throw new Error('no model call belongs on an awareness signal'); },
+    },
+    crawler: {
+      robotsFor: async () => { throw new Error('no robots.txt is read for an article we are not going to fetch'); },
+      fetchDoc: async (url) => { throw new Error(`no article fetch belongs here: ${url}`); },
+    },
+    chain: { add: (type, data) => receipts.push({ type, data }) },
+    settings: { minConfidence: 0.7 },
+    todayIsoDate: '2026-09-11',
+    fetchImpl: async () => { throw new Error('no network call belongs on an awareness signal'); },
+  });
+
+  assert.equal(out.considered, 1);
+  assert.equal(out.requirementCandidates, 0);
+  assert.equal(out.awarenessOnly, 1);
+  assert.equal(out.articlesRead, 0);
+  assert.equal(out.upgraded, 0);
+
+  assert.equal(lead.kind, 'signal', 'it stays a signal, and it is still a lead worth keeping');
+  assert.ok(lead.why_now, 'an awareness signal keeps a reason to act on it');
+  assert.match(lead.why_now, /opening or expansion reported/);
+  assert.equal(lead.extra.awarenessOnly, true);
+
+  const receipt = receipts.find((r) => r.type === 'openings.awareness_only');
+  assert.ok(receipt, 'the decision not to spend is on the receipt chain');
+  assert.equal(receipt.data.leadId, 'l1');
+  assert.equal(receipt.data.matchRule, 'opening');
+});
+
+test('a publisher item that does state a requirement is read end to end, model and all', async () => {
+  const rss = `<rss><channel><item>
+    <title>Tender floated for supply of vegetables to the hostel mess</title>
+    <description>The university has invited quotations for the annual supply of fresh vegetables to its hostel mess.</description>
+    <link>https://paper.example/city/hostel-mess-tender</link>
+    <pubDate>Wed, 10 Sep 2026 06:00:00 +0530</pubDate>
+  </item></channel></rss>`;
+  const entry = { name: 'Paper', publisher: 'Paper', url: 'https://paper.example/feed', city: 'Bengaluru', state: 'Karnataka' };
+  const { candidates } = publishers.parseFeed(rss, { entry, todayIsoDate: '2026-09-11' });
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].extra.matchTier, 'requirement_candidate');
+  const lead = leadFrom(candidates[0], 'l3');
+
+  const article =
+    '<html><body><p>The university has invited quotations for the annual supply of fresh vegetables ' +
+    'to its hostel mess. Bids close on 30 September 2026.</p>' +
+    '<a href="https://hostelmess.example">Sunrise University</a></body></html>';
+  const site = '<html><body><p>Sunrise University. Purchase Officer: Shri A Rao. Phone: 080-2293 2222</p></body></html>';
 
   const fetched = [];
   const crawler = {
-    robotsFor: async () => { throw new Error('the openings lane must not ask Google for robots.txt here'); },
+    robotsFor: async () => { throw new Error('a publisher URL is already the article - nothing to resolve through Google'); },
     fetchDoc: async (url) => {
       fetched.push(url);
-      if (url === candidate.sourceUrl) return { ok: true, url, html, text: htmlToText(html, { maxChars: 20000 }), status: 200, kind: 'html' };
-      if (url === 'https://chalethotels.example') {
-        const page = '<html><body><p>Chalet Hotels. Purchase Officer: Shri A Rao. Phone: 022-2726 5555</p></body></html>';
-        return { ok: true, url, html: page, text: page.replace(/<[^>]+>/g, ' '), status: 200, kind: 'html' };
-      }
+      if (url === candidates[0].sourceUrl) return { ok: true, url, html: article, text: article.replace(/<[^>]+>/g, ' '), status: 200, kind: 'html' };
+      if (url.startsWith('https://hostelmess.example')) return { ok: true, url, html: site, text: site.replace(/<[^>]+>/g, ' '), status: 200, kind: 'html' };
       return { ok: false, reason: 'HTTP 404', url };
     },
   };
   let asked = 0;
-  const runner = {
-    notNeeded() { throw new Error('this article gives the deterministic readers nothing, so the model is needed'); },
-    ask: async ({ input }) => {
-      asked += 1;
-      assert.match(input, /Article text:/);
-      assert.match(input, /Chalet Hotels/);
-      return {
-        ok: true,
-        value: {
-          isRequirement: true,
-          organisation: 'Chalet Hotels',
-          requirement: 'fresh produce for the new keys',
-          quantity: null,
-          deadline: null,
-          contactHint: null,
-          site: 'https://chalethotels.example',
-          evidence: ['targets 5,500 keys by FY30'],
-          confidence: 0.9,
-        },
-      };
-    },
-  };
   const receipts = [];
   const out = await openings.upgradeSignals([lead], {
-    runner,
+    runner: {
+      notNeeded: ({ reason }) => { throw new Error(`the model is needed here: ${reason}`); },
+      ask: async ({ input }) => {
+        asked += 1;
+        assert.match(input, /Article text:/);
+        return {
+          ok: true,
+          value: {
+            isRequirement: true,
+            organisation: 'Sunrise University',
+            requirement: 'annual supply of fresh vegetables to the hostel mess',
+            quantity: null,
+            deadline: '2026-09-30',
+            contactHint: null,
+            site: 'https://hostelmess.example',
+            evidence: ['invited quotations for the annual supply of fresh vegetables'],
+            confidence: 0.9,
+          },
+        };
+      },
+    },
     crawler,
     chain: { add: (type, data) => receipts.push({ type, data }) },
     settings: { minConfidence: 0.7 },
@@ -343,17 +399,15 @@ test('REAL: a publisher signal is read from the publisher\'s page, with no reque
     fetchImpl: async () => { throw new Error('no network call belongs in this lane for a direct publisher URL'); },
   });
 
-  assert.equal(out.considered, 1);
-  assert.equal(out.linksResolved, 0, 'a publisher URL needs no resolving - it is already the article');
-  assert.equal(out.linksUnresolved, 0);
+  assert.equal(out.requirementCandidates, 1);
+  assert.equal(out.awarenessOnly, 0);
   assert.equal(out.articlesRead, 1);
   assert.equal(asked, 1);
-  assert.equal(fetched[0], candidate.sourceUrl);
+  assert.equal(fetched[0], candidates[0].sourceUrl);
   assert.equal(lead.kind, 'requirement');
-  assert.equal(lead.phone, '+912227265555');
-  assert.equal(lead.extra.document_url, candidate.sourceUrl);
-  assert.equal(lead.extra.organisation, 'Chalet Hotels');
-  assert.ok(receipts.some((r) => r.type === 'openings.article_read' && r.data.publisher === 'hospitality.economictimes.indiatimes.com'));
+  assert.equal(lead.phone, '+918022932222');
+  assert.equal(lead.extra.organisation, 'Sunrise University');
+  assert.ok(receipts.some((r) => r.type === 'openings.article_read'));
   assert.ok(receipts.some((r) => r.type === 'openings.upgraded'));
 });
 
@@ -362,46 +416,55 @@ test('REAL: a phone number on a newspaper page is the newspaper\'s, and is never
   const { candidates } = publishers.parseFeed(await read('publishers-feed-telangana-today.xml'), { entry: TELANGANA, maxAgeDays: null });
   const candidate = candidates.find((c) => /Loyola Academy/i.test(c.name));
   assert.ok(candidate);
-  const lead = leadFrom(candidate, 'l2');
+  assert.equal(candidate.extra.matchTier, 'awareness');
 
   // The deterministic readers do get something off this page - a date - and the
-  // old rule would have stopped there and used whatever contact the page
-  // carried. The page belongs to Telangana Today.
+  // oldest version of this lane would have stopped there and used whatever
+  // contact the page carried. The page belongs to Telangana Today.
   const text = htmlToText(html, { maxChars: 20000 });
   assert.ok(openings.deterministicReads(text, { todayIsoDate: '2026-09-11' }).deadline, 'a date is readable on the page');
 
-  const fetched = [];
-  const crawler = {
-    robotsFor: async () => { throw new Error('no Google robots.txt read belongs here'); },
-    fetchDoc: async (url) => {
-      fetched.push(url);
-      return { ok: true, url, html, text, status: 200, kind: 'html' };
-    },
-  };
-  let asked = 0;
-  const out = await openings.upgradeSignals([lead], {
+  // First: as awareness, the page is never fetched at all.
+  const lead = leadFrom(candidate, 'l2');
+  const untouched = await openings.upgradeSignals([lead], {
     runner: {
-      notNeeded: () => { throw new Error('a publisher article is never answerable without the model'); },
-      ask: async () => {
-        asked += 1;
-        // The model read the article and offered the newspaper as the site.
-        return {
-          ok: true,
-          value: {
-            isRequirement: true,
-            organisation: 'Loyola Academy',
-            requirement: 'provisions for the college canteen',
-            quantity: null,
-            deadline: null,
-            contactHint: null,
-            site: 'https://telanganatoday.com',
-            evidence: [],
-            confidence: 0.9,
-          },
-        };
+      notNeeded() { throw new Error('an awareness signal never reaches the model gate'); },
+      ask: async () => { throw new Error('no model call belongs on an awareness signal'); },
+    },
+    crawler: {
+      robotsFor: async () => { throw new Error('no robots.txt read belongs here'); },
+      fetchDoc: async (url) => { throw new Error(`no fetch belongs here: ${url}`); },
+    },
+    chain: { add() {} },
+    settings: { minConfidence: 0.7 },
+    todayIsoDate: '2026-09-11',
+    fetchImpl: async () => { throw new Error('no network call belongs here'); },
+  });
+  assert.equal(untouched.awarenessOnly, 1);
+  assert.equal(untouched.articlesRead, 0);
+  assert.equal(lead.kind, 'signal');
+  assert.ok(!lead.phone, 'no number was written onto the lead');
+
+  // Second, with the tier forced to a requirement candidate, so the rules below
+  // the tier are still exercised on a REAL newspaper page: the article never
+  // uses procurement wording, so the pre-check refuses the model, and no
+  // contact is taken off the newspaper whatever its page carries.
+  const forced = leadFrom(candidate, 'l2b');
+  forced.extra.matchTier = 'requirement_candidate';
+  const fetched = [];
+  const refusals = [];
+  const out = await openings.upgradeSignals([forced], {
+    runner: {
+      notNeeded: (r) => refusals.push(r),
+      ask: async () => { throw new Error('this page never says tender, supply or empanelment - the model must not be called'); },
+    },
+    crawler: {
+      robotsFor: async () => { throw new Error('no Google robots.txt read belongs here'); },
+      fetchDoc: async (url) => {
+        fetched.push(url);
+        return { ok: true, url, html, text, status: 200, kind: 'html' };
       },
     },
-    crawler,
     chain: { add() {} },
     settings: { minConfidence: 0.7 },
     todayIsoDate: '2026-09-11',
@@ -409,14 +472,14 @@ test('REAL: a phone number on a newspaper page is the newspaper\'s, and is never
   });
 
   assert.equal(out.articlesRead, 1);
-  assert.equal(asked, 1);
-  assert.equal(out.notNeeded, 0);
+  assert.equal(out.notNeeded, 1);
   assert.equal(out.upgraded, 0);
+  assert.deepEqual(refusals.map((r) => r.reason), ['no procurement wording']);
   assert.deepEqual(fetched, [candidate.sourceUrl], 'the newspaper is read once as an article and never as a buyer\'s site');
-  assert.equal(lead.kind, 'signal');
-  assert.ok(!lead.phone, 'no number was written onto the lead');
-  assert.equal(lead.extra.contactComplete, false);
-  assert.match(lead.extra.contactNotFound, /refused host telanganatoday\.com/);
+  assert.equal(forced.kind, 'signal');
+  assert.ok(!forced.phone, 'no number was written onto the lead');
+  assert.equal(forced.extra.contactComplete, false);
+  assert.equal(forced.extra.contactNotFound, 'no procurement wording');
 });
 
 test('REAL: a second publisher\'s page reads as text through the same crawler path', async () => {
@@ -441,8 +504,8 @@ test('a publisher whose robots.txt refuses the article is skipped, with the refu
     id: 'l9',
     kind: 'signal',
     source: 'publishers',
-    source_url: 'https://walled.example/city/new-hotel-opens',
-    name: 'New hotel opens in Bengaluru',
+    source_url: 'https://walled.example/city/hostel-mess-tender',
+    name: 'Tender floated for supply of vegetables to the hostel mess',
     city: 'Bengaluru',
     score: 40,
     extra: {},
@@ -461,6 +524,164 @@ test('a publisher whose robots.txt refuses the article is skipped, with the refu
   assert.equal(lead.kind, 'signal', 'a page we may not read leaves the lead exactly as it was');
   const skipped = receipts.find((r) => r.type === 'openings.article_skipped');
   assert.ok(skipped, 'the refusal is on the receipt chain');
-  assert.match(skipped.data.reason, /robots\.txt disallows \/city\/new-hotel-opens/);
+  assert.match(skipped.data.reason, /robots\.txt disallows \/city\/hostel-mess-tender/);
   assert.equal(crawler.stats().blockedByRobots, 1);
+});
+
+// ------------------------------------------------------------------- tiers
+//
+// The first real run of this lane on the server read 12 articles, made 34 model
+// calls and spent Rs 8.57 to learn that 0 of them stated a requirement. Every
+// one was an opening or an expansion story. The tiers are that run's lesson:
+// awareness is kept and never paid for.
+
+test('the two tiers are decided by the configured word lists, not by the code', () => {
+  for (const text of [
+    'Tender floated for supply of vegetables to the hostel mess',
+    'Quotations invited for canteen provisions at the district hospital',
+    'EOI invited for the annual supply of fresh vegetables to the college mess',
+    'Vendor registration opens for hostel kitchen supplies',
+    'RFQ issued for mid-day meal groceries',
+  ]) {
+    const m = publishers.matchItem(text);
+    assert.equal(m.ok, true, text);
+    assert.equal(m.tier, 'requirement_candidate', text);
+    assert.equal(m.rule, 'demand', text);
+  }
+
+  for (const text of [
+    'Taj to open a 200-room hotel in Whitefield next year',
+    'ITC expands its Bengaluru hotel portfolio',
+    'New restaurant opens in Jubilee Hills',
+  ]) {
+    const m = publishers.matchItem(text);
+    assert.equal(m.ok, true, text);
+    assert.equal(m.tier, 'awareness', text);
+    assert.equal(m.rule, 'opening', text);
+  }
+
+  assert.equal(publishers.matchItem('Metro line opens between Majestic and Whitefield').tier, null);
+
+  // The lists are built at load in src/lib/profile.mjs - the trade's half from
+  // the engine, the supplier's half from the client profile - so a deployment's
+  // words can grow by editing config/client.json and touching no source.
+  const profile = loadProfile();
+  for (const word of ['tender', 'e-tender', 'procurement', 'supply of', 'rfq', 'eoi', 'expression of interest', 'empanel', 'rate contract', 'annual supply', 'canteen contract', 'mess contract', 'vendor registration', 'supplier']) {
+    assert.ok(profile.requirement.includes(word), `${word} is on the requirement list`);
+  }
+  assert.ok(profile.opening.includes('expansion'), 'the awareness list carries the expansion words');
+});
+
+test('a feed item carries its tier onto the candidate, and the source counts both', () => {
+  const rss = `<rss><channel>
+    <item><title>Tender floated for supply of vegetables to the hostel mess</title><link>https://paper.example/a</link></item>
+    <item><title>New hotel opens in Whitefield</title><link>https://paper.example/b</link></item>
+  </channel></rss>`;
+  const { candidates, stats } = publishers.parseFeed(rss, { entry: { name: 'Paper', url: 'https://paper.example/feed' }, maxAgeDays: null });
+  assert.deepEqual(candidates.map((c) => c.extra.matchTier), ['requirement_candidate', 'awareness']);
+  assert.equal(stats.requirementCandidates, 1);
+  assert.equal(stats.awareness, 1);
+});
+
+test('a lead with no tier on it is tiered from its own words', () => {
+  const lead = (name) => ({ id: 'x', kind: 'signal', source: 'news', source_url: 'https://n/x', name, score: 10, extra: {} });
+  assert.equal(openings.tierOf(lead('Canteen tender floated by the railway')), 'requirement_candidate');
+  assert.equal(openings.tierOf(lead('New hotel opens in Bengaluru')), 'awareness');
+  assert.equal(openings.tierOf(lead('Metro line opens between Majestic and Whitefield')), 'awareness');
+  // A lane that has already read the summary is believed over the headline.
+  assert.equal(
+    openings.tierOf({ ...lead('Chalet Hotels targets 5,500 keys by FY30'), extra: { matchTier: 'requirement_candidate' } }),
+    'requirement_candidate'
+  );
+});
+
+// --------------------------------------------------------------------- cap
+
+test('the lane reads no more articles in a run than OPENINGS_MAX_READS allows', async () => {
+  const leads = [1, 2, 3, 4].map((n) => ({
+    id: `c${n}`,
+    kind: 'signal',
+    source: 'publishers',
+    source_url: `https://paper.example/tender-${n}`,
+    name: `Tender floated for supply of vegetables to hostel mess ${n}`,
+    city: 'Bengaluru',
+    score: 100 - n,
+    extra: { matchTier: 'requirement_candidate' },
+  }));
+  const page = '<html><body><p>The hostel mess tender invites quotations for the supply of vegetables.</p></body></html>';
+  const fetched = [];
+  const receipts = [];
+  const out = await openings.upgradeSignals(leads, {
+    runner: {
+      notNeeded() {},
+      ask: async () => ({ ok: true, value: { isRequirement: false, organisation: null, requirement: null, quantity: null, deadline: null, contactHint: null, site: null, evidence: [], confidence: 0.2 } }),
+    },
+    crawler: {
+      robotsFor: async () => ({ allowed: true }),
+      fetchDoc: async (url) => {
+        fetched.push(url);
+        return { ok: true, url, html: page, text: page.replace(/<[^>]+>/g, ' '), status: 200, kind: 'html' };
+      },
+    },
+    chain: { add: (type, data) => receipts.push({ type, data }) },
+    settings: { minConfidence: 0.7 },
+    todayIsoDate: '2026-09-11',
+    fetchImpl: async () => { throw new Error('no network call belongs here'); },
+    maxReads: 2,
+  });
+
+  assert.equal(out.readCap, 2);
+  assert.equal(out.articlesRead, 2);
+  assert.equal(fetched.length, 2, 'the cap counts fetches, not intentions');
+  assert.equal(out.capReached, true);
+  assert.equal(out.cappedOut, 2);
+
+  const capped = receipts.filter((r) => r.type === 'openings.cap_reached');
+  assert.equal(capped.length, 1, 'the cap is receipted once, not once per lead left unread');
+  assert.equal(capped[0].data.cap, 2);
+  assert.equal(capped[0].data.env, 'OPENINGS_MAX_READS');
+  assert.match(leads[3].extra.contactNotFound, /article-read cap of 2/);
+});
+
+test('the cap comes from the environment, and a nonsense value is ignored', () => {
+  assert.equal(openingsMaxReads({}), OPENINGS.maxReads);
+  assert.equal(OPENINGS.maxReads, 6);
+  assert.equal(openingsMaxReads({ OPENINGS_MAX_READS: '3' }), 3);
+  assert.equal(openingsMaxReads({ OPENINGS_MAX_READS: '0' }), 0);
+  assert.equal(openingsMaxReads({ OPENINGS_MAX_READS: 'plenty' }), OPENINGS.maxReads);
+  assert.equal(openingsMaxReads({ OPENINGS_MAX_READS: '' }), OPENINGS.maxReads);
+});
+
+// ------------------------------------------------- the news lane, unchanged
+
+test('the news lane still parses exactly as it did: the tiers are the openings lane\'s business', () => {
+  const xml = `<rss><channel><item>
+    <title>Canteen tender floated by the railway - The Hindu</title>
+    <link>https://news.google.com/rss/articles/AU_yqLabc?oc=5</link>
+    <pubDate>Wed, 10 Sep 2026 06:00:00 +0530</pubDate>
+    <guid>g1</guid>
+  </item><item>
+    <title>New hotel opens in Whitefield - Deccan Herald</title>
+    <link>https://news.google.com/rss/articles/AU_yqLdef?oc=5</link>
+    <pubDate>Wed, 10 Sep 2026 06:00:00 +0530</pubDate>
+    <guid>g2</guid>
+  </item></channel></rss>`;
+  const items = news.parseFeed(xml, { query: 'canteen tender', segment: 'institution', city: CITIES.bengaluru, feedUrl: 'https://news.google.com/rss/search?q=x' });
+
+  assert.equal(items.length, 2, 'the news lane keeps what it always kept');
+  assert.deepEqual(items.map((i) => i.name), ['Canteen tender floated by the railway', 'New hotel opens in Whitefield']);
+  for (const item of items) {
+    assert.equal(item.kind, 'signal');
+    assert.equal(item.source, 'news');
+    assert.equal(item.phone, null);
+    assert.equal(item.extra.matchTier, undefined, 'the news source tiers nothing - it has only a headline');
+    assert.equal(new URL(item.sourceUrl).hostname, 'news.google.com');
+  }
+  assert.equal(items[0].extra.publication, 'The Hindu');
+  assert.equal(items[0].whyNow, 'reported 2026-09-10');
+
+  // The tier is decided where the money is spent, from the same headline.
+  const lead = (i, item) => ({ id: `n${i}`, kind: 'signal', source: 'news', source_url: item.sourceUrl, name: item.name, score: 40, extra: { ...item.extra } });
+  assert.equal(openings.tierOf(lead(1, items[0])), 'requirement_candidate');
+  assert.equal(openings.tierOf(lead(2, items[1])), 'awareness');
 });

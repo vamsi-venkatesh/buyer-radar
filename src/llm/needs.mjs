@@ -17,12 +17,14 @@
 //               cache does not already hold the answer.
 //   opener      needed only for a lead the digest will actually show AND that
 //               has at least one concrete fact to build a line on.
-//   requirement needed only when the deterministic readers found no quantity,
-//               no deadline and no contact in the notice text - and ALWAYS for a
-//               publisher's article, which names no buyer and no buyer's site
-//               whatever a regex reads off it.
+//   requirement needed only when the text uses procurement wording at all, AND
+//               the deterministic readers found no quantity, no deadline and no
+//               contact in the notice text - and ALWAYS for a publisher's
+//               article, which names no buyer and no buyer's site whatever a
+//               regex reads off it.
 
 import { DIGEST_SECTIONS } from '../config.mjs';
+import { hasRequirementWording } from '../lib/profile.mjs';
 
 export const PURPOSES = ['enrich', 'opener', 'requirement'];
 
@@ -141,6 +143,16 @@ export function needsModel(purpose, lead = null, ctx = {}) {
   // requirement
   const d = ctx.deterministic || {};
   if (!ctx.hasText) return { needed: false, reason: 'there is no notice text to read' };
+
+  // The hard pre-check, ahead of every rule below it including the article
+  // rule. A text that never says tender, RFQ, EOI, supply of, empanelment or
+  // any other word on the client's requirement list does not contain a posted
+  // requirement, and a model cannot find one in it. The first real run of the
+  // openings lane spent 34 calls on 12 expansion stories to be told this 12
+  // times. The words come from src/lib/profile.mjs.
+  if (typeof ctx.text === 'string' && !hasRequirementWording(ctx.text)) {
+    return { needed: false, reason: 'no procurement wording' };
+  }
 
   // A notice is published by the body that wants the vegetables, so everything
   // on it - the quantity, the closing date, the officer's number - is that

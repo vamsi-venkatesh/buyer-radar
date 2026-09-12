@@ -386,6 +386,7 @@ async function handle(req, res, { token, digestsDir, runsDir, openStore: open })
           leadsTotal: r.summary?.leadsTotal,
           blocked: r.summary?.blocked || [],
           llm: r.summary?.llm || null,
+          openings: r.summary?.openings || null,
           bundleHash: r.bundleHash,
           hasBundle: bundleFiles.has(`${r.id}.evidence.json`),
         }));

@@ -8,6 +8,29 @@ All notable changes to this project are recorded here. The format follows
 
 ### Added
 
+- **Two tiers on the openings lane, and only one of them costs money.** Every
+  signal is tiered before anything is fetched: a `requirement_candidate` uses
+  procurement wording next to a produce word and is read, an `awareness` item
+  reports an opening or an expansion and is kept as a signal with its `why_now`
+  for the price of one receipt (`openings.awareness_only`) and nothing else. The
+  first real run of this lane on the reference deployment read 12 articles over
+  34 model calls and found a posted requirement in none of them; all 12 were
+  opening stories.
+- **A procurement-wording pre-check on the model gate.** `needsModel('requirement',
+  ...)` now refuses a call for a text that never uses procurement wording at all,
+  above every other requirement rule including the article rule:
+  `llm.not_needed { reason: 'no procurement wording' }`.
+- **`OPENINGS_MAX_READS`, default 6.** A per-run ceiling on article reads, and
+  therefore on requirement calls. When it is reached the remaining candidates are
+  left unread with the reason on their own record and `openings.cap_reached` is
+  written once.
+- **`src/lib/profile.mjs`.** The word lists behind the two tiers in one place:
+  the trade's half from the engine, the supplier's half from the client profile,
+  and `signals` in `config/client.json` replaces either without a code change.
+- **The run summary and the dashboard say what the lane read.** `openingsLine()`
+  and a new **Openings** column: articles read, awareness-only, the cap, and
+  whether it was reached.
+
 - **The `publishers` source.** 37 direct RSS/Atom feeds published by Indian
   newspapers, trade titles and institutions, in `config/publisher-feeds.json`,
   each carrying the publisher's own article URL - so the openings lane has
