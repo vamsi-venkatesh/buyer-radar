@@ -69,6 +69,34 @@ Every arrow into the register is a write that leaves a receipt. Nothing in the
 diagram has an arrow pointing at a buyer, and that is deliberate - see
 [ADR 3](docs/adr/0003-the-human-gate.md).
 
+## Governance
+
+The same workflow, read as the thing it is governed as: ten nodes, six roles,
+and one human gate. [docs/governance.md](docs/governance.md) maps every node to
+the modules that implement it, the receipt types it emits and the tests that
+hold it in place; it also sets out what each role may call, the hash recipe an
+auditor recomputes, what is remembered and what is deliberately not, and how to
+run the evaluation.
+
+```mermaid
+graph TD
+  A["Intake<br/>the supplier's own facts"] --> B["Scouts<br/>one module per open source"]
+  B --> C["Normalise + Dedup<br/>phone, then name + city"]
+  C --> D["Rules Scorer<br/>written rules, 0-100"]
+  D --> E["Reader<br/>a model, only when the rules cannot answer"]
+  E --> F["Verifier<br/>independent, can veto"]
+  F --> G["Desk<br/>requirements, buyers, market prices"]
+  G --> H{{"Owner gate<br/>HUMAN AUTHORITY<br/>digest automatic; any buyer contact<br/>needs the owner's one word"}}
+  H --> I["Receipt<br/>hash-sealed, recomputable"]
+  I --> J["Memory<br/>bounded, per class"]
+  J -.->|"what yesterday already knew"| C
+
+  classDef gate fill:#fff3cd,stroke:#b8860b,stroke-width:3px;
+  class H gate;
+```
+
+The owner contacts buyers. The service never does.
+
 ## The four instruments
 
 This is a small product built to demonstrate four things that are hard to fake.
