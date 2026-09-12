@@ -57,9 +57,11 @@ own.
 
 The only things any caller can do to this project are the tools in
 `src/tools/registry.mjs`. Every tool declares a `kind` (`read`, `write`,
-`network`, `model`) and a `cost` (`free`, `metered`), validates its input
-against a JSON Schema before the handler runs, and leaves a `tool.call` receipt
-— or a `tool.refused` receipt when a gate stops it.
+`network`, `model`), a `cost` (`free`, `metered`) and the `role` whose job it is,
+validates its input against a JSON Schema before the handler runs, and leaves a
+`tool.call` receipt — or a `tool.refused` receipt when a gate stops it. A tool
+whose declared role is not one of the six below throws at import time, so the
+table in this document and the code cannot drift apart quietly.
 
 | Tool | Kind | Cost | Owner only |
 | --- | --- | --- | --- |
@@ -158,6 +160,14 @@ hash = sha256(payload), lowercase hex
 `schema` is `EVIDENCE_SCHEMA` from `src/config.mjs` (`vvdex.evidence-bundle/v1`).
 The recipe does not change without a new schema string.
 
+Every receipt carries a `role` — one of the six in section 2 — so a bundle reads
+as *who did what* and not only as *what happened*. The tool layer states its own
+role per tool and a stated role always wins; everything else derives it from the
+receipt type (`roleForReceipt()`), which never throws and falls back to
+`auditor`. The recipe is over the receipt objects as they are stored, so adding
+`role` inside a receipt changed that receipt's hash exactly as any other change
+to it would. The recipe itself is untouched.
+
 To check a bundle:
 
 ```bash
@@ -175,6 +185,10 @@ deployment.
 ---
 
 ## 5. Memory
+
+What the service remembers, what it never remembers, and where each class lives
+is written out in full in [memory.md](memory.md), with retention stated as *not
+enforced yet* wherever the code enforces nothing.
 
 The store is chosen by `src/lib/store.mjs`: Postgres when `DATABASE_URL` is set
 (`src/lib/store-pg.mjs`), JSON files under `data/` otherwise
@@ -225,6 +239,61 @@ retention policy the code does not implement.
 ---
 
 ## 6. Evaluation
+
+Two lanes, and they measure different things. `tools/harness.mjs` measures the
+**service**: the rules, the gates, the receipts, the memory bounds. `eval/llm/`
+measures the **prompt**.
+
+### The service harness
+
+```bash
+npm run harness                       # every case, and write the results
+node tools/harness.mjs --group scoring
+node tools/harness.mjs --quiet
+```
+
+The case set is `eval/harness/cases.json` — a fixed list, each case with an id, a
+group, a description and an expected outcome — and `tools/harness.mjs` holds one
+check per case. Every executed case runs against the service's own modules with
+local fixtures: no network call, no model call, nothing spent. The case set and
+the harness are reconciled before anything runs, so a case with no check and a
+check with no case are both errors rather than a silent gap.
+
+Three verdicts, and only three: `pass`, `fail`, `not_applicable`. **A case that
+cannot be run is never reported as a pass.** The model-quality group is that rule
+in practice — those 30 cases are not re-run here, their verdict is read from the
+recorded evaluation at `eval/llm/results/2026-09-11.real.json`, and if that file
+were absent they would be `not_applicable` and say which file was looked for and
+why the stub-lane result present is not a substitute.
+
+The run writes `eval/harness/results/<date>.{json,md}` and exits non-zero when
+anything failed. Per-case timings are deliberately kept off the result, so a
+rerun on an unchanged tree writes a byte-identical file and the artifact can be
+diffed to see what actually moved.
+
+The committed run — `eval/harness/results/2026-09-12.md`, 119 cases:
+
+| Group | Cases | Pass | Fail | N/A |
+| --- | ---: | ---: | ---: | ---: |
+| dedup | 5 | 5 | 0 | 0 |
+| scoring | 44 | 44 | 0 | 0 |
+| digest | 8 | 8 | 0 | 0 |
+| model_gate | 8 | 8 | 0 | 0 |
+| owner_gate | 8 | 8 | 0 | 0 |
+| verifier | 6 | 6 | 0 | 0 |
+| receipts | 5 | 5 | 0 | 0 |
+| memory | 5 | 5 | 0 | 0 |
+| model_quality | 30 | 28 | 2 | 0 |
+| **total** | **119** | **117** | **2** | **0** |
+
+The two failures are both real and both in `model_quality`:
+`mq-fx24-institution-tender-school` and `mq-fx25-institution-no-deadline`, where
+the recorded real lane answered `size: large` for a case labelled `medium`. They
+are the same two misses the prompt evaluation below reports, carried into the
+service harness rather than rounded away, and `npm run harness` exits 1 because
+of them.
+
+### The prompt evaluation
 
 `eval/llm/` scores the enrich prompt against 30 labelled cases.
 

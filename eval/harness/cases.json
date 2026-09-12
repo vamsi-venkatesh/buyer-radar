@@ -1,0 +1,857 @@
+{
+  "schema": "vvdex.eval-harness/v1",
+  "service": "buyer-radar",
+  "title": "Buyer Radar - service evaluation harness",
+  "groups": [
+    "dedup",
+    "scoring",
+    "digest",
+    "model_gate",
+    "owner_gate",
+    "verifier",
+    "receipts",
+    "memory",
+    "model_quality"
+  ],
+  "verdicts": [
+    "pass",
+    "fail",
+    "not_applicable"
+  ],
+  "note": "Every case with provenance 'executed' is run against the service's own modules with local fixtures: no network call, no model call, no money. A case with provenance 'recorded' is not re-run; its verdict is read from a recorded evaluation result and the harness says which file it read.",
+  "cases": [
+    {
+      "id": "dedup-01",
+      "group": "dedup",
+      "description": "Two sightings whose phone numbers normalise to the same E.164 value are folded into one lead.",
+      "expected": "one lead, one duplicate merged",
+      "provenance": "executed"
+    },
+    {
+      "id": "dedup-02",
+      "group": "dedup",
+      "description": "Two sightings with no phone, the same normalised trading name and the same city are folded into one lead.",
+      "expected": "one lead, one duplicate merged",
+      "provenance": "executed"
+    },
+    {
+      "id": "dedup-03",
+      "group": "dedup",
+      "description": "The same trading name in two different cities stays two leads.",
+      "expected": "two leads, no duplicate merged",
+      "provenance": "executed"
+    },
+    {
+      "id": "dedup-04",
+      "group": "dedup",
+      "description": "A merged lead keeps the register's status and notes; a fetch never resets them.",
+      "expected": "status contacted and the existing note survive the merge",
+      "provenance": "executed"
+    },
+    {
+      "id": "dedup-05",
+      "group": "dedup",
+      "description": "Two notices published by one institution stay two requirements: a requirement is identified by its own notice.",
+      "expected": "two leads, no duplicate merged",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-wholesale",
+      "group": "scoring",
+      "description": "Segment fit for wholesale, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 30",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-hotel",
+      "group": "scoring",
+      "description": "Segment fit for hotel, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 30",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-restaurant",
+      "group": "scoring",
+      "description": "Segment fit for restaurant, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 30",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-food_manufacturer",
+      "group": "scoring",
+      "description": "Segment fit for food manufacturer, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 30",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-distributor",
+      "group": "scoring",
+      "description": "Segment fit for distributor, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 26",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-caterer",
+      "group": "scoring",
+      "description": "Segment fit for caterer, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 22",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-retailer",
+      "group": "scoring",
+      "description": "Segment fit for retailer, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 18",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-institution",
+      "group": "scoring",
+      "description": "Segment fit for institution, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 16",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-seg-other",
+      "group": "scoring",
+      "description": "Segment fit for other, with no contact, no date, no city match and no detail, so the segment band is the whole score.",
+      "expected": "segment component 8",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-contact-phone",
+      "group": "scoring",
+      "description": "Contactability band for a parsed E.164 phone.",
+      "expected": "contactability component 30",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-contact-email",
+      "group": "scoring",
+      "description": "Contactability band for an email and no phone.",
+      "expected": "contactability component 20",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-contact-website",
+      "group": "scoring",
+      "description": "Contactability band for a website and nothing else.",
+      "expected": "contactability component 10",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-contact-none",
+      "group": "scoring",
+      "description": "Contactability band for no contact route at all.",
+      "expected": "contactability component 0",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-recency-within14",
+      "group": "scoring",
+      "description": "Recency band for a why-now date 3 days old.",
+      "expected": "recency component 20",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-recency-within30",
+      "group": "scoring",
+      "description": "Recency band for a why-now date 20 days old.",
+      "expected": "recency component 10",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-recency-older",
+      "group": "scoring",
+      "description": "Recency band for a why-now date 60 days old.",
+      "expected": "recency component 0",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-recency-unknown",
+      "group": "scoring",
+      "description": "Recency band for no date on the record at all.",
+      "expected": "recency component 4",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-city-match",
+      "group": "scoring",
+      "description": "A lead in the city the run was asked for scores the city component.",
+      "expected": "cityMatch component 10",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-city-miss",
+      "group": "scoring",
+      "description": "A lead in another city scores nothing for the city component.",
+      "expected": "cityMatch component 0",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-detail-full",
+      "group": "scoring",
+      "description": "A usable address plus coordinates or a website scores the whole detail component.",
+      "expected": "detail component 10",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-detail-none",
+      "group": "scoring",
+      "description": "A bare name with no address and no location scores nothing for detail.",
+      "expected": "detail component 0",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-penalty-worked",
+      "group": "scoring",
+      "description": "A lead whose status is anything other than new carries the already-worked penalty.",
+      "expected": "penalty -25",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-example-wholesale",
+      "group": "scoring",
+      "description": "docs/scoring.md worked example: a Bengaluru wholesale trader on OpenStreetMap with a phone and a street address, on a Bengaluru run.",
+      "expected": "score 84 (30 + 30 + 4 + 10 + 10)",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-example-restaurant",
+      "group": "scoring",
+      "description": "docs/scoring.md second worked example: a restaurant in a three-week-old news item, no phone, no address, same run.",
+      "expected": "score 50 (30 + 0 + 10 + 10 + 0)",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-deadline-within7",
+      "group": "scoring",
+      "description": "Requirement deadline band for a notice that closes in 4 days.",
+      "expected": "deadline component 30",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-deadline-within14",
+      "group": "scoring",
+      "description": "Requirement deadline band for a notice that closes in 11 days.",
+      "expected": "deadline component 25",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-deadline-within30",
+      "group": "scoring",
+      "description": "Requirement deadline band for a notice that closes in 22 days.",
+      "expected": "deadline component 18",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-deadline-later",
+      "group": "scoring",
+      "description": "Requirement deadline band for a notice that closes in 60 days.",
+      "expected": "deadline component 10",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-deadline-none",
+      "group": "scoring",
+      "description": "Requirement deadline band for a notice that states no closing date.",
+      "expected": "deadline component 8",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-deadline-closed",
+      "group": "scoring",
+      "description": "Requirement deadline band for a notice that closed two days ago.",
+      "expected": "deadline component 0",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-closed-not-live",
+      "group": "scoring",
+      "description": "A closed notice never scores as a live one: the same notice, identical in every other field, scores strictly lower once its date has passed and its deadline component is zero.",
+      "expected": "closed deadline component 0 and a strictly lower total than the live twin",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-qty-within",
+      "group": "scoring",
+      "description": "Quantity fit band for a requirement stating 1,000 kg per day, inside capacity.",
+      "expected": "quantityFit component 25",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-qty-unstated",
+      "group": "scoring",
+      "description": "Quantity fit band for a requirement stating no quantity stated.",
+      "expected": "quantityFit component 12",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-qty-small",
+      "group": "scoring",
+      "description": "Quantity fit band for a requirement stating 5 kg per day, below the size worth quoting.",
+      "expected": "quantityFit component 8",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-qty-over",
+      "group": "scoring",
+      "description": "Quantity fit band for a requirement stating 50,000 kg per day, larger than can be served alone.",
+      "expected": "quantityFit component 6",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-reqcontact-both",
+      "group": "scoring",
+      "description": "Requirement contact completeness for a notice carrying a phone and an email.",
+      "expected": "contact component 30",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-reqcontact-phone",
+      "group": "scoring",
+      "description": "Requirement contact completeness for a notice carrying a phone only.",
+      "expected": "contact component 26",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-reqcontact-email",
+      "group": "scoring",
+      "description": "Requirement contact completeness for a notice carrying an email only.",
+      "expected": "contact component 18",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-reqcontact-name",
+      "group": "scoring",
+      "description": "Requirement contact completeness for a notice carrying a named person or role and no phone or email.",
+      "expected": "contact component 6",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-reqcontact-none",
+      "group": "scoring",
+      "description": "Requirement contact completeness for a notice carrying nothing to act on.",
+      "expected": "contact component 0",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-place-city",
+      "group": "scoring",
+      "description": "Requirement place band for a notice in the city the run was for.",
+      "expected": "place component 15",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-place-state",
+      "group": "scoring",
+      "description": "Requirement place band for a notice in a different city in the same state.",
+      "expected": "place component 8",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-place-elsewhere",
+      "group": "scoring",
+      "description": "Requirement place band for a notice in another state.",
+      "expected": "place component 0",
+      "provenance": "executed"
+    },
+    {
+      "id": "score-example-requirement",
+      "group": "scoring",
+      "description": "docs/scoring.md requirement worked example: closes in 4 days, quantity inside capacity, a phone and an email, a different city in a different state.",
+      "expected": "score 85 (30 + 25 + 30 + 0)",
+      "provenance": "executed"
+    },
+    {
+      "id": "digest-order-sections",
+      "group": "digest",
+      "description": "The digest prints REQUIREMENTS POSTED, then BUYERS TO APPROACH, then the mandi price block, whatever the scores say.",
+      "expected": "requirements before buyers before prices",
+      "provenance": "executed"
+    },
+    {
+      "id": "digest-cap-1500",
+      "group": "digest",
+      "description": "A register far larger than the WhatsApp cap still renders a digest within DIGEST.maxChars.",
+      "expected": "rendered text at most 1500 characters",
+      "provenance": "executed"
+    },
+    {
+      "id": "digest-no-phone-not-callable",
+      "group": "digest",
+      "description": "A requirement with no phone and no email is shown, and its contact line says so rather than showing anything callable.",
+      "expected": "the line reads 'contact not found yet' and carries no digits",
+      "provenance": "executed"
+    },
+    {
+      "id": "digest-prices-last",
+      "group": "digest",
+      "description": "The mandi price block is the last thing before the reply footer.",
+      "expected": "the price block sits after both lead sections",
+      "provenance": "executed"
+    },
+    {
+      "id": "digest-price-sheet-every-item",
+      "group": "digest",
+      "description": "The price sheet carries one line per catalogue item, and every item with a mandi line shows its market and its arrival date.",
+      "expected": "every catalogue item present, each priced line carrying a market and a date",
+      "provenance": "executed"
+    },
+    {
+      "id": "digest-price-no-quote",
+      "group": "digest",
+      "description": "A catalogue item Agmarknet carries no line for says 'no mandi quote today' rather than guessing a price.",
+      "expected": "'no mandi quote today' for every unpriced item",
+      "provenance": "executed"
+    },
+    {
+      "id": "digest-plans-shed-order",
+      "group": "digest",
+      "description": "When the cap bites, the plan order sheds registrations first, then buyers one at a time, and a posted requirement last.",
+      "expected": "the last plans drop requirements only after registrations and buyers are already at zero",
+      "provenance": "executed"
+    },
+    {
+      "id": "digest-ties-keep-score-order",
+      "group": "digest",
+      "description": "Tie diversification reorders only inside an equal-score group and never breaks score order.",
+      "expected": "scores non-increasing after diversifyTies",
+      "provenance": "executed"
+    },
+    {
+      "id": "gate-enrich-directory-row",
+      "group": "model_gate",
+      "description": "A plain directory row whose source already gave a segment, whose size cannot move the digest, and which is not a requirement missing a date.",
+      "expected": "needsModel enrich returns not needed",
+      "provenance": "executed"
+    },
+    {
+      "id": "gate-enrich-cache-hit",
+      "group": "model_gate",
+      "description": "The cache already holds an answer for this exact page and prompt version.",
+      "expected": "needsModel enrich returns not needed, reason names the cache",
+      "provenance": "executed"
+    },
+    {
+      "id": "gate-enrich-missing-deadline",
+      "group": "model_gate",
+      "description": "A requirement carrying no closing date.",
+      "expected": "needsModel enrich returns needed",
+      "provenance": "executed"
+    },
+    {
+      "id": "gate-req-no-procurement-wording",
+      "group": "model_gate",
+      "description": "Article text that never uses procurement wording cannot contain a posted requirement.",
+      "expected": "needsModel requirement returns not needed, reason 'no procurement wording'",
+      "provenance": "executed"
+    },
+    {
+      "id": "gate-req-ambiguous-notice",
+      "group": "model_gate",
+      "description": "A notice using procurement wording whose quantity, closing date and contact the deterministic readers could not find.",
+      "expected": "needsModel requirement returns needed",
+      "provenance": "executed"
+    },
+    {
+      "id": "gate-req-publisher-article",
+      "group": "model_gate",
+      "description": "A publisher's article: it may state a requirement, but nothing on it names the buyer or the buyer's own site.",
+      "expected": "needsModel requirement returns needed even with deterministic reads present",
+      "provenance": "executed"
+    },
+    {
+      "id": "gate-cache-hit-no-call",
+      "group": "model_gate",
+      "description": "A second ask for the same input, model and prompt version is served from the cache.",
+      "expected": "one call for two asks; the second is a cache hit and costs nothing",
+      "provenance": "executed"
+    },
+    {
+      "id": "gate-budget-exhausted-receipt",
+      "group": "model_gate",
+      "description": "The day's spend is already at the cap before the ask.",
+      "expected": "no call, an llm.budget_exhausted receipt, and totals.budgetSkipped 1",
+      "provenance": "executed"
+    },
+    {
+      "id": "owner-digest-reply",
+      "group": "owner_gate",
+      "description": "Plain text from the owner's own number is answered with the latest digest.",
+      "expected": "one reply sent to the owner, carrying the digest text",
+      "provenance": "executed"
+    },
+    {
+      "id": "owner-stranger-recorded-never-answered",
+      "group": "owner_gate",
+      "description": "An inbound message from any other number is recorded and never answered, and its text is not stored.",
+      "expected": "inbound recorded, no reply sent, stored text null",
+      "provenance": "executed"
+    },
+    {
+      "id": "owner-command-l3-won",
+      "group": "owner_gate",
+      "description": "An owner command of the form L<n> won updates that lead's status through the register.",
+      "expected": "status moves to won and a receipt hash is quoted back",
+      "provenance": "executed"
+    },
+    {
+      "id": "owner-duplicate-wamid",
+      "group": "owner_gate",
+      "description": "Meta redelivering a message id already acted on must not re-apply the command.",
+      "expected": "the second delivery is a duplicate: no reply, no status change",
+      "provenance": "executed"
+    },
+    {
+      "id": "owner-bad-hmac-401",
+      "group": "owner_gate",
+      "description": "A POST whose X-Hub-Signature-256 does not match the app secret.",
+      "expected": "HTTP 401 and a whatsapp.rejected receipt",
+      "provenance": "executed"
+    },
+    {
+      "id": "owner-missing-secret-503",
+      "group": "owner_gate",
+      "description": "A POST with WA_APP_SECRET unset: nothing can be verified, so nothing is accepted.",
+      "expected": "HTTP 503",
+      "provenance": "executed"
+    },
+    {
+      "id": "owner-24h-131047",
+      "group": "owner_gate",
+      "description": "A failed delivery status carrying Meta error 131047, the 24-hour re-engagement rule.",
+      "expected": "recorded as a delivery failure with the code, and surfaced as the last failure",
+      "provenance": "executed"
+    },
+    {
+      "id": "owner-only-tool-refused-for-agent",
+      "group": "owner_gate",
+      "description": "An owner-only tool called by an actor that is not the owner and not the pipeline.",
+      "expected": "refused, with a tool.refused receipt and no tool.call",
+      "provenance": "executed"
+    },
+    {
+      "id": "verify-publisher-site-refused",
+      "group": "verifier",
+      "description": "A site a model read off an article that resolves to a newspaper or a search engine is refused as the buyer's own site.",
+      "expected": "refused with a reason naming the host",
+      "provenance": "executed"
+    },
+    {
+      "id": "verify-own-site-accepted",
+      "group": "verifier",
+      "description": "A plain http(s) host that is neither a publisher, a search engine nor a social page is accepted.",
+      "expected": "accepted, origin returned",
+      "provenance": "executed"
+    },
+    {
+      "id": "verify-phone-no-country-code-assumed",
+      "group": "verifier",
+      "description": "Phone normalisation never invents a country code: a run of digits that is not a complete Indian number is refused.",
+      "expected": "null for a 9-digit and an 11-digit run; +91 only where ten digits are actually present",
+      "provenance": "executed"
+    },
+    {
+      "id": "verify-portal-helpdesk-dropped",
+      "group": "verifier",
+      "description": "The e-procurement portal's own helpdesk address is not the buyer's contact.",
+      "expected": "the helpdesk address is dropped; the buyer's own address survives",
+      "provenance": "executed"
+    },
+    {
+      "id": "verify-date-not-a-phone",
+      "group": "verifier",
+      "description": "A date-shaped run of digits in a notice is not read as a phone number.",
+      "expected": "no phone found in a line of dates",
+      "provenance": "executed"
+    },
+    {
+      "id": "verify-licence-on-every-lead",
+      "group": "verifier",
+      "description": "Every source states a licence, and the licence survives onto the persisted lead.",
+      "expected": "a non-empty licence on every source's configuration and on the lead built from it",
+      "provenance": "executed"
+    },
+    {
+      "id": "receipt-hash-recipe",
+      "group": "receipts",
+      "description": "The evidence bundle hash is sha256 over schema, newline, count, newline, then each receipt's JSON and a newline.",
+      "expected": "the recomputed digest equals bundleHash()",
+      "provenance": "executed"
+    },
+    {
+      "id": "receipt-order-in-hash",
+      "group": "receipts",
+      "description": "Receipt order is part of the hash.",
+      "expected": "swapping two receipts changes the hash",
+      "provenance": "executed"
+    },
+    {
+      "id": "receipt-verify-good-bundle",
+      "group": "receipts",
+      "description": "tools/verify.mjs on a sealed bundle.",
+      "expected": "exit code 0 and VERIFIED on stdout",
+      "provenance": "executed"
+    },
+    {
+      "id": "receipt-verify-tampered-bundle",
+      "group": "receipts",
+      "description": "tools/verify.mjs on the same bundle with one field changed.",
+      "expected": "exit code 1 and a hash mismatch reported",
+      "provenance": "executed"
+    },
+    {
+      "id": "receipt-role-on-every-receipt",
+      "group": "receipts",
+      "description": "Every receipt a run and the tool layer emit carries a role from the fixed set.",
+      "expected": "a role in scout, reader, verifier, desk, owner, auditor on every receipt",
+      "provenance": "executed"
+    },
+    {
+      "id": "memory-status-across-runs",
+      "group": "memory",
+      "description": "A status set in one process is still there when the store is opened again.",
+      "expected": "the lead reads back as won after a reopen",
+      "provenance": "executed"
+    },
+    {
+      "id": "memory-pgsafe-nul",
+      "group": "memory",
+      "description": "A NUL byte in text is stripped before it reaches Postgres.",
+      "expected": "no U+0000 anywhere in the written value",
+      "provenance": "executed"
+    },
+    {
+      "id": "memory-pgsafe-lone-surrogate",
+      "group": "memory",
+      "description": "A lone surrogate in text is stripped before it reaches Postgres.",
+      "expected": "no unpaired surrogate left; a valid pair survives",
+      "provenance": "executed"
+    },
+    {
+      "id": "memory-spend-across-restart",
+      "group": "memory",
+      "description": "The day's model spend is held in the store, so a restart resumes the same day's total instead of handing the cap back.",
+      "expected": "the second budget reads the first's spend and refuses the next call",
+      "provenance": "executed"
+    },
+    {
+      "id": "memory-cache-across-restart",
+      "group": "memory",
+      "description": "A cached model answer written in one process is served in the next.",
+      "expected": "the answer comes back as a cache hit with no call",
+      "provenance": "executed"
+    },
+    {
+      "id": "mq-fx01-wholesale-large",
+      "group": "model_quality",
+      "description": "Labelled page fx01-wholesale-large: expected segment wholesale, size large, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx02-wholesale-small",
+      "group": "model_quality",
+      "description": "Labelled page fx02-wholesale-small: expected segment wholesale, size small, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx03-wholesale-medium",
+      "group": "model_quality",
+      "description": "Labelled page fx03-wholesale-medium: expected segment wholesale, size medium, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx04-restaurant-small",
+      "group": "model_quality",
+      "description": "Labelled page fx04-restaurant-small: expected segment restaurant, size small, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx05-restaurant-medium",
+      "group": "model_quality",
+      "description": "Labelled page fx05-restaurant-medium: expected segment restaurant, size medium, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx06-restaurant-large",
+      "group": "model_quality",
+      "description": "Labelled page fx06-restaurant-large: expected segment restaurant, size large, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx07-restaurant-unknown-size",
+      "group": "model_quality",
+      "description": "Labelled page fx07-restaurant-unknown-size: expected segment restaurant, size unknown, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx08-hotel-large",
+      "group": "model_quality",
+      "description": "Labelled page fx08-hotel-large: expected segment hotel, size large, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx09-hotel-medium",
+      "group": "model_quality",
+      "description": "Labelled page fx09-hotel-medium: expected segment hotel, size medium, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx10-hotel-unknown-size",
+      "group": "model_quality",
+      "description": "Labelled page fx10-hotel-unknown-size: expected segment hotel, size unknown, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx11-caterer-large",
+      "group": "model_quality",
+      "description": "Labelled page fx11-caterer-large: expected segment caterer, size large, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx12-caterer-small",
+      "group": "model_quality",
+      "description": "Labelled page fx12-caterer-small: expected segment caterer, size small, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx13-caterer-medium",
+      "group": "model_quality",
+      "description": "Labelled page fx13-caterer-medium: expected segment caterer, size medium, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx14-retailer-small",
+      "group": "model_quality",
+      "description": "Labelled page fx14-retailer-small: expected segment retailer, size small, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx15-retailer-large",
+      "group": "model_quality",
+      "description": "Labelled page fx15-retailer-large: expected segment retailer, size large, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx16-retailer-medium",
+      "group": "model_quality",
+      "description": "Labelled page fx16-retailer-medium: expected segment retailer, size medium, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx17-manufacturer-large",
+      "group": "model_quality",
+      "description": "Labelled page fx17-manufacturer-large: expected segment food_manufacturer, size large, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx18-manufacturer-medium",
+      "group": "model_quality",
+      "description": "Labelled page fx18-manufacturer-medium: expected segment food_manufacturer, size medium, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx19-manufacturer-small",
+      "group": "model_quality",
+      "description": "Labelled page fx19-manufacturer-small: expected segment food_manufacturer, size small, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx20-distributor-medium",
+      "group": "model_quality",
+      "description": "Labelled page fx20-distributor-medium: expected segment distributor, size medium, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx21-distributor-large",
+      "group": "model_quality",
+      "description": "Labelled page fx21-distributor-large: expected segment distributor, size large, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx22-institution-tender-hostel",
+      "group": "model_quality",
+      "description": "Labelled page fx22-institution-tender-hostel: expected segment institution, size large, deadline 2026-09-24.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx23-institution-tender-hospital",
+      "group": "model_quality",
+      "description": "Labelled page fx23-institution-tender-hospital: expected segment institution, size large, deadline 2026-10-02.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx24-institution-tender-school",
+      "group": "model_quality",
+      "description": "Labelled page fx24-institution-tender-school: expected segment institution, size medium, deadline 2026-09-30.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx25-institution-no-deadline",
+      "group": "model_quality",
+      "description": "Labelled page fx25-institution-no-deadline: expected segment institution, size medium, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx26-not-a-business-error",
+      "group": "model_quality",
+      "description": "Labelled page fx26-not-a-business-error: expected segment other, size unknown, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx27-not-a-business-nav",
+      "group": "model_quality",
+      "description": "Labelled page fx27-not-a-business-nav: expected segment other, size unknown, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx28-blog-about-prices",
+      "group": "model_quality",
+      "description": "Labelled page fx28-blog-about-prices: expected segment other, size unknown, deadline none.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx29-news-restaurant-opening",
+      "group": "model_quality",
+      "description": "Labelled page fx29-news-restaurant-opening: expected segment restaurant, size medium, deadline 2026-09-19.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    },
+    {
+      "id": "mq-fx30-news-hotel-opening",
+      "group": "model_quality",
+      "description": "Labelled page fx30-news-hotel-opening: expected segment hotel, size large, deadline 2026-10-01.",
+      "expected": "the recorded real-lane result for this case",
+      "provenance": "recorded"
+    }
+  ]
+}

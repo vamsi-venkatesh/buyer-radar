@@ -281,8 +281,9 @@ test('an llm.call receipt carries every field the run summary is built from', as
   const call = chain.receipts.find((r) => r.type === 'llm.call');
   assert.deepEqual(Object.keys(call).sort(), [
     'at', 'cacheHit', 'costInr', 'inputHash', 'inputTokens', 'model', 'ms',
-    'outputTokens', 'promptVersion', 'provider', 'purpose', 'seq', 'type',
+    'outputTokens', 'promptVersion', 'provider', 'purpose', 'role', 'seq', 'type',
   ]);
+  assert.equal(call.role, 'reader', 'a model call is the reader\'s work');
   assert.equal(call.purpose, 'enrich');
   assert.equal(call.provider, 'deepseek');
   assert.equal(call.model, 'deepseek-chat');

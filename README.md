@@ -111,6 +111,55 @@ continues; it never returns a fabricated row to keep a count up.
 
 ### 2. An evaluation harness with numbers attached
 
+Two harnesses, measuring two different things: `tools/harness.mjs` measures the
+**service**, `eval/llm/` measures the **prompt**.
+
+#### The service harness
+
+```bash
+npm run harness                        # 119 cases, and write the results
+node tools/harness.mjs --group scoring
+```
+
+`eval/harness/cases.json` is a fixed case set - id, group, description, expected
+outcome - and `tools/harness.mjs` holds one check per case, run against the
+service's own modules with local fixtures. **No network call, no model call,
+nothing spent.** Three verdicts and only three - `pass`, `fail`,
+`not_applicable` - and **a case that cannot be run is never reported as a pass**.
+The case set and the harness are reconciled before anything runs: a case with no
+check and a check with no case are both errors.
+
+The committed run,
+[`eval/harness/results/2026-09-12.md`](eval/harness/results/2026-09-12.md):
+
+| Group | Cases | Pass | Fail | N/A |
+| --- | ---: | ---: | ---: | ---: |
+| dedup | 5 | 5 | 0 | 0 |
+| scoring | 44 | 44 | 0 | 0 |
+| digest | 8 | 8 | 0 | 0 |
+| model_gate | 8 | 8 | 0 | 0 |
+| owner_gate | 8 | 8 | 0 | 0 |
+| verifier | 6 | 6 | 0 | 0 |
+| receipts | 5 | 5 | 0 | 0 |
+| memory | 5 | 5 | 0 | 0 |
+| model_quality | 30 | 28 | 2 | 0 |
+| **total** | **119** | **117** | **2** | **0** |
+
+**The two failures are real and they are not going to be hidden.**
+`mq-fx24-institution-tender-school` and `mq-fx25-institution-no-deadline` are the
+two cases the model got wrong in the recorded prompt evaluation below: a school
+tender labelled `size: medium` and answered `large`, twice. The `model_quality`
+group does not re-run those thirty cases - it reads their verdict from
+[`eval/llm/results/2026-09-11.real.json`](eval/llm/results/2026-09-11.real.json),
+and if that file were missing all thirty would be `not_applicable` and say which
+file was looked for. `npm run harness` exits 1 while those two stand.
+
+Per-case timings are kept off the result deliberately, so a rerun on an unchanged
+tree writes a **byte-identical** file and the artifact can be diffed to see what
+actually moved.
+
+#### The prompt evaluation
+
 `eval/llm/` scores the enrichment prompt against 30 labelled synthetic pages -
 wholesalers, hotels, tender notices, news items, and pages that are not
 businesses at all. `eval/lib/score.mjs` knows nothing about segments; it takes
@@ -193,6 +242,13 @@ The gate is the owner. The two tools that change anything refuse a caller who is
 not the owner or the pipeline, and a refusal writes `tool.refused` naming the
 tool, the actor and the reason - so a register that did not move can be *shown*
 not to have moved. See [ADR 6](docs/adr/0006-tools-and-mcp.md).
+
+What the service remembers, what it never remembers, and where each class lives
+is written out in [docs/memory.md](docs/memory.md), with retention stated as *not
+enforced yet* wherever the code enforces nothing. Every receipt also carries the
+`role` whose work it is - scout, reader, verifier, desk, owner, auditor - so a
+bundle reads as who did what and not only as what happened; each tool states its
+own, and a tool declaring anything else throws at import.
 
 ## The demo, in one command
 
@@ -576,9 +632,12 @@ src/cron.mjs          the scheduler: one daily pass, no system cron
 src/lib/*.mjs         stores, receipts, crawler, PDF text, contacts, quantities
 config/               the client profile, the registries and their probes, the price table
 demo/                 synthetic fixtures and the one-command demo
-eval/                 the labelled cases, the stub model, the scorer, the results
-test/                 345 tests, node --test, saved and synthetic fixtures
+eval/llm/             the labelled prompt cases, the stub model, the scorer, the results
+eval/harness/         the service case set and its committed results
+tools/harness.mjs     one check per case, run against the service's own modules
+test/                 347 tests, node --test, saved and synthetic fixtures
 tools/                verify.mjs, validate.mjs, the probes, the fixture builders
+docs/memory.md        what is remembered, what is not, and for how long
 docs/adr/             six decisions, and why
 ```
 
@@ -588,8 +647,9 @@ output and are git-ignored.
 ## Tests
 
 ```bash
-npm test        # 345 tests
+npm test        # 347 tests
 npm run validate
+npm run harness # 119 service cases; exits 1 while the two known failures stand
 ```
 
 **No test makes a real model call, contacts a real SMTP server or the real

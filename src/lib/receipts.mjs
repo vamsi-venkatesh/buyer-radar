@@ -7,11 +7,64 @@ import { EVIDENCE_SCHEMA } from '../config.mjs';
  *   payload = schema + "\n" + receipts.length + "\n"
  *   then, for each receipt in order: JSON.stringify(receipt) + "\n"
  *   hash = sha256(payload) as lowercase hex
+ *
+ * The recipe is over the receipt objects as they are stored, so a field added
+ * inside a receipt - `role`, for instance - changes that receipt's hash and
+ * therefore the bundle's, exactly as any other change to it would. The recipe
+ * itself is untouched.
  */
 export function bundleHash(receipts, schema = EVIDENCE_SCHEMA) {
   let payload = `${schema}\n${receipts.length}\n`;
   for (const r of receipts) payload += `${JSON.stringify(r)}\n`;
   return sha256Hex(payload);
+}
+
+/**
+ * The six roles the service's work divides into. Every receipt carries one, so
+ * an evidence bundle can be read as "who did what" and not only "what
+ * happened":
+ *
+ *   scout    a source: fetching a listing, a feed, an article, a document
+ *   reader   the model stage: a call, a cache hit, a refusal to call
+ *   verifier a check on what was read: a contact, a closing date, a licence
+ *   desk     the register and the digest: what the owner is actually handed
+ *   owner    the owner's own lane: his commands, his WhatsApp, his statuses
+ *   auditor  the bundle's own bookkeeping: the run record and the seal
+ *
+ * The role is derived from the receipt type unless the caller states one, and a
+ * caller that states one (the tool layer does, per tool) always wins.
+ */
+export const RECEIPT_ROLES = ['scout', 'reader', 'verifier', 'desk', 'owner', 'auditor'];
+
+const ROLE_BY_TYPE = {
+  'run.created': 'auditor',
+  'evidence.sealed': 'auditor',
+  'leads.upserted': 'desk',
+  'lead.status_changed': 'owner',
+  // The openings lane is two jobs under one prefix. Reading the article is
+  // scouting; deciding whether what came back is a real requirement with a real
+  // contact on the organisation's own site is verification.
+  'openings.not_a_requirement': 'verifier',
+  'openings.no_site': 'verifier',
+  'openings.contact_search': 'verifier',
+  'openings.upgraded': 'verifier',
+};
+
+const ROLE_BY_PREFIX = [
+  ['source.', 'scout'],
+  ['openings.', 'scout'],
+  ['llm.', 'reader'],
+  ['digest.', 'desk'],
+  ['whatsapp.', 'owner'],
+  ['owner.', 'owner'],
+];
+
+/** The role a receipt of this type belongs to. Never throws; defaults to auditor. */
+export function roleForReceipt(type) {
+  const t = String(type || '');
+  if (ROLE_BY_TYPE[t]) return ROLE_BY_TYPE[t];
+  for (const [prefix, role] of ROLE_BY_PREFIX) if (t.startsWith(prefix)) return role;
+  return 'auditor';
 }
 
 export class ReceiptChain {
@@ -22,7 +75,14 @@ export class ReceiptChain {
   }
 
   add(type, data = {}) {
-    const receipt = { seq: this.receipts.length, type, at: new Date().toISOString(), ...data };
+    const { role, ...rest } = data;
+    const receipt = {
+      seq: this.receipts.length,
+      type,
+      at: new Date().toISOString(),
+      role: role || roleForReceipt(type),
+      ...rest,
+    };
     this.receipts.push(receipt);
     return receipt;
   }

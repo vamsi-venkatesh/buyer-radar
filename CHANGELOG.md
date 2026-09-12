@@ -30,6 +30,29 @@ All notable changes to this project are recorded here. The format follows
 - **The run summary and the dashboard say what the lane read.** `openingsLine()`
   and a new **Openings** column: articles read, awareness-only, the cap, and
   whether it was reached.
+- **An executable service evaluation harness.** `npm run harness` runs the fixed
+  case set in `eval/harness/cases.json` - 119 cases across dedup, scoring,
+  digest, model_gate, owner_gate, verifier, receipts, memory and model_quality -
+  one check per case against the service's own modules with local fixtures, no
+  network and no model call. Three verdicts only, and a case that cannot be run
+  is never reported as a pass. The committed run is 117 pass, 2 fail, 0 not
+  applicable; the two failures are the two size misses the recorded prompt
+  evaluation already reports, and the run exits 1 because of them. A rerun on an
+  unchanged tree writes a byte-identical result file.
+- **A `role` on every receipt.** Scout, reader, verifier, desk, owner, auditor -
+  derived from the receipt type unless the caller states one, and the tool layer
+  states its own per tool. A tool declaring a role that is not one of the six
+  throws at import. The bundle hash recipe is unchanged; the receipts it hashes
+  now carry one more field.
+- **`docs/memory.md`.** What the service remembers, what it never remembers, and
+  where each class lives, with retention stated as *not enforced yet* wherever
+  the code enforces nothing.
+
+### Fixed
+
+- **`docs/scoring.md`, second worked example.** It said restaurant 24 for a total
+  of 44. The table above it has said 30 since the four top segments were levelled
+  and the code agrees; the example was stale. It now reads 30 and 50.
 
 - **The `publishers` source.** 37 direct RSS/Atom feeds published by Indian
   newspapers, trade titles and institutions, in `config/publisher-feeds.json`,

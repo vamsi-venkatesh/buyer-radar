@@ -9,6 +9,9 @@
 //
 //   kind   read | write | network | model - what it does to the world
 //   cost   free | metered - whether calling it can spend money
+//   role   scout | reader | verifier | desk | owner | auditor - whose job this
+//          is, written onto every receipt the call leaves, so a bundle can be
+//          read as who did what and not only as what happened
 //   schemas  JSON Schema for the input and the output, so a caller that has
 //            never seen this codebase can call it correctly and a caller that
 //            gets it wrong is refused before the handler runs
@@ -27,7 +30,7 @@
 // it.
 
 import { sha256Hex } from '../lib/hash.mjs';
-import { appendDayBundle } from '../lib/receipts.mjs';
+import { appendDayBundle, RECEIPT_ROLES } from '../lib/receipts.mjs';
 import { RUNS_DIR } from '../lib/paths.mjs';
 import { todayIso, STATUSES, KINDS, SEGMENTS, normaliseCity } from '../lib/normalise.mjs';
 import { validate } from './schema.mjs';
@@ -150,6 +153,7 @@ const LEAD_OUT = {
 export const TOOLS = [
   {
     name: 'leads.search',
+    role: 'desk',
     kind: 'read',
     cost: 'free',
     description:
@@ -195,6 +199,7 @@ export const TOOLS = [
 
   {
     name: 'leads.get',
+    role: 'desk',
     kind: 'read',
     cost: 'free',
     description: 'One lead by its register id. Returns found:false rather than an error when there is no such lead.',
@@ -217,6 +222,7 @@ export const TOOLS = [
 
   {
     name: 'leads.set_status',
+    role: 'owner',
     kind: 'write',
     cost: 'free',
     ownerOnly: true,
@@ -272,6 +278,7 @@ export const TOOLS = [
 
   {
     name: 'prices.get',
+    role: 'desk',
     kind: 'read',
     cost: 'free',
     description:
@@ -354,6 +361,7 @@ export const TOOLS = [
 
   {
     name: 'web.fetch',
+    role: 'scout',
     kind: 'network',
     cost: 'free',
     description:
@@ -391,6 +399,7 @@ export const TOOLS = [
 
   {
     name: 'contacts.extract',
+    role: 'verifier',
     kind: 'read',
     cost: 'free',
     description:
@@ -420,6 +429,7 @@ export const TOOLS = [
 
   {
     name: 'pdf.text',
+    role: 'scout',
     kind: 'network',
     cost: 'free',
     description:
@@ -466,6 +476,7 @@ export const TOOLS = [
 
   {
     name: 'source.run',
+    role: 'scout',
     kind: 'network',
     cost: 'free',
     description:
@@ -519,6 +530,7 @@ export const TOOLS = [
 
   {
     name: 'digest.render',
+    role: 'desk',
     kind: 'read',
     cost: 'free',
     description:
@@ -572,6 +584,7 @@ export const TOOLS = [
 
   {
     name: 'owner.message',
+    role: 'owner',
     kind: 'write',
     cost: 'free',
     ownerOnly: true,
@@ -612,6 +625,7 @@ export const TOOLS = [
 
   {
     name: 'model.read',
+    role: 'reader',
     kind: 'model',
     cost: 'metered',
     description:
@@ -702,6 +716,14 @@ function deterministicReads(text) {
   return { quantity: null, deadline: null, contact: contacts.complete };
 }
 
+// A tool whose role is not one of the six is a programming error, and it is
+// caught at import time rather than found later in a bundle.
+for (const t of TOOLS) {
+  if (!RECEIPT_ROLES.includes(t.role)) {
+    throw new Error(`tool ${t.name} declares role ${JSON.stringify(t.role)}, which is not one of ${RECEIPT_ROLES.join(', ')}`);
+  }
+}
+
 const BY_NAME = new Map(TOOLS.map((t) => [t.name, t]));
 
 export function getTool(name) {
@@ -710,11 +732,12 @@ export function getTool(name) {
 
 /** Every tool, as a caller sees it: no handlers, schemas intact. */
 export function listTools() {
-  return TOOLS.map(({ name, description, kind, cost, inputSchema, outputSchema, ownerOnly }) => ({
+  return TOOLS.map(({ name, description, kind, cost, role, inputSchema, outputSchema, ownerOnly }) => ({
     name,
     description,
     kind,
     cost,
+    role,
     ownerOnly: Boolean(ownerOnly),
     inputSchema,
     outputSchema,
@@ -757,6 +780,7 @@ export async function callTool(name, rawInput = {}, ctx = {}) {
     receipts.add('tool.call', {
       name: String(name),
       kind: null,
+      role: 'auditor',
       ms: Date.now() - started,
       ok: false,
       inputHash: hashOf(rawInput),
@@ -772,6 +796,7 @@ export async function callTool(name, rawInput = {}, ctx = {}) {
     receipts.add('tool.call', {
       name: tool.name,
       kind: tool.kind,
+      role: tool.role,
       ms: Date.now() - started,
       ok: false,
       inputHash: hashOf(rawInput),
@@ -786,6 +811,7 @@ export async function callTool(name, rawInput = {}, ctx = {}) {
     receipts.add('tool.refused', {
       name: tool.name,
       kind: tool.kind,
+      role: tool.role,
       actor: ctx.actor || 'agent',
       reason: gate.reason,
       inputHash: hashOf(checked.value),
@@ -798,6 +824,7 @@ export async function callTool(name, rawInput = {}, ctx = {}) {
     receipts.add('tool.call', {
       name: tool.name,
       kind: tool.kind,
+      role: tool.role,
       ms: Date.now() - started,
       ok: true,
       inputHash: hashOf(checked.value),
@@ -809,6 +836,7 @@ export async function callTool(name, rawInput = {}, ctx = {}) {
     receipts.add('tool.call', {
       name: tool.name,
       kind: tool.kind,
+      role: tool.role,
       ms: Date.now() - started,
       ok: false,
       inputHash: hashOf(checked.value),

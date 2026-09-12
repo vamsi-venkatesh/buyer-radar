@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { bundleHash, verifyBundle, ReceiptChain } from '../src/lib/receipts.mjs';
+import { bundleHash, verifyBundle, ReceiptChain, roleForReceipt, RECEIPT_ROLES } from '../src/lib/receipts.mjs';
 import { EVIDENCE_SCHEMA } from '../src/config.mjs';
 
 const RECEIPTS = [
@@ -76,4 +76,32 @@ test('a sealed chain verifies and ends with evidence.sealed', () => {
     bundle.receipts.map((r) => r.type),
     ['run.created', 'source.fetched', 'source.blocked', 'leads.upserted', 'digest.rendered', 'evidence.sealed']
   );
+});
+
+test('every receipt carries the role whose work it is', () => {
+  const chain = new ReceiptChain('run_roles');
+  chain.add('run.created', { city: 'bengaluru' });
+  chain.add('source.fetched', { source: 'news', count: 7 });
+  chain.add('llm.call', { purpose: 'enrich' });
+  chain.add('openings.contact_search', { found: true });
+  chain.add('digest.rendered', { chars: 500 });
+  chain.add('lead.status_changed', { to: 'won' });
+  const bundle = chain.seal();
+
+  assert.deepEqual(
+    bundle.receipts.map((r) => r.role),
+    ['auditor', 'scout', 'reader', 'verifier', 'desk', 'owner', 'auditor']
+  );
+  for (const r of bundle.receipts) assert.ok(RECEIPT_ROLES.includes(r.role), r.type);
+  assert.equal(verifyBundle(bundle).ok, true);
+});
+
+test('a caller that states a role keeps it, and an unknown type falls back to auditor', () => {
+  const chain = new ReceiptChain('run_roles_stated');
+  chain.add('tool.call', { name: 'web.fetch', role: 'scout' });
+  chain.add('something.new', {});
+  assert.equal(chain.receipts[0].role, 'scout');
+  assert.equal(chain.receipts[1].role, 'auditor');
+  assert.equal(roleForReceipt('whatsapp.reply'), 'owner');
+  assert.equal(roleForReceipt('evidence.sealed'), 'auditor');
 });

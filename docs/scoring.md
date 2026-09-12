@@ -145,14 +145,14 @@ A restaurant mentioned in a news item from three weeks ago, with no phone and no
 address, in the same run:
 
 ```
-segment        restaurant         24
+segment        restaurant         30
 contactability none                0
 recency        15-30 days         10
 cityMatch      Bengaluru          10
 detail         none                0
 penalty        status = new        0
                                  ---
-score                              44
+score                              50
 ```
 
 ## Dedup

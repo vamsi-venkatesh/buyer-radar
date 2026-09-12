@@ -21,7 +21,8 @@
     "report": "node src/report.mjs",
     "eval:llm": "node eval/llm/run.mjs",
     "mcp": "node src/mcp/server.mjs",
-    "tools": "node src/tools/cli.mjs"
+    "tools": "node src/tools/cli.mjs",
+    "harness": "node tools/harness.mjs"
   },
   "dependencies": {
     "pg": "^8.13.1"
