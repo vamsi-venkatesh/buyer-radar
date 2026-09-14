@@ -339,6 +339,7 @@ instead of drifting.
 | `RADAR_TO` / `RADAR_SMTP_URL` / `RADAR_FROM` | - | The owner's own address and SMTP submission over implicit TLS |
 | `WA_PHONE_NUMBER_ID` / `WA_TOKEN` / `RADAR_TO_WA` | - | WhatsApp Cloud API and the owner's own number |
 | `WA_VERIFY_TOKEN` / `WA_APP_SECRET` | - | The webhook. Without the secret it answers `503` and accepts nothing |
+| `RADAR_ORDERS_KEY` | - | The order endpoint. Without it `POST /orders` answers `503` and accepts nothing |
 | `DATA_GOV_IN_KEY` | - | Free key for mandi prices. Without it the source is skipped with a recorded reason and no price is invented |
 | `DEEPSEEK_API_KEY` / `LLM_*` | - | The model stage. No key, no stage, and every score is what the rules alone produce |
 | `GEM_ENABLED` | off | The GeM lane, off because its response shape has never been observed |
@@ -385,6 +386,141 @@ that run's evidence bundle; the combined delivery records it in
 carry `cities: [...]` - the cities the one message stood for - plus
 `citiesFailed` and, when Meta refused it, `errorCode` and `errorMessage` taken
 from Meta's own response body. A refusal is never a silence.
+
+## Orders
+
+The radar finds buyers. This is the other direction: a buyer who has already
+decided, and what happens to him between the order form on the client's own site
+and the owner's phone.
+
+```
+the client's order form
+  -> the site stores the request, then posts it on
+  -> the automation workflow (ops/n8n/)
+       validates the order
+       emails the buyer an acknowledgement (only when he gave an address)
+       emails the business the order alert
+       posts the order to the radar
+       appends it to the business's Google Sheet (once a Google credential is selected)
+  -> POST /orders
+       records the order, once, keyed on the site's own reference
+       puts the buyer in the register as a WON lead
+       tells the OWNER on WhatsApp, or by email when WhatsApp refuses
+  -> the Orders page, orders.csv, and the Orders block of the weekly report
+```
+
+Two things this loop never does. It never messages the buyer - the only outbound
+address anywhere in `src/orders.mjs` is the owner's own, exactly as everywhere
+else here. And it never accepts the commercial order: the alert says in as many
+words that nothing has been promised and no payment has been taken. The order is
+a request until the owner rings back.
+
+### The endpoint
+
+`POST /orders` is served by the dashboard process. It is one of the two routes
+the owner token does not guard, because the caller cannot present one. What
+stands in its place is `RADAR_ORDERS_KEY`, compared in constant time against the
+`x-farmquick-automation-key` header the client's site already sends.
+
+| Condition | Answer |
+| --- | --- |
+| `RADAR_ORDERS_KEY` unset | `503` - it never falls back to accepting an unauthenticated order |
+| header missing or wrong | `401` |
+| body not JSON, or not an order | `400`, naming the missing fields |
+| a new order | `201` with the order reference, the lead id and the alert result |
+| a reference already recorded | `200` with `duplicate: true`, and **nothing happens twice** |
+
+The body is either the envelope the site posts
+(`{ eventType, eventId, occurredAt, source, order }`) or a bare order object, so
+it does not matter whether the automation layer forwards the envelope or only
+the order it validated. A site that calls the supply schedule `schedule` and a
+register that has always called it `frequency` are both understood on the way
+in.
+
+Idempotency is the site's own reference and it is enforced twice: a unique index
+on `orders.id` in Postgres, and the check in `recordOrder()` before anything is
+written. A replayed order writes no second row, appends no second note to the
+lead, and sends the owner no second message.
+
+### What it does to the register
+
+The buyer is matched on his **normalised phone number** first, because that is
+the one field a buyer types the same way twice; on the trading name with the
+city only when there is no phone match. Matched or created, he comes out of it
+as a `won` lead carrying:
+
+- `status: won`, with a dated note `won: order <reference> on <the client site>`;
+- `why_now` = `Ordered on <date>: <the first three lines of the order>`;
+- the order itself in `extra.orders`, once per reference;
+- for a buyer created here: `source: site-order`, a licence naming the buyer's
+  own order on that site, and the segment read off the business type he chose on
+  the form.
+
+The site itself comes from `business.site` in the client profile, so the licence
+and the note name the deployment's own address and nothing is hard-coded.
+
+Three events are appended - `order.received`, `lead.won` and `order.alert` - and
+the same three go into `runs/orders_<date>.evidence.json`, sealed with the same
+hash recipe as a run and verified by `tools/verify.mjs` the same way.
+
+### Telling the owner
+
+WhatsApp text first, because that is where he reads. Meta only accepts a
+free-form text inside the 24-hour customer-service window, and outside it
+refuses with **131047**. That refusal is recorded with its code - never
+swallowed, never reported as a send - and the same alert goes out by email to
+`RADAR_TO` over the existing SMTP path instead. With neither channel configured
+the order is still recorded and the Orders page says `not delivered: ...` rather
+than showing a tick.
+
+**A refusal arrives twice, and only one of them is in the response.** The Cloud
+API often answers `200` with a message id and then fails the message minutes
+later, reporting it as a delivery status on the webhook - which is exactly what
+131047 does in practice. A message reported sent and then failed never reached
+the owner. So the webhook's `failed` status looks the message id up against the
+orders, and when it belongs to an order alert it fires the email fallback there,
+rewrites the order's alert to `sent: false, failedLater: true` with the code, and
+appends a second `order.alert` event. The Orders page then says
+`email (WhatsApp failed: window closed)` instead of `WhatsApp sent`. The rule is
+the same one everywhere in this project: what was recorded has to be what
+happened, not what the first response looked like.
+
+### The pages
+
+`/orders` is the owner-token page: date, reference, buyer, business, city, the
+lines, and what became of the alert. `/orders.csv` is the same rows as a file.
+The weekly report gains an **Orders** block - count this week, by city, by
+product, the buyers who ordered, and how many alerts did not reach him.
+
+### An order the owner took himself
+
+Not every order arrives through the form. `O <what was ordered>` on WhatsApp
+records one:
+
+```
+O 200 kg peeled garlic weekly, Copper Chimney
+```
+
+It is recorded against the lead the owner's **last status command** touched -
+that is the buyer he was last talking about - or as a free-text order when there
+is no such lead, and the reply says which. The same thing from the tool layer is
+`orders.record`, owner-only. Both go through `recordOrder()`, so an order taken
+on the phone leaves the same order row, the same won lead, the same events and
+the same receipt as an order placed on the site; its reference is prefixed
+`OWN-` so the two can never be confused. The owner is not messaged about the one
+he just dictated: the reply he gets is the confirmation.
+
+### The Google Sheets copy
+
+The sheet is the business's own register, and it is the one part of this loop
+that waits on the business rather than on the code: the Google Sheets node is
+fully configured - `appendOrUpdate`, keyed on `order_id`, with all fourteen
+columns mapped - and it writes as soon as the business connects its own Google
+account to the workflow. Until it does, the node sits on its own branch with
+*Continue on fail*, so nothing about the missing credential can stop the radar or
+the emails: every order is still recorded, the buyer is still won in the
+register, and the owner is still told. The two exports in
+[`ops/n8n/`](ops/n8n/) show the workflow before and after this change.
 
 ## Sources and their terms
 
@@ -545,6 +681,8 @@ Everything an agent may do is one of these, and every one leaves a receipt.
 | `source.run` | network | free | Run one source and report what it returned. **Writes nothing to the register** |
 | `digest.render` | read | free | Render the digest from the store. Writes nothing, sends nothing, calls no model |
 | `owner.message` | write | free | **Owner only.** One WhatsApp text to the owner's own number. **There is no recipient field** |
+| `orders.list` | read | free | Orders placed on the client's own site, newest first, each one saying what became of the owner's alert. An alert that never reached him says so |
+| `orders.record` | write | free | **Owner only.** Record an order the owner took himself. Same path as a site order: one order row, the buyer won in the register, the owner told |
 | `model.read` | model | **metered** | Ask the model to read text, through the same cache, cap and receipts the pipeline uses |
 
 ```bash
@@ -664,16 +802,18 @@ src/tools/            the tool registry, its JSON Schema validator, its CLI
 src/mcp/server.mjs    MCP over stdio, JSON-RPC 2.0, no dependencies
 src/dashboard/        the owner's dashboard: server-rendered HTML, no JavaScript
 src/webhook.mjs       the WhatsApp webhook: signature, idempotency, owner commands
+src/orders.mjs        the order loop: one order, one won lead, one owner alert
 src/digest.mjs        the morning digest; src/report.mjs the weekly one
 src/deliver.mjs       delivery to the OWNER only - email and WhatsApp
 src/cron.mjs          the scheduler: one daily pass, no system cron
 src/lib/*.mjs         stores, receipts, crawler, PDF text, contacts, quantities
 config/               the client profile, the registries and their probes, the price table
 demo/                 synthetic fixtures and the one-command demo
+ops/n8n/              the order workflow, exported before and after the loop
 eval/llm/             the labelled prompt cases, the stub model, the scorer, the results
 eval/harness/         the service case set and its committed results
 tools/harness.mjs     one check per case, run against the service's own modules
-test/                 347 tests, node --test, saved and synthetic fixtures
+test/                 394 tests, node --test, saved and synthetic fixtures
 tools/                verify.mjs, validate.mjs, the probes, the fixture builders
 docs/memory.md        what is remembered, what is not, and for how long
 docs/adr/             six decisions, and why
@@ -685,7 +825,7 @@ output and are git-ignored.
 ## Tests
 
 ```bash
-npm test        # 347 tests
+npm test        # 394 tests
 npm run validate
 npm run harness # 119 service cases; exits 1 while the two known failures stand
 ```

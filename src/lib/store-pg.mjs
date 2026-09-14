@@ -77,6 +77,34 @@ CREATE TABLE IF NOT EXISTS llm_cache (
   cost_inr       NUMERIC
 );
 
+-- One order, as the site sent it. The primary key is the site's own order
+-- reference, so a redelivered webhook is a no-op rather than a second order;
+-- the explicit unique index says so at the schema level as well.
+CREATE TABLE IF NOT EXISTS orders (
+  id            TEXT PRIMARY KEY,
+  created_at    TIMESTAMPTZ,
+  received_at   TIMESTAMPTZ NOT NULL,
+  contact_name  TEXT,
+  business_name TEXT,
+  phone         TEXT,
+  email         TEXT,
+  city          TEXT,
+  business_type TEXT,
+  products      TEXT[],
+  order_details TEXT,
+  frequency     TEXT,
+  volume        TEXT,
+  needed_by     TEXT,
+  notes         TEXT,
+  source_path   TEXT,
+  status        TEXT,
+  lead_id       TEXT,
+  alert         JSONB NOT NULL DEFAULT '{}'::jsonb,
+  raw           JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+CREATE UNIQUE INDEX IF NOT EXISTS orders_id_key ON orders (id);
+CREATE INDEX IF NOT EXISTS orders_received_idx ON orders (received_at DESC);
+
 -- One row per day. The cap is only a cap if it survives a restart.
 CREATE TABLE IF NOT EXISTS llm_spend (
   day      DATE PRIMARY KEY,
@@ -132,6 +160,50 @@ export function pgSafe(v) {
   if (Array.isArray(v)) return v.map(pgSafe);
   if (v && typeof v === 'object' && !(v instanceof Date)) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, pgSafe(x)]));
   return v;
+}
+
+/**
+ * The order columns, in one order, used by the insert and by the row mapper so
+ * the two cannot drift apart.
+ */
+const ORDER_COLUMNS = [
+  'id', 'created_at', 'received_at', 'contact_name', 'business_name', 'phone',
+  'email', 'city', 'business_type', 'products', 'order_details', 'frequency',
+  'volume', 'needed_by', 'notes', 'source_path', 'status', 'lead_id', 'alert', 'raw',
+];
+
+const ORDER_FIELD_TO_COLUMN = {
+  id: 'id', createdAt: 'created_at', receivedAt: 'received_at',
+  contactName: 'contact_name', businessName: 'business_name', phone: 'phone',
+  email: 'email', city: 'city', businessType: 'business_type', products: 'products',
+  orderDetails: 'order_details', frequency: 'frequency', volume: 'volume',
+  neededBy: 'needed_by', notes: 'notes', sourcePath: 'source_path',
+  status: 'status', leadId: 'lead_id', alert: 'alert', raw: 'raw',
+};
+
+const ORDER_COLUMN_TO_FIELD = Object.fromEntries(
+  Object.entries(ORDER_FIELD_TO_COLUMN).map(([field, column]) => [column, field])
+);
+
+function orderRow(order) {
+  return ORDER_COLUMNS.map((column) => {
+    const value = order[ORDER_COLUMN_TO_FIELD[column]];
+    if (column === 'alert' || column === 'raw') return JSON.stringify(value || {});
+    if (column === 'products') return Array.isArray(value) ? value : [];
+    return value ?? null;
+  });
+}
+
+function orderFromRow(row) {
+  const out = {};
+  for (const [column, value] of Object.entries(row)) {
+    const field = ORDER_COLUMN_TO_FIELD[column] || column;
+    out[field] = iso(value);
+  }
+  out.products = out.products || [];
+  out.alert = out.alert || {};
+  out.raw = out.raw || {};
+  return out;
 }
 
 export async function createPgStore(connectionString) {
@@ -226,6 +298,45 @@ export async function createPgStore(connectionString) {
           [runId ?? null, seq ?? null, type, at, JSON.stringify(payload), key ?? null]
         );
       }
+    },
+
+    // ---------------------------------------------------------------- orders
+
+    async allOrders() {
+      const { rows } = await pool.query('SELECT * FROM orders ORDER BY received_at DESC');
+      return rows.map(orderFromRow);
+    },
+
+    async getOrder(id) {
+      const { rows } = await pool.query('SELECT * FROM orders WHERE id = $1', [String(id)]);
+      return rows[0] ? orderFromRow(rows[0]) : null;
+    },
+
+    /**
+     * Insert one order. The order reference is the key, so a replay inserts
+     * nothing and reports inserted:false - the caller turns that into a 200
+     * no-op rather than a second order, a second lead note and a second alert.
+     */
+    async putOrder(order) {
+      const o = pgSafe(order);
+      const { rows } = await pool.query(
+        `INSERT INTO orders (${ORDER_COLUMNS.join(', ')})
+         VALUES (${ORDER_COLUMNS.map((_, i) => `$${i + 1}`).join(', ')})
+         ON CONFLICT (id) DO NOTHING
+         RETURNING id`,
+        orderRow(o)
+      );
+      return { inserted: rows.length > 0 };
+    },
+
+    /** Record what became of the owner's alert, after the fact. */
+    async updateOrder(id, patch) {
+      const keys = Object.keys(patch);
+      if (!keys.length) return this.getOrder(id);
+      const sets = keys.map((k, i) => `${ORDER_FIELD_TO_COLUMN[k] || k} = $${i + 2}`).join(', ');
+      const vals = keys.map((k) => (k === 'alert' || k === 'raw' ? JSON.stringify(pgSafe(patch[k]) || {}) : pgSafe(patch[k])));
+      const { rows } = await pool.query(`UPDATE orders SET ${sets} WHERE id = $1 RETURNING *`, [String(id), ...vals]);
+      return rows[0] ? orderFromRow(rows[0]) : null;
     },
 
     /** Idempotency check for the webhook; see the unique index in the DDL. */

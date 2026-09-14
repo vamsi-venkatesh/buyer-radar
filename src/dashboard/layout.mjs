@@ -111,6 +111,7 @@ footer.foot{padding:0 12px 32px;max-width:900px;margin:0 auto;font-size:13px;col
 const TABS = [
   ['/', 'Today'],
   ['/leads', 'Register'],
+  ['/orders', 'Orders'],
   ['/prices', 'Prices'],
   ['/runs', 'Runs'],
   ['/report/weekly', 'Weekly'],

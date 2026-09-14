@@ -254,6 +254,59 @@ ${flash(message, messageKind)}
   return page({ title: 'Radar - register', subtitle: `Register - ${total} matching`, active: '/leads', body });
 }
 
+// ------------------------------------------------------------------ orders
+
+/**
+ * Orders that came in from the client's own site. One row per order, newest
+ * first, and the last column is the honest one: whether the owner was told, and
+ * by which channel. A row that says "not delivered" is a row the owner has to
+ * chase, and the page says so rather than showing a tick.
+ */
+export function ordersPage({ orders, total, limit, message, messageKind }) {
+  const rows = orders
+    .map(
+      (o) => `<tr>
+  <td>${esc(o.date)}</td>
+  <td><code>${esc(o.id)}</code></td>
+  <td>${esc(o.buyer)}${o.leadId ? ` <a class="muted" href="${BASE}/leads?q=${encodeURIComponent(o.buyer)}">register</a>` : ''}</td>
+  <td>${esc(o.businessType || '-')}</td>
+  <td>${esc(o.city || '-')}</td>
+  <td>${o.lines.length ? o.lines.map((l) => esc(l)).join('<br>') : '<span class="muted">-</span>'}</td>
+  <td>${esc(o.alert)}</td>
+</tr>`
+    )
+    .join('');
+
+  const body = `
+${flash(message, messageKind)}
+<section>
+  <div class="tiles">
+    ${tile(total, total === 1 ? 'order' : 'orders')}
+    ${tile(orders.filter((o) => o.alert === 'WhatsApp sent').length, 'told on WhatsApp')}
+    ${tile(orders.filter((o) => o.alert.startsWith('email')).length, 'told by email')}
+    ${tile(orders.filter((o) => o.alert.startsWith('not ')).length, 'not delivered')}
+  </div>
+  <p class="muted">Every order the site has sent the radar, newest first. <a href="${BASE}/orders.csv">Download CSV</a>${
+    total > orders.length ? ` &middot; showing the first ${limit}` : ''
+  }</p>
+</section>
+
+<section>
+  <h2>Orders</h2>
+  ${
+    rows
+      ? `<div class="scroll"><table>
+  <thead><tr><th>Date</th><th>Reference</th><th>Buyer</th><th>Business</th><th>City</th><th>Lines</th><th>Owner alert</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table></div>
+<p class="muted">The buyer is never messaged from here. The only alert this page reports is the one sent to the owner's own number or address.</p>`
+      : '<p class="muted">No order has reached the radar yet. The site posts one here as soon as a buyer places it.</p>'
+  }
+</section>
+`;
+  return page({ title: 'Radar - orders', subtitle: `Orders - ${total}`, active: '/orders', body });
+}
+
 // ------------------------------------------------------------------ prices
 
 export function pricesPage({ days, rows, unpriced }) {

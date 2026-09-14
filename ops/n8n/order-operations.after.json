@@ -1,0 +1,499 @@
+{
+  "updatedAt": "2026-09-14T08:27:49.085Z",
+  "createdAt": "2026-07-21T01:45:48.634Z",
+  "id": "REPLACE_WITH_WORKFLOW_ID",
+  "name": "B2B Order Operations",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-created",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-order-created",
+      "name": "Order Created Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -900,
+        0
+      ],
+      "webhookId": "order-created",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Order Webhook Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $json.body ?? $json;\nif (event.eventType !== 'order.created') throw new Error('Unsupported event type');\nconst order = event.order ?? {};\nconst required = ['orderId','createdAt','contactName','businessName','phone','city','businessType','orderDetails','schedule'];\nconst missing = required.filter((key) => !String(order[key] ?? '').trim());\nif (missing.length) throw new Error(`Missing order fields: ${missing.join(', ')}`);\nconst products = Array.isArray(order.products) ? order.products.filter(Boolean) : [];\nif (!products.length) throw new Error('Order has no products');\n// The spreadsheet the Google Sheets node writes to. It is read from the n8n\n// environment so the id is configuration and not a value edited into a node;\n// set ORDERS_SHEET_ID on the n8n container, or paste the id on the node.\nlet sheetId = '';\ntry { sheetId = String($env.ORDERS_SHEET_ID ?? '').trim(); } catch (e) { sheetId = ''; }\nconst sheetName = (() => { try { return String($env.ORDERS_SHEET_NAME ?? '').trim() || 'Orders'; } catch (e) { return 'Orders'; } })();\nconst operationsMessage = [`NEW ORDER \\u2014 ${order.orderId}`, `${order.businessName} \\u00b7 ${order.businessType}`, `Contact: ${order.contactName} \\u00b7 ${order.phone}`, `Delivery: ${order.city}`, '', order.orderDetails, '', `Schedule: ${order.schedule}`, order.neededBy ? `Needed by: ${order.neededBy}` : '', order.notes ? `Notes: ${order.notes}` : ''].filter(Boolean).join('\\n');\nreturn [{ json: {\n  event_id: event.eventId, event_type: event.eventType, occurred_at: event.occurredAt,\n  order_id: order.orderId, created_at: order.createdAt,\n  status: order.status || 'new-awaiting-confirmation',\n  business: order.businessName, business_name: order.businessName,\n  buyer_type: order.businessType, business_type: order.businessType,\n  contact_name: order.contactName, phone: order.phone, email: order.email || '', city: order.city,\n  products: products.join(', '), order_details: order.orderDetails,\n  schedule: order.schedule, frequency: order.schedule, volume: order.volume || '',\n  needed_by: order.neededBy || '', notes: order.notes || '',\n  source_path: order.sourcePath || '', source: event.source || 'website',\n  sheet_id: sheetId, sheet_name: sheetName,\n  // The order exactly as the site sent it, for the radar to normalise itself.\n  radar_order: order,\n  operations_message: operationsMessage,\n  customer_message: `Thank you, ${order.contactName}. We have received order request ${order.orderId}. We will contact you to confirm availability, price, packing and delivery. No payment has been taken.`\n} }];"
+      },
+      "id": "validate-normalize",
+      "name": "Validate & Normalize Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Validate & Normalize Order').item.json.sheet_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Validate & Normalize Order').item.json.sheet_name }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $('Validate & Normalize Order').item.json.order_id }}",
+            "created_at": "={{ $('Validate & Normalize Order').item.json.created_at }}",
+            "contact_name": "={{ $('Validate & Normalize Order').item.json.contact_name }}",
+            "business_name": "={{ $('Validate & Normalize Order').item.json.business_name }}",
+            "phone": "={{ $('Validate & Normalize Order').item.json.phone }}",
+            "city": "={{ $('Validate & Normalize Order').item.json.city }}",
+            "business_type": "={{ $('Validate & Normalize Order').item.json.business_type }}",
+            "products": "={{ $('Validate & Normalize Order').item.json.products }}",
+            "order_details": "={{ $('Validate & Normalize Order').item.json.order_details }}",
+            "frequency": "={{ $('Validate & Normalize Order').item.json.frequency }}",
+            "volume": "={{ $('Validate & Normalize Order').item.json.volume }}",
+            "notes": "={{ $('Validate & Normalize Order').item.json.notes }}",
+            "source_path": "={{ $('Validate & Normalize Order').item.json.source_path }}",
+            "status": "={{ $('Validate & Normalize Order').item.json.status }}"
+          },
+          "matchingColumns": [
+            "order_id"
+          ],
+          "schema": [
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "business_name",
+              "displayName": "business_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "business_type",
+              "displayName": "business_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "products",
+              "displayName": "products",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_details",
+              "displayName": "order_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "frequency",
+              "displayName": "frequency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "volume",
+              "displayName": "volume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_path",
+              "displayName": "source_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "google-sheets-upsert",
+      "name": "Register order in Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -120,
+        -200
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "notes": "Needs a Google credential. Everything else on this node is already set.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "has-email",
+      "name": "Customer Has Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -380,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "Greenfield Produce <hello@example.com>",
+        "toEmail": "={{ $json.email }}",
+        "subject": "We received your order {{ $json.order_id }}",
+        "emailFormat": "text",
+        "text": "={{ $json.customer_message }}",
+        "options": {}
+      },
+      "id": "smtp-customer",
+      "name": "Email Customer Acknowledgement",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -120,
+        120
+      ],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "Greenfield Produce Orders <hello@example.com>",
+        "toEmail": "owner@example.com, hello@example.com",
+        "subject": "New order {{ $json.order_id }}",
+        "emailFormat": "text",
+        "text": "={{ $json.operations_message }}",
+        "options": {
+          "replyTo": "={{ $json.email || 'hello@example.com' }}"
+        }
+      },
+      "id": "smtp-operations",
+      "name": "Email Order Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -380,
+        360
+      ],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "automation-accepted",
+      "name": "Automation Accepted",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Secure event boundary\nThe Cloudflare Worker stores the order first, then posts here in the background. Configure Header Auth using `x-farmquick-automation-key`.",
+        "height": 210,
+        "width": 340
+      },
+      "id": "note-boundary",
+      "name": "Architecture Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -330
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Human confirmation stays central\nThis workflow records and alerts. It does not accept the commercial order, calculate prices, take payment or promise stock.",
+        "height": 190,
+        "width": 390
+      },
+      "id": "note-human",
+      "name": "Business Rule Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -330
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://automation.example.com/radar/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ eventType: $json.event_type, eventId: $json.event_id, occurredAt: $json.occurred_at, source: $json.source, order: $json.radar_order }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "id": "radar-record-order",
+      "name": "Radar: record order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -380,
+        -20
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Radar Orders Key"
+        }
+      },
+      "notes": "Records the order in the Buyer Radar: one order row, the buyer won in the lead register, and the owner told on WhatsApp (or by email when Meta refuses). A reference already recorded answers 200 with duplicate:true and changes nothing."
+    },
+    {
+      "parameters": {
+        "content": "## Google Sheets: two minutes, then the register copies itself\n\nThe **Register order in Google Sheets** node is fully configured - appendOrUpdate,\nkeyed on `order_id`, all fourteen columns mapped. The only thing missing is a\nGoogle credential, because this n8n has none.\n\n1. Left sidebar -> **Credentials** -> **Add credential** -> search **Google Sheets**\n   -> choose **Google Sheets OAuth2 API** (or **Google Service Account**) -> sign in\n   with the Google account that owns the register, and save it.\n2. Open this workflow -> click **Register order in Google Sheets** -> pick that\n   credential in **Credential to connect with**.\n3. Give it the spreadsheet: either set `ORDERS_SHEET_ID` (and optionally\n   `ORDERS_SHEET_NAME`, default `Orders`) in the n8n container environment, or\n   paste the spreadsheet id straight into **Document** on the node.\n4. **Save**. The next order appends a row; the same order twice updates that row.\n\nUntil then nothing is lost: the node continues on failure, so the radar still\nrecords every order, the buyer is still won in the lead register, and the owner is\nstill told. Only the sheet copy is missing.",
+        "height": 420,
+        "width": 420
+      },
+      "id": "note-sheets-setup",
+      "name": "Google Sheets Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        -680
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## The owner is told by the radar, not from here\n\nThe placeholder WhatsApp node is gone. **Radar: record order** posts the order to\nthe Buyer Radar, which records it, puts the buyer in the lead register as\n`won`, and sends the WhatsApp text to the owner from the number that is already\nconnected there - falling back to email when Meta refuses (error 131047, the closed\n24-hour window).\n\nThe buyer is never messaged by the radar.",
+        "height": 280,
+        "width": 380
+      },
+      "id": "note-radar",
+      "name": "Radar Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        -680
+      ]
+    }
+  ],
+  "connections": {
+    "Order Created Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize Order": {
+      "main": [
+        [
+          {
+            "node": "Customer Has Email?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email Order Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Radar: record order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Has Email?": {
+      "main": [
+        [
+          {
+            "node": "Email Customer Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Radar: record order": {
+      "main": [
+        [
+          {
+            "node": "Register order in Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Register order in Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Automation Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": null,
+  "activeVersionId": null,
+  "versionCounter": 5,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": []
+}

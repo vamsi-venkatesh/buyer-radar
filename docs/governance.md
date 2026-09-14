@@ -73,11 +73,13 @@ table in this document and the code cannot drift apart quietly.
 | `web.fetch` | network | free | no |
 | `pdf.text` | network | free | no |
 | `source.run` | network | free | no |
+| `orders.list` | read | free | no |
 | `model.read` | model | metered | no |
 | `leads.set_status` | write | free | **yes** |
 | `owner.message` | write | free | **yes** |
+| `orders.record` | write | free | **yes** |
 
-`OWNER_ONLY = ['leads.set_status', 'owner.message']`. `allowed()` passes a call
+`OWNER_ONLY = ['leads.set_status', 'owner.message', 'orders.record']`. `allowed()` passes a call
 only when `ctx.system === true` (the pipeline calling itself) or
 `ctx.actor === 'owner'`. Over MCP the actor comes from `RADAR_MCP_ACTOR`, which
 defaults to `agent` — so a model driving the MCP server can read everything in

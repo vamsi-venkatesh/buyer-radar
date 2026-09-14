@@ -70,7 +70,10 @@ export function loadClient({ file = existsSync(CLIENT_FILE) ? CLIENT_FILE : EXAM
       approx: Boolean(item.approx),
     }));
 
-  const business = { owner: 'the owner', homeCity: '', contactEmail: '', ...raw.business };
+  // `site` is the supplier's own website - the one a buyer places an order on.
+  // It names the order loop's origin in the register's licence and in the note on
+  // a won lead, so an order can always be traced back to where it was placed.
+  const business = { owner: 'the owner', homeCity: '', contactEmail: '', site: '', ...raw.business };
   const digest = { title: 'Buyer Radar', maxChars: 1500, topN: 10, ...raw.digest };
   digest.sections = { requirements: 6, buyers: 6, registrations: 4, ...(raw.digest || {}).sections };
   // The combined morning digest carries every city inside the same character

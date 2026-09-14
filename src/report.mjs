@@ -15,6 +15,7 @@ import { isoWeek, weekRange, previousWeek, inWeek, shortDate } from './lib/week.
 import { segmentLabel, normaliseCity, todayIso } from './lib/normalise.mjs';
 import { catalogueItems } from './lib/catalogue.mjs';
 import { page, esc } from './dashboard/layout.mjs';
+import { orderLines, ORDER_SITE } from './orders.mjs';
 
 export const REPORTS_DIR = path.join(ROOT, 'reports');
 export const REPORT = { maxChars: 1800, topCities: 5, topSegments: 6, topPriceItems: 6, topWon: 6 };
@@ -111,7 +112,7 @@ function weeklyModal(priceLeads, range) {
  * Fold the store into every number the report prints. Pure: give it rows, it
  * gives you counts. No I/O, no clock beyond the `today` you pass in.
  */
-export function collectReport({ leads = [], runs = [], events = [], week, today = todayIso() }) {
+export function collectReport({ leads = [], runs = [], events = [], orders = [], week, today = todayIso() }) {
   const range = weekRange(week);
   const prior = previousWeek(week);
   const priorRange = weekRange(prior);
@@ -191,6 +192,23 @@ export function collectReport({ leads = [], runs = [], events = [], week, today 
     return { segment, city, count: v };
   });
 
+  // ---- orders placed on the client's own site this week
+  const weekOrders = orders.filter((o) => inWeek(o.createdAt || o.receivedAt, range));
+  const orderProducts = new Map();
+  for (const o of weekOrders) {
+    const items = (o.products && o.products.length ? o.products : orderLines(o)).map((p) => String(p).trim()).filter(Boolean);
+    // The same product named twice in one order is one order for that product.
+    for (const item of new Set(items.map((i) => i.toLowerCase()))) {
+      const label = items.find((i) => i.toLowerCase() === item) || item;
+      orderProducts.set(label, (orderProducts.get(label) || 0) + 1);
+    }
+  }
+  const orderBuyers = [];
+  for (const o of weekOrders) {
+    const name = o.businessName || o.contactName || o.id;
+    if (!orderBuyers.includes(name)) orderBuyers.push(name);
+  }
+
   const data = {
     week,
     range,
@@ -225,6 +243,14 @@ export function collectReport({ leads = [], runs = [], events = [], week, today 
     blocked: [...blocked.entries()].map(([source, reason]) => ({ source, reason })),
     priceMoves,
     untouched,
+    orders: {
+      count: weekOrders.length,
+      total: orders.length,
+      byCity: countByNormalised(weekOrders, (o) => o.city, normaliseCity),
+      byProduct: [...orderProducts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
+      buyers: orderBuyers,
+      notDelivered: weekOrders.filter((o) => !(o.alert && ((o.alert.whatsapp && o.alert.whatsapp.sent) || (o.alert.email && o.alert.email.sent)))).length,
+    },
   };
   data.nextActions = nextActions(data);
   return data;
@@ -314,6 +340,16 @@ export function renderReportText(d, { maxChars = REPORT.maxChars } = {}) {
       `Register: ${d.registerTotal} leads - new ${d.funnel.new}, contacted ${d.funnel.contacted}, quoted ${d.funnel.quoted}, won ${d.funnel.won}, lost ${d.funnel.lost}`
     );
     lines.push('');
+    lines.push(`Orders on ${ORDER_SITE}: ${d.orders.count} this week (${d.orders.total} all time)`);
+    if (d.orders.count) {
+      if (d.orders.byCity.length) lines.push(`Order city: ${topList(d.orders.byCity, limits.cities)}`);
+      if (limits.prices > 0 && d.orders.byProduct.length) lines.push(`Ordered: ${topList(d.orders.byProduct, limits.prices)}`);
+      lines.push(
+        `Ordered by: ${d.orders.buyers.slice(0, limits.won).join(', ')}${d.orders.buyers.length > limits.won ? `, +${d.orders.buyers.length - limits.won} more` : ''}`
+      );
+      if (d.orders.notDelivered) lines.push(`${d.orders.notDelivered} order alert${d.orders.notDelivered === 1 ? '' : 's'} did not reach the owner - see the Orders page`);
+    }
+    lines.push('');
     lines.push(
       `Runs: ${d.runs} on ${d.runDays.length} ${d.runDays.length === 1 ? 'day' : 'days'}`
     );
@@ -400,6 +436,26 @@ export function renderReportHtml(d) {
 </section>
 
 <section>
+  <h2>Orders</h2>
+  <div class="tiles">
+    <div class="tile"><div class="n">${d.orders.count}</div><div class="k">this week</div></div>
+    <div class="tile"><div class="n">${d.orders.total}</div><div class="k">all time</div></div>
+    <div class="tile"><div class="n">${d.orders.buyers.length}</div><div class="k">buyers who ordered</div></div>
+    <div class="tile"><div class="n">${d.orders.notDelivered}</div><div class="k">alerts not delivered</div></div>
+  </div>
+  ${
+    d.orders.count
+      ? `<h3>By city</h3>
+  <table><tbody>${rows(d.orders.byCity)}</tbody></table>
+  <h3>By product</h3>
+  <table><tbody>${rows(d.orders.byProduct)}</tbody></table>
+  <h3>Buyers who ordered</h3>
+  <p>${esc(d.orders.buyers.join(', '))}</p>`
+      : `<p class="muted">No order came in from ${esc(ORDER_SITE)} this week.</p>`
+  }
+</section>
+
+<section>
   <h2>Sources</h2>
   <table><tbody>${rows(d.sources)}</tbody></table>
   <h3>Blocked</h3>
@@ -460,7 +516,8 @@ export async function buildReport({ week = isoWeek(new Date()), today = todayIso
     const leads = await s.allLeads();
     const runs = await s.allRuns();
     const events = typeof s.allEvents === 'function' ? await s.allEvents() : [];
-    const data = collectReport({ leads, runs, events, week, today });
+    const orders = typeof s.allOrders === 'function' ? await s.allOrders() : [];
+    const data = collectReport({ leads, runs, events, orders, week, today });
     return { data, text: renderReportText(data), html: renderReportHtml(data) };
   } finally {
     if (own) await s.close();

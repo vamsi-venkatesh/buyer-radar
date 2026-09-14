@@ -41,6 +41,9 @@ const ROLE_BY_TYPE = {
   'evidence.sealed': 'auditor',
   'leads.upserted': 'desk',
   'lead.status_changed': 'owner',
+  // An order is the desk's business: it arrives at the register, it is not
+  // scouted and it is not the owner's own command.
+  'lead.won': 'desk',
   // The openings lane is two jobs under one prefix. Reading the article is
   // scouting; deciding whether what came back is a real requirement with a real
   // contact on the organisation's own site is verification.
@@ -55,6 +58,7 @@ const ROLE_BY_PREFIX = [
   ['openings.', 'scout'],
   ['llm.', 'reader'],
   ['digest.', 'desk'],
+  ['order.', 'desk'],
   ['whatsapp.', 'owner'],
   ['owner.', 'owner'],
 ];

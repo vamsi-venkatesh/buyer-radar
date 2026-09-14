@@ -136,10 +136,11 @@ export const EVENTS = [
 ];
 
 /** Mutable in-memory store with the same shape openStore() returns. */
-export function fixtureStore({ leads = LEADS, runs = RUNS, events = EVENTS, llmCache = new Map(), llmSpend = new Map() } = {}) {
+export function fixtureStore({ leads = LEADS, runs = RUNS, events = EVENTS, orders = [], llmCache = new Map(), llmSpend = new Map() } = {}) {
   let rows = leads.map((l) => ({ ...l }));
   const runRows = runs.map((r) => ({ ...r }));
   const eventRows = events.map((e) => ({ ...e }));
+  const orderRows = orders.map((o) => ({ ...o }));
   return {
     kind: 'fixture',
     describe: () => 'fixture',
@@ -175,6 +176,26 @@ export function fixtureStore({ leads = LEADS, runs = RUNS, events = EVENTS, llmC
     async hasEvent(kind, key) {
       if (!kind || !key) return false;
       return eventRows.some((e) => e.type === kind && e.key === key);
+    },
+    async allOrders() {
+      return [...orderRows]
+        .sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || '')))
+        .map((o) => ({ ...o }));
+    },
+    async getOrder(id) {
+      const found = orderRows.find((o) => o.id === String(id));
+      return found ? { ...found } : null;
+    },
+    async putOrder(order) {
+      if (orderRows.some((o) => o.id === order.id)) return { inserted: false };
+      orderRows.push({ ...order });
+      return { inserted: true };
+    },
+    async updateOrder(id, patch) {
+      const i = orderRows.findIndex((o) => o.id === String(id));
+      if (i === -1) return null;
+      orderRows[i] = { ...orderRows[i], ...patch };
+      return { ...orderRows[i] };
     },
     // The LLM stage. Both maps survive a "restart" in a test by being handed
     // back to fixtureStore(), which is how the budget cap is proved to persist.

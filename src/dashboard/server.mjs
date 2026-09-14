@@ -26,13 +26,17 @@ import { callTool } from '../tools/registry.mjs';
 import { catalogueItems } from '../lib/catalogue.mjs';
 import { lastDays, isoWeek } from '../lib/week.mjs';
 import { buildReport } from '../report.mjs';
-import { todayPage, leadsPage, pricesPage, runsPage, loginPage, notFoundPage } from './pages.mjs';
+import { todayPage, leadsPage, pricesPage, runsPage, ordersPage, loginPage, notFoundPage } from './pages.mjs';
+import { recordOrder, orderRows, ordersToCsv } from '../orders.mjs';
 import { latestDigest } from '../lib/digest-files.mjs';
 import { handleWebhookRequest, webhookSummary, openWindow } from '../webhook.mjs';
 
 export const COOKIE_NAME = 'radar_token';
 export const DEFAULT_PORT = 4710;
 export const LEADS_PAGE_SIZE = 60;
+export const ORDERS_PAGE_SIZE = 200;
+/** An order body is bigger than a status form; it is still nothing like a file. */
+export const MAX_ORDER_BYTES = 64 * 1024;
 export const PRICE_DAYS = 14;
 const MAX_BODY_BYTES = 8 * 1024;
 
@@ -176,6 +180,114 @@ function applyExtraFilters(leads, filters) {
   });
 }
 
+// ------------------------------------------------------------------ orders
+
+function sendJson(res, status, value) {
+  const payload = Buffer.from(`${JSON.stringify(value)}\n`, 'utf8');
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': payload.length,
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Robots-Tag': 'noindex, nofollow',
+  });
+  res.end(payload);
+}
+
+function readJsonBody(req, limit = MAX_ORDER_BYTES) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > limit) {
+        const err = new Error('request body too large');
+        err.tooLarge = true;
+        reject(err);
+        req.destroy();
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('error', reject);
+  });
+}
+
+/**
+ * POST /orders - one order from the site, by way of n8n.
+ *
+ * 503 with no RADAR_ORDERS_KEY, 401 on a wrong or missing key, 400 on a body
+ * that is not an order, 200 with duplicate:true on a replay, 201 on a new one.
+ * The answer carries the order reference, the lead the buyer now is, and what
+ * became of the owner's alert - so the caller's own execution log records the
+ * whole loop and not only that something was posted.
+ */
+export async function handleOrderRequest(req, res, ctx = {}) {
+  const { env = process.env, storeFactory, runsDir = RUNS_DIR, fetchImpl, smtpConnect } = ctx;
+  const expected = env.RADAR_ORDERS_KEY;
+  if (!expected || String(expected).length < 8) {
+    return sendJson(res, 503, {
+      ok: false,
+      error: 'RADAR_ORDERS_KEY is not set, so no order can be authenticated and none is accepted.',
+    });
+  }
+  const presented = req.headers['x-farmquick-automation-key'];
+  if (!safeEqual(presented, expected)) {
+    return sendJson(res, 401, {
+      ok: false,
+      error: presented ? 'x-farmquick-automation-key does not match' : 'x-farmquick-automation-key is missing',
+    });
+  }
+
+  let raw;
+  try {
+    raw = await readJsonBody(req);
+  } catch (err) {
+    if (err.tooLarge) return sendJson(res, 413, { ok: false, error: 'request body too large' });
+    return sendJson(res, 400, { ok: false, error: 'could not read the body' });
+  }
+
+  let body;
+  try {
+    body = JSON.parse(raw);
+  } catch {
+    return sendJson(res, 400, { ok: false, error: 'body is not JSON' });
+  }
+
+  const store = await storeFactory();
+  try {
+    const result = await recordOrder(store, body, { env, fetchImpl, runsDir, smtpConnect });
+    if (result.duplicate) {
+      return sendJson(res, 200, {
+        ok: true,
+        duplicate: true,
+        orderId: result.orderId,
+        leadId: result.leadId,
+        message: 'This order reference is already recorded; nothing was changed and nobody was told again.',
+      });
+    }
+    return sendJson(res, 201, {
+      ok: true,
+      duplicate: false,
+      orderId: result.orderId,
+      leadId: result.leadId,
+      leadCreated: result.leadCreated,
+      matchedOn: result.matchedOn,
+      status: 'won',
+      alert: result.alert,
+      receipt: result.receipt,
+    });
+  } catch (err) {
+    const message = String(err.message || err);
+    const status = message.startsWith('not an order') ? 400 : 500;
+    if (status === 500) process.stderr.write(`[orders] POST failed: ${err.stack || err}\n`);
+    return sendJson(res, status, { ok: false, error: status === 400 ? message : 'could not record the order' });
+  } finally {
+    await store.close();
+  }
+}
+
 // ------------------------------------------------------------------ routing
 
 async function handle(req, res, { token, digestsDir, runsDir, openStore: open }) {
@@ -194,6 +306,15 @@ async function handle(req, res, { token, digestsDir, runsDir, openStore: open })
       digestsDir,
       runsDir,
     });
+  }
+
+  // The orders endpoint is the second route the owner token does not guard:
+  // n8n cannot present it either. What stands in its place is
+  // RADAR_ORDERS_KEY, compared in constant time against the same header the
+  // site's Worker already sends. With the key unset the route answers 503 - it
+  // never falls back to accepting an unauthenticated order.
+  if (pathname === '/orders' && req.method === 'POST') {
+    return handleOrderRequest(req, res, { env: process.env, storeFactory: open, runsDir });
   }
 
   // /login is the only route that accepts the token in the query string.
@@ -340,6 +461,31 @@ async function handle(req, res, { token, digestsDir, runsDir, openStore: open })
       return send(res, 200, toCsv(matched), {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="leads-${todayIso()}.csv"`,
+      });
+    }
+
+    // -------------------------------------------------- /orders
+    if (pathname === '/orders') {
+      const orders = typeof store.allOrders === 'function' ? await store.allOrders() : [];
+      const rows = orderRows(orders);
+      return send(
+        res,
+        200,
+        ordersPage({
+          orders: rows.slice(0, ORDERS_PAGE_SIZE),
+          total: rows.length,
+          limit: ORDERS_PAGE_SIZE,
+          message,
+          messageKind,
+        })
+      );
+    }
+
+    if (pathname === '/orders.csv') {
+      const orders = typeof store.allOrders === 'function' ? await store.allOrders() : [];
+      return send(res, 200, ordersToCsv(orders), {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="orders-${todayIso()}.csv"`,
       });
     }
 

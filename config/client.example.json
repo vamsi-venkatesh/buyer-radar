@@ -7,7 +7,8 @@
     "homeCity": "Bengaluru",
     "headline": "peeled garlic up to 1,000 kg/day, broccoli, capsicum, exotic and regular vegetables",
     "contactEmail": "radar@example.com",
-    "userAgent": "BuyerRadar/0.1 (radar@example.com)"
+    "userAgent": "BuyerRadar/0.1 (radar@example.com)",
+    "site": "greenfieldproduce.example"
   },
 
   "digest": {

@@ -42,6 +42,7 @@ import { pdfToText, looksLikePdf } from '../lib/pdf-text.mjs';
 import { extractContacts } from '../lib/contacts.mjs';
 import { catalogueItems } from '../lib/catalogue.mjs';
 import { sendWhatsAppText } from '../deliver.mjs';
+import { recordOrder, orderRows, ownerOrderId } from '../orders.mjs';
 import { llmSettings } from '../llm/settings.mjs';
 import { createRunner } from '../llm/stage.mjs';
 import { loadPrompt } from '../llm/prompts.mjs';
@@ -57,7 +58,7 @@ export const KINDS_OF_TOOL = ['read', 'write', 'network', 'model'];
 export const COSTS = ['free', 'metered'];
 
 /** Tools that refuse anybody who is not the owner or the pipeline itself. */
-export const OWNER_ONLY = ['leads.set_status', 'owner.message'];
+export const OWNER_ONLY = ['leads.set_status', 'owner.message', 'orders.record'];
 
 // ------------------------------------------------------------------ receipts
 
@@ -648,6 +649,144 @@ export const TOOLS = [
         chars: result.chars ?? input.text.length,
         trimmed: Boolean(result.trimmed),
         reason: result.reason || null,
+      };
+    },
+  },
+
+  {
+    name: 'orders.list',
+    role: 'desk',
+    kind: 'read',
+    cost: 'free',
+    description:
+      'Orders placed on the client\'s own site and recorded here, newest first. Reports what became of the owner\'s alert on each one honestly: an order whose alert never reached him says so rather than showing nothing.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        city: { type: 'string', maxLength: 80, description: 'City name or key; matched loosely' },
+        since: { type: 'string', maxLength: 10, description: 'ISO date; only orders created on or after it' },
+        query: { type: 'string', maxLength: 200, description: 'Free text: buyer name, order reference or a product line' },
+        limit: { type: 'integer', minimum: 1, maximum: 500, default: 50 },
+      },
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        count: { type: 'integer' },
+        matched: { type: 'integer' },
+        total: { type: 'integer' },
+        orders: { type: 'array', items: { type: 'object' } },
+      },
+    },
+    async handler(input, ctx) {
+      const store = requireStore(ctx, 'orders.list');
+      if (typeof store.allOrders !== 'function') return { count: 0, matched: 0, total: 0, orders: [] };
+      const all = orderRows(await store.allOrders());
+      const q = String(input.query || '').toLowerCase().trim();
+      const filtered = all
+        .filter((o) => (input.city ? normaliseCity(o.city) === normaliseCity(input.city) : true))
+        .filter((o) => (input.since ? String(o.date) >= String(input.since) : true))
+        .filter((o) => {
+          if (!q) return true;
+          if (String(o.id).toLowerCase().includes(q)) return true;
+          if (String(o.buyer).toLowerCase().includes(q)) return true;
+          return o.lines.some((l) => String(l).toLowerCase().includes(q));
+        });
+      return {
+        count: Math.min(input.limit, filtered.length),
+        matched: filtered.length,
+        total: all.length,
+        orders: filtered.slice(0, input.limit),
+      };
+    },
+  },
+
+  {
+    name: 'orders.record',
+    role: 'owner',
+    kind: 'write',
+    cost: 'free',
+    ownerOnly: true,
+    description:
+      'Record an order the owner took himself - on the phone, at the gate, over WhatsApp. OWNER ONLY. It does exactly what an order from the site does: stores the order once, puts the buyer in the register as won with the order on his record, and tells the owner. Leave orderId out and one is generated; give the same one twice and the second call changes nothing.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['orderDetails'],
+      properties: {
+        orderId: { type: 'string', minLength: 1, maxLength: 64, description: 'Leave out to generate an OWN- reference' },
+        orderDetails: { type: 'string', minLength: 1, maxLength: 1500, description: 'What was ordered, in the owner\'s own words' },
+        businessName: { type: ['string', 'null'], maxLength: 120, default: null },
+        contactName: { type: ['string', 'null'], maxLength: 80, default: null },
+        phone: { type: ['string', 'null'], maxLength: 24, default: null },
+        email: { type: ['string', 'null'], maxLength: 160, default: null },
+        city: { type: ['string', 'null'], maxLength: 120, default: null },
+        businessType: { type: ['string', 'null'], maxLength: 80, default: null },
+        products: { type: 'array', items: { type: 'string', maxLength: 100 }, maxItems: 50, default: [] },
+        frequency: { type: ['string', 'null'], maxLength: 80, default: null },
+        volume: { type: ['string', 'null'], maxLength: 100, default: null },
+        notes: { type: ['string', 'null'], maxLength: 1000, default: null },
+        leadId: { type: ['string', 'null'], maxLength: 64, default: null, description: 'Record it against this lead rather than matching on the phone or the name' },
+        notify: { type: 'boolean', default: true, description: 'Set false to record without telling the owner' },
+      },
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        orderId: { type: 'string' },
+        duplicate: { type: 'boolean' },
+        leadId: { type: ['string', 'null'] },
+        leadCreated: { type: 'boolean' },
+        matchedOn: { type: ['string', 'null'] },
+        alertChannel: { type: ['string', 'null'] },
+        receiptHash: { type: ['string', 'null'] },
+      },
+    },
+    async handler(input, ctx) {
+      const store = requireStore(ctx, 'orders.record');
+      const env = ctx.env || process.env;
+      const order = {
+        orderId: input.orderId || ownerOrderId(),
+        createdAt: new Date().toISOString(),
+        contactName: input.contactName,
+        businessName: input.businessName,
+        phone: input.phone,
+        email: input.email,
+        city: input.city,
+        businessType: input.businessType,
+        products: input.products || [],
+        orderDetails: input.orderDetails,
+        frequency: input.frequency,
+        volume: input.volume,
+        notes: input.notes,
+        sourcePath: 'owner',
+        status: 'recorded-by-owner',
+        source: 'owner',
+      };
+      // An explicit lead wins over matching: the owner saying which buyer this
+      // is beats any guess this code could make from a name.
+      if (input.leadId) {
+        const lead = await store.getLead(input.leadId);
+        if (!lead) throw new Error(`lead not found: ${input.leadId}`);
+        if (!order.businessName) order.businessName = lead.name;
+        if (!order.phone) order.phone = lead.phone;
+        if (!order.city) order.city = lead.city;
+      }
+      const result = await recordOrder(store, order, {
+        env,
+        fetchImpl: ctx.fetch,
+        notify: input.notify !== false,
+        ...(ctx.runsDir ? { runsDir: ctx.runsDir } : {}),
+      });
+      return {
+        orderId: result.orderId,
+        duplicate: Boolean(result.duplicate),
+        leadId: result.leadId ?? null,
+        leadCreated: Boolean(result.leadCreated),
+        matchedOn: result.matchedOn ?? null,
+        alertChannel: result.alert?.channel ?? null,
+        receiptHash: result.receipt ?? null,
       };
     },
   },

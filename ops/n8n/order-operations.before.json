@@ -1,0 +1,312 @@
+{
+  "updatedAt": "2026-07-21T03:32:30.159Z",
+  "createdAt": "2026-07-21T01:45:48.634Z",
+  "id": "REPLACE_WITH_WORKFLOW_ID",
+  "name": "B2B Order Operations",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-created",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-order-created",
+      "name": "Order Created Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -900,
+        0
+      ],
+      "webhookId": "order-created",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Order Webhook Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $json.body ?? $json;\nif (event.eventType !== 'order.created') throw new Error('Unsupported event type');\nconst order = event.order ?? {};\nconst required = ['orderId','createdAt','contactName','businessName','phone','city','businessType','orderDetails','schedule'];\nconst missing = required.filter((key) => !String(order[key] ?? '').trim());\nif (missing.length) throw new Error(`Missing order fields: ${missing.join(', ')}`);\nconst products = Array.isArray(order.products) ? order.products.filter(Boolean) : [];\nif (!products.length) throw new Error('Order has no products');\nconst operationsMessage = [`NEW ORDER — ${order.orderId}`, `${order.businessName} · ${order.businessType}`, `Contact: ${order.contactName} · ${order.phone}`, `Delivery: ${order.city}`, '', order.orderDetails, '', `Schedule: ${order.schedule}`, order.neededBy ? `Needed by: ${order.neededBy}` : '', order.notes ? `Notes: ${order.notes}` : ''].filter(Boolean).join('\\n');\nreturn [{ json: { event_id: event.eventId, event_type: event.eventType, occurred_at: event.occurredAt, order_id: order.orderId, created_at: order.createdAt, status: order.status || 'new-awaiting-confirmation', business: order.businessName, buyer_type: order.businessType, contact_name: order.contactName, phone: order.phone, email: order.email || '', city: order.city, products: products.join(', '), order_details: order.orderDetails, schedule: order.schedule, needed_by: order.neededBy || '', notes: order.notes || '', source: event.source || 'website', operations_message: operationsMessage, customer_message: `Thank you, ${order.contactName}. We have received order request ${order.orderId}. We will contact you to confirm availability, price, packing and delivery. No payment has been taken.` } }];"
+      },
+      "id": "validate-normalize",
+      "name": "Validate & Normalize Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Orders",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $json.order_id }}",
+            "created_at": "={{ $json.created_at }}",
+            "status": "={{ $json.status }}",
+            "business": "={{ $json.business }}",
+            "buyer_type": "={{ $json.buyer_type }}",
+            "contact_name": "={{ $json.contact_name }}",
+            "phone": "={{ $json.phone }}",
+            "email": "={{ $json.email }}",
+            "city": "={{ $json.city }}",
+            "products": "={{ $json.products }}",
+            "order_details": "={{ $json.order_details }}",
+            "schedule": "={{ $json.schedule }}",
+            "needed_by": "={{ $json.needed_by }}",
+            "notes": "={{ $json.notes }}",
+            "source": "={{ $json.source }}"
+          },
+          "matchingColumns": [
+            "order_id"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "google-sheets-upsert",
+      "name": "CONFIGURE — Upsert Order in Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -380,
+        -220
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "REPLACE_WITH_META_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "REPLACE_WITH_OWNER_WHATSAPP_NUMBER",
+        "textBody": "={{ $json.operations_message }}",
+        "additionalFields": {}
+      },
+      "id": "whatsapp-ops",
+      "name": "CONFIGURE — WhatsApp owner alert",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 2.2,
+      "position": [
+        -380,
+        -20
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "has-email",
+      "name": "Customer Has Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -380,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "Greenfield Produce <hello@example.com>",
+        "toEmail": "={{ $json.email }}",
+        "subject": "We received your order {{ $json.order_id }}",
+        "emailFormat": "text",
+        "text": "={{ $json.customer_message }}",
+        "options": {}
+      },
+      "id": "smtp-customer",
+      "name": "Email Customer Acknowledgement",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -120,
+        120
+      ],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "Greenfield Produce Orders <hello@example.com>",
+        "toEmail": "owner@example.com, hello@example.com",
+        "subject": "New order {{ $json.order_id }}",
+        "emailFormat": "text",
+        "text": "={{ $json.operations_message }}",
+        "options": {
+          "replyTo": "={{ $json.email || 'hello@example.com' }}"
+        }
+      },
+      "id": "smtp-operations",
+      "name": "Email Order Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -380,
+        360
+      ],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "automation-accepted",
+      "name": "Automation Accepted",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Secure event boundary\nThe Cloudflare Worker stores the order first, then posts here in the background. Configure Header Auth using `x-farmquick-automation-key`.",
+        "height": 210,
+        "width": 340
+      },
+      "id": "note-boundary",
+      "name": "Architecture Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -330
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Human confirmation stays central\nThis workflow records and alerts. It does not accept the commercial order, calculate prices, take payment or promise stock.",
+        "height": 190,
+        "width": 390
+      },
+      "id": "note-human",
+      "name": "Business Rule Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -330
+      ]
+    }
+  ],
+  "connections": {
+    "Order Created Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize Order": {
+      "main": [
+        [
+          {
+            "node": "CONFIGURE — Upsert Order in Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CONFIGURE — WhatsApp owner alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Customer Has Email?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email Order Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Automation Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Has Email?": {
+      "main": [
+        [
+          {
+            "node": "Email Customer Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": null,
+  "activeVersionId": null,
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": []
+}

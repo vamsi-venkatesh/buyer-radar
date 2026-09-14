@@ -27,6 +27,7 @@ import { todayIso, STATUSES } from './lib/normalise.mjs';
 import { latestDigest } from './lib/digest-files.mjs';
 import { setLeadStatus } from './register.mjs';
 import { bodyText, sendWhatsAppText } from './deliver.mjs';
+import { recordOrder, ownerOrderId, orderLines, alertFailedLater } from './orders.mjs';
 
 /** Meta's documented maximum payload is far below this; anything larger is refused. */
 export const MAX_WEBHOOK_BYTES = 1024 * 1024;
@@ -40,12 +41,18 @@ export const EVENT_REJECTED = 'whatsapp.rejected';
 export const EVENT_WINDOW = 'whatsapp.window';
 export const EVENT_KINDS = [
   EVENT_INBOUND, EVENT_STATUS, EVENT_DUPLICATE, EVENT_REJECTED, EVENT_WINDOW,
-  'whatsapp.command', 'whatsapp.reply',
+  'whatsapp.command', 'whatsapp.reply', 'whatsapp.order', 'order.alert.resent',
 ];
 
 // R<n> is a posted requirement, L<n> a buyer, G<n> a registration route - the
 // three sections of the digest, each numbered in its own series.
 const COMMAND_RE = /^([LRG])(\d+)\s+(won|lost|contacted|quoted|ignored|new)(?:\s+(.*))?$/i;
+
+// `O <what was ordered>` - an order the owner took himself, on the phone or at
+// the gate. It is recorded against the lead his last status command touched,
+// because that is the buyer he was last talking about; with no such lead it is
+// recorded as a free-text order and the reply says so.
+const ORDER_COMMAND_RE = /^O\s+(.+)$/i;
 
 // ------------------------------------------------------------------ helpers
 
@@ -155,6 +162,24 @@ export function matchCommand(text) {
   return { ref: `${m[1].toUpperCase()}${m[2]}`, status, note: (m[4] || '').trim() || null };
 }
 
+export function matchOrderCommand(text) {
+  const m = String(text ?? '').trim().replace(/\s+/g, ' ').match(ORDER_COMMAND_RE);
+  if (!m) return null;
+  const details = m[1].trim();
+  if (!details) return null;
+  return { orderDetails: details.slice(0, 1500) };
+}
+
+/** The lead the owner's last status command touched, or null when there is none. */
+export function lastMatchedLeadId(events) {
+  let latest = null;
+  for (const e of events) {
+    if (e.type !== 'lead.status_changed' || !e.leadId) continue;
+    if (!latest || String(e.at || '') >= String(latest.at || '')) latest = e;
+  }
+  return latest ? latest.leadId : null;
+}
+
 /** Meta sends a unix seconds string; fall back to now when it is absent. */
 function stampIso(value) {
   const n = Number(value);
@@ -241,6 +266,49 @@ async function applyCommand(store, command, { digestsDir, runsDir }) {
   };
 }
 
+/**
+ * Record an order the owner dictated. It goes through the same recordOrder()
+ * the site's orders go through, so it leaves the same order row, the same won
+ * lead, the same events and the same receipt. The owner is not messaged a
+ * second time about it: he is standing in this conversation, and the reply he
+ * is about to get is the confirmation.
+ */
+async function applyOrderCommand(store, command, { env, runsDir, fetchImpl }) {
+  const leadId = lastMatchedLeadId(await store.allEvents());
+  const lead = leadId ? await store.getLead(leadId) : null;
+  const order = {
+    orderId: ownerOrderId(),
+    createdAt: new Date().toISOString(),
+    orderDetails: command.orderDetails,
+    businessName: lead ? lead.name : null,
+    phone: lead ? lead.phone : null,
+    city: lead ? lead.city : null,
+    businessType: lead ? lead.segment : null,
+    sourcePath: 'whatsapp',
+    status: 'recorded-by-owner',
+    source: 'owner-whatsapp',
+  };
+  const result = await recordOrder(store, order, {
+    env,
+    fetchImpl,
+    notify: false,
+    ...(runsDir ? { runsDir } : {}),
+  });
+  const against = lead
+    ? `${lead.name}${lead.city ? ` (${lead.city})` : ''}`
+    : 'no lead - recorded as a free-text order';
+  return {
+    ok: true,
+    orderId: result.orderId,
+    leadId: result.leadId,
+    against,
+    text:
+      `Order ${result.orderId} recorded against ${against}.\n` +
+      `${orderLines(order).join('; ')}\n` +
+      `Receipt ${result.receipt ? result.receipt.slice(0, 12) : 'none'}.`,
+  };
+}
+
 async function replyToOwner({ to, text, env, fetchImpl }) {
   const sent = await sendWhatsAppText({ to, text, env, fetchImpl });
   return sent;
@@ -273,7 +341,7 @@ export async function processWebhookBatch(raw, ctx = {}) {
   const store = await storeFactory();
   const receipts = [];
   const events = [];
-  const summary = { inbound: 0, statuses: 0, duplicates: 0, replies: [], commands: [] };
+  const summary = { inbound: 0, statuses: 0, duplicates: 0, replies: [], commands: [], orders: [], resent: [] };
   const owner = env.RADAR_TO_WA;
 
   try {
@@ -321,8 +389,20 @@ export async function processWebhookBatch(raw, ctx = {}) {
       }
 
       const command = matchCommand(text);
+      const orderCommand = command ? null : matchOrderCommand(text);
       let replyText;
-      if (command) {
+      if (orderCommand) {
+        try {
+          const applied = await applyOrderCommand(store, orderCommand, { env, runsDir, fetchImpl });
+          replyText = applied.text;
+          summary.orders.push(applied);
+          receipts.push({ type: 'whatsapp.order', data: { messageId: id, orderId: applied.orderId, leadId: applied.leadId, against: applied.against } });
+        } catch (err) {
+          replyText = `Order not recorded. ${err.message}`;
+          summary.orders.push({ ok: false, error: err.message });
+          receipts.push({ type: 'whatsapp.order', data: { messageId: id, recorded: false, error: err.message } });
+        }
+      } else if (command) {
         try {
           const applied = await applyCommand(store, command, { digestsDir, runsDir });
           replyText = applied.text;
@@ -377,6 +457,22 @@ export async function processWebhookBatch(raw, ctx = {}) {
         error,
       });
       receipts.push({ type: EVENT_STATUS, data: { messageId: id, status, recipient: st?.recipient_id ?? null, error } });
+
+      // The Cloud API answers 200 with a message id and Meta fails the message
+      // afterwards - 131047, the closed 24-hour window, is the usual reason.
+      // An order alert that was reported sent and then failed never reached the
+      // owner, so the email fallback fires here, where the truth arrives.
+      if (status === 'failed') {
+        try {
+          const resent = await alertFailedLater(store, { messageId: id, error }, { env });
+          if (resent) {
+            summary.resent.push(resent);
+            receipts.push({ type: 'order.alert.resent', data: resent });
+          }
+        } catch (err) {
+          receipts.push({ type: 'order.alert.resent', data: { messageId: id, ok: false, error: err.message } });
+        }
+      }
     }
 
     await record(store, events);

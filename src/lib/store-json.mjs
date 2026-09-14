@@ -30,6 +30,7 @@ export function createJsonStore({ dataDir = DATA_DIR } = {}) {
   const eventsFile = path.join(dataDir, 'events.json');
   const llmCacheFile = path.join(dataDir, 'llm-cache.json');
   const llmSpendFile = path.join(dataDir, 'llm-spend.json');
+  const ordersFile = path.join(dataDir, 'orders.json');
 
   return {
     kind: 'json',
@@ -92,6 +93,36 @@ export function createJsonStore({ dataDir = DATA_DIR } = {}) {
       if (!kind || !key) return false;
       const all = await readJson(eventsFile, []);
       return all.some((e) => e.type === kind && e.key === key);
+    },
+
+    // ---------------------------------------------------------------- orders
+
+    async allOrders() {
+      const all = await readJson(ordersFile, []);
+      return [...all].sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || '')));
+    },
+
+    async getOrder(id) {
+      const all = await readJson(ordersFile, []);
+      return all.find((o) => o.id === String(id)) || null;
+    },
+
+    /** The order reference is the key here too: a replay inserts nothing. */
+    async putOrder(order) {
+      const all = await readJson(ordersFile, []);
+      if (all.some((o) => o.id === order.id)) return { inserted: false };
+      all.push(order);
+      await writeJson(ordersFile, all);
+      return { inserted: true };
+    },
+
+    async updateOrder(id, patch) {
+      const all = await readJson(ordersFile, []);
+      const i = all.findIndex((o) => o.id === String(id));
+      if (i === -1) return null;
+      all[i] = { ...all[i], ...patch };
+      await writeJson(ordersFile, all);
+      return all[i];
     },
 
     // ---------------------------------------------------------- the LLM stage

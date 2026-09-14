@@ -264,6 +264,10 @@ export async function sendWhatsAppText({ to, text, env = process.env, fetchImpl 
     } catch {
       messageId = null;
     }
+    // Meta's own error, not only the HTTP status: 131047 is "outside the
+    // 24-hour customer-service window" and a caller that must fall back to
+    // another channel needs to be able to say which refusal it was.
+    const error = res.ok ? null : metaError(responseText);
     return {
       channel: 'whatsapp',
       sent: Boolean(res.ok),
@@ -272,7 +276,8 @@ export async function sendWhatsAppText({ to, text, env = process.env, fetchImpl 
       messageId,
       chars: body.length,
       trimmed,
-      reason: res.ok ? null : `not sent: WhatsApp API returned HTTP ${res.status}`,
+      error,
+      reason: res.ok ? null : `not sent: WhatsApp API returned HTTP ${res.status}${errorSuffix(error)}`,
     };
   } catch (err) {
     return {
@@ -281,6 +286,7 @@ export async function sendWhatsAppText({ to, text, env = process.env, fetchImpl 
       via: fake ? 'fake' : 'cloud-api',
       chars: body.length,
       trimmed,
+      error: null,
       reason: `not sent: ${err.name}: ${err.message}`,
     };
   }
@@ -460,6 +466,62 @@ export async function deliverWhatsApp({
     out.error = (templateResult && templateResult.error) || textResult.error;
   }
   return out;
+}
+
+/**
+ * One plain-text email to the owner's own address (RADAR_TO), used when the
+ * WhatsApp alert was refused. It is the same SMTP path the morning digest uses
+ * - the same parser, the same TLS, the same outbox fallback - with a subject of
+ * its own, so an order alert is not filed as a digest.
+ *
+ * The recipient is RADAR_TO and nothing else. As everywhere in this codebase,
+ * there is no input for a buyer's address.
+ */
+export async function deliverAlertEmail({
+  subject = `${CLIENT.digest.title} - alert`,
+  text = '',
+  name = `alert-${Date.now().toString(36)}`,
+  env = process.env,
+  outboxDir = OUTBOX_DIR,
+  now = new Date(),
+  connect,
+  send = sendMail,
+} = {}) {
+  const smtpUrl = env.RADAR_SMTP_URL;
+  const to = env.RADAR_TO;
+  const from = env.RADAR_FROM || to || CLIENT.business.contactEmail;
+  const headers = [
+    `From: ${headerValue(from)}`,
+    `To: ${headerValue(to || from)}`,
+    `Subject: ${headerValue(subject)}`,
+    `Date: ${rfc5322Date(now)}`,
+    `Message-ID: <${randomUUID()}@buyer-radar>`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=utf-8',
+    'Content-Transfer-Encoding: 8bit',
+    'Auto-Submitted: auto-generated',
+    'X-Buyer-Radar: alert',
+  ];
+  const message = `${headers.join('\n')}\n\n${String(text).trim()}\n`;
+  const bytes = Buffer.byteLength(message, 'utf8');
+
+  const notSent = async (reason) => ({
+    channel: 'email',
+    sent: false,
+    reason,
+    file: path.relative(ROOT, await writeOutbox(`${name}.eml`, message, { outboxDir })),
+    bytes,
+  });
+
+  if (!smtpUrl) return notSent('not sent: RADAR_SMTP_URL unset');
+  if (!to) return notSent('not sent: RADAR_TO unset');
+
+  try {
+    const result = await send({ url: smtpUrl, from, to, message, connect });
+    return { channel: 'email', sent: true, to, host: result.host, port: result.port, bytes };
+  } catch (err) {
+    return { ...(await notSent(`not sent: ${err.name}: ${err.message}`)), error: `${err.name}: ${err.message}` };
+  }
 }
 
 export function parseChannels(raw) {
