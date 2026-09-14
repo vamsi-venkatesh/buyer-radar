@@ -7,14 +7,24 @@
 //   node src/cron.mjs --once    run the pipeline now, then exit
 //   node src/cron.mjs --print   print the next few run times and exit
 //
-// One city is one run and therefore one digest and one message. Cities are run
-// one after another, never in parallel, so the polite per-source pauses in each
-// source still hold.
+// Cities are run one after another, never in parallel, so the polite
+// per-source pauses in each source still hold. One city is one run, one
+// evidence bundle and one set of receipts - but NOT one message. In the default
+// `combined` mode the pass delivers once, after the last city, because Meta
+// applies a per-recipient frequency cap to a MARKETING template and a
+// multi-city morning is refused partway through. `per-city` restores the old
+// shape.
 
-import { CITIES } from './config.mjs';
+import { CITIES, EVIDENCE_SCHEMA } from './config.mjs';
 import { nextRunAt, waitUntil, zonedParts, parseTimeOfDay } from './lib/schedule.mjs';
-import { parseChannels } from './deliver.mjs';
+import { parseChannels, deliver as deliverDefault } from './deliver.mjs';
+import { combineDigests, writeCombinedDigest } from './digest.mjs';
+import { appendDayBundle } from './lib/receipts.mjs';
+import { openStore } from './lib/store.mjs';
+import { todayIso } from './lib/normalise.mjs';
 import { run } from './run.mjs';
+
+export const DELIVER_MODES = ['combined', 'per-city'];
 
 export const CRON_DEFAULTS = {
   at: '07:00',
@@ -23,6 +33,7 @@ export const CRON_DEFAULTS = {
   sources: ['overpass', 'news', 'agmarknet'],
   limit: 200,
   deliver: [],
+  deliverMode: 'combined',
 };
 
 /** Read the schedule out of the environment, validating every value. */
@@ -49,7 +60,11 @@ export function cronConfig(env = process.env) {
     .filter(Boolean);
   const limit = Number(env.RADAR_LIMIT || CRON_DEFAULTS.limit);
   if (!Number.isFinite(limit) || limit <= 0) throw new Error(`RADAR_LIMIT must be a positive number, got: ${env.RADAR_LIMIT}`);
-  return { at, timeZone, cities, sources, limit, deliver: parseChannels(env.RADAR_DELIVER || '') };
+  const deliverMode = String(env.RADAR_DELIVER_MODE || CRON_DEFAULTS.deliverMode).trim().toLowerCase();
+  if (!DELIVER_MODES.includes(deliverMode)) {
+    throw new Error(`RADAR_DELIVER_MODE must be one of: ${DELIVER_MODES.join(', ')} (got: ${env.RADAR_DELIVER_MODE})`);
+  }
+  return { at, timeZone, cities, sources, limit, deliver: parseChannels(env.RADAR_DELIVER || ''), deliverMode };
 }
 
 /** The next `count` run instants after `from`. Used by --print and by the tests. */
@@ -70,20 +85,140 @@ function stamp(date, timeZone) {
   return `${p.year}-${pad(p.month)}-${pad(p.day)} ${pad(p.hour)}:${pad(p.minute)} ${timeZone}`;
 }
 
-/** One pass: every city, in order, delivering after each city's digest. */
-export async function runOnce(config, { log = (m) => process.stderr.write(`${m}\n`) } = {}) {
+/**
+ * Deliver ONE combined digest for the whole morning.
+ *
+ * The city runs have already written their own run rows, bundles and receipts;
+ * this is the delivery they no longer do themselves. It composes one message
+ * from what every city ranked, sends it through each configured channel, writes
+ * it to digests/<date>.txt so the dashboard and the owner's WhatsApp reply hand
+ * back the message he was actually sent, and records one receipt per channel -
+ * carrying the cities it stood for and, when Meta refuses it, Meta's own error
+ * code.
+ */
+export async function deliverCombined(
+  cityResults,
+  {
+    channels = [],
+    date = todayIso(),
+    log = () => {},
+    deliverImpl = deliverDefault,
+    openStoreImpl = openStore,
+    writeCombined = writeCombinedDigest,
+    appendBundle = appendDayBundle,
+    runsDir,
+    digestsDir,
+  } = {}
+) {
+  const ok = cityResults.filter((r) => r.ok && r.delivery).map((r) => r.delivery);
+  const failed = cityResults.filter((r) => !r.ok).map((r) => ({ city: CITIES[r.city]?.name || r.city, error: r.error }));
+  const combined = combineDigests(ok, { date, failed });
+
+  await writeCombined(combined, date, digestsDir ? { digestsDir } : {});
+
+  const stats = ok.reduce(
+    (acc, d) => ({
+      leads: acc.leads + (d.stats?.leads || 0),
+      withPhone: acc.withPhone + (d.stats?.withPhone || 0),
+      requirements: acc.requirements + (d.stats?.requirements || 0),
+      requirementsWithContact: acc.requirementsWithContact + (d.stats?.requirementsWithContact || 0),
+    }),
+    { leads: 0, withPhone: 0, requirements: 0, requirementsWithContact: 0 }
+  );
+
+  let delivered = [];
+  if (channels.length) {
+    delivered = await deliverImpl(channels, {
+      date,
+      digestText: combined.text,
+      fullSheet: combined.full,
+      priceSheet: combined.priceSheet,
+      cities: combined.cities,
+      stats,
+    });
+  }
+
+  const entries = delivered.map((result) =>
+    result.sent
+      ? {
+          type: 'digest.delivered',
+          data: {
+            channel: result.channel,
+            cities: combined.cities,
+            citiesFailed: combined.failedCities,
+            to: result.to || null,
+            via: result.via || null,
+            bytes: result.bytes ?? null,
+            chars: result.chars ?? null,
+            // A template send means the text was refused first. The refusal is
+            // recorded even on a delivery that succeeded.
+            textRefused: result.textRefused || null,
+          },
+        }
+      : {
+          type: 'digest.not_sent',
+          data: {
+            channel: result.channel,
+            cities: combined.cities,
+            citiesFailed: combined.failedCities,
+            reason: result.reason,
+            errorCode: result.error?.code ?? null,
+            errorMessage: result.error?.message ?? null,
+            file: result.file || null,
+          },
+        }
+  );
+
+  let bundle = null;
+  if (entries.length) {
+    bundle = await appendBundle(`delivery_${date}`, entries, { runsDir, schema: EVIDENCE_SCHEMA });
+    const store = await openStoreImpl();
+    try {
+      await store.appendEvents(
+        entries.map((e) => ({ type: e.type, at: new Date().toISOString(), key: null, runId: `delivery_${date}`, ...e.data }))
+      );
+    } finally {
+      await store.close();
+    }
+  }
+
+  for (const d of delivered) {
+    log(`[cron] combined: ${d.channel} ${d.sent ? `sent to ${d.to || 'the owner'} for ${combined.cities.join(', ') || 'no city'}` : d.reason}`);
+  }
+  return { combined, delivered, bundle };
+}
+
+/**
+ * One pass: every city, in order.
+ *
+ * In `combined` mode the per-city runs deliver nothing and one message goes out
+ * after the last city. In `per-city` mode each run delivers its own digest, as
+ * it did before. A city that fails is logged, does not stop the others, and is
+ * named in the combined digest.
+ */
+export async function runOnce(
+  config,
+  { log = (m) => process.stderr.write(`${m}\n`), date = todayIso(), runImpl = run, ...hooks } = {}
+) {
+  const combinedMode = (config.deliverMode || CRON_DEFAULTS.deliverMode) === 'combined';
   const results = [];
   for (const city of config.cities) {
     log(`[cron] ${city}: starting`);
     try {
-      const result = await run(
-        { city, sources: config.sources, limit: config.limit, dry: false, deliver: config.deliver },
+      const result = await runImpl(
+        {
+          city,
+          sources: config.sources,
+          limit: config.limit,
+          dry: false,
+          deliver: combinedMode ? [] : config.deliver,
+        },
         { log }
       );
       for (const d of result.delivered || []) {
         log(`[cron] ${city}: ${d.channel} ${d.sent ? `sent to ${d.to}` : d.reason}`);
       }
-      results.push({ city, ok: true, runId: result.runId, delivered: result.delivered || [] });
+      results.push({ city, ok: true, runId: result.runId, delivered: result.delivered || [], delivery: result.delivery || null });
       log(`[cron] ${city}: ${result.runId} ${result.summary.leadsTotal} leads in the register`);
       const llm = result.summary.llm;
       if (llm) {
@@ -94,9 +229,27 @@ export async function runOnce(config, { log = (m) => process.stderr.write(`${m}\
         );
       }
     } catch (err) {
-      // One city failing must not stop the others, and must not stop tomorrow.
+      // One city failing must not stop the others, must not stop the combined
+      // delivery, and must not stop tomorrow.
       log(`[cron] ${city}: FAILED ${err.name}: ${err.message}`);
       results.push({ city, ok: false, error: `${err.name}: ${err.message}` });
+    }
+  }
+
+  // The return value stays one entry per city, as it always was; the morning's
+  // single delivery is attached beside it rather than pretending to be a city.
+  if (combinedMode) {
+    try {
+      const { combined, delivered } = await deliverCombined(results, {
+        channels: config.deliver || [],
+        date,
+        log,
+        ...hooks,
+      });
+      results.combined = { cities: combined.cities, failedCities: combined.failedCities, chars: combined.text.length, delivered };
+    } catch (err) {
+      log(`[cron] combined delivery FAILED ${err.name}: ${err.message}`);
+      results.combined = { error: `${err.name}: ${err.message}` };
     }
   }
   return results;
@@ -127,7 +280,7 @@ async function main() {
   const config = cronConfig();
   process.stderr.write(
     `[cron] ${config.cities.join(', ')} | sources ${config.sources.join(',')} | limit ${config.limit} | ` +
-      `at ${config.at} ${config.timeZone} | deliver ${config.deliver.join(',') || 'none'}\n`
+      `at ${config.at} ${config.timeZone} | deliver ${config.deliver.join(',') || 'none'} (${config.deliverMode})\n`
   );
   if (argv.includes('--print')) {
     for (const d of upcoming(config, new Date(), 3)) {

@@ -111,6 +111,8 @@ export async function deliverEmail({
   // text only when a run produced no sheet.
   fullSheet = null,
   priceSheet = '',
+  // The cities this message covers, recorded on the result for the receipt.
+  cities = null,
   env = process.env,
   outboxDir = OUTBOX_DIR,
   now = new Date(),
@@ -126,6 +128,7 @@ export async function deliverEmail({
   const notSent = async (reason) => ({
     channel: 'email',
     sent: false,
+    cities: Array.isArray(cities) && cities.length ? [...cities] : null,
     reason,
     file: path.relative(ROOT, await writeOutbox(`${date}.eml`, message, { outboxDir })),
     bytes,
@@ -140,6 +143,7 @@ export async function deliverEmail({
       channel: 'email',
       sent: true,
       to,
+      cities: Array.isArray(cities) && cities.length ? [...cities] : null,
       host: result.host,
       port: result.port,
       bytes,
@@ -160,6 +164,14 @@ export async function deliverEmail({
  * token is never written to that file.
  */
 
+/**
+ * The length each of the five body parameters is cut to, in order. Meta allows
+ * more than this per parameter; these are the lengths the template was written
+ * and approved against, and the combined digest uses exactly the same ones - the
+ * parameters carry more cities' worth of material, not more characters.
+ */
+export const TEMPLATE_PARAM_LIMITS = [40, 10, 10, 400, 300];
+
 /** Parameters for the approved WhatsApp digest template ( date, leads, phones, top three with numbers, short prices. No newlines (Meta rejects them). */
 export function templateParams({ date = todayIso(), digestText = '', priceSheet = '', stats = {} } = {}) {
   const clean = (s, n) => String(s).replace(/[\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim().slice(0, n);
@@ -178,12 +190,39 @@ export function templateParams({ date = todayIso(), digestText = '', priceSheet 
   }).filter(Boolean);
   const day = new Date(`${date}T00:00:00Z`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
   return [
-    clean(day, 40),
-    clean(stats.leads ?? shown, 10),
-    clean(stats.withPhone ?? shown, 10),
-    clean(leads.join(', ') || 'none today', 400),
-    clean(prices.length ? prices.join(', ') + ' per quintal' : 'no mandi quotes today', 300),
+    clean(day, TEMPLATE_PARAM_LIMITS[0]),
+    clean(stats.leads ?? shown, TEMPLATE_PARAM_LIMITS[1]),
+    clean(stats.withPhone ?? shown, TEMPLATE_PARAM_LIMITS[2]),
+    clean(leads.join(', ') || 'none today', TEMPLATE_PARAM_LIMITS[3]),
+    clean(prices.length ? prices.join(', ') + ' per quintal' : 'no mandi quotes today', TEMPLATE_PARAM_LIMITS[4]),
   ];
+}
+
+/**
+ * Meta's own error out of a Cloud API response body. The HTTP status alone does
+ * not say why a message was refused: 131047 is "outside the 24-hour window" and
+ * 131049 is the per-recipient frequency cap on a MARKETING template. Both are
+ * recorded, never swallowed.
+ */
+export function metaError(responseBody) {
+  let e = null;
+  try {
+    e = JSON.parse(String(responseBody || ''))?.error || null;
+  } catch {
+    return null;
+  }
+  if (!e) return null;
+  return {
+    code: e.code ?? null,
+    subcode: e.error_subcode ?? null,
+    message: String(e.message ?? '').slice(0, 200),
+    details: e.error_data?.details ? String(e.error_data.details).slice(0, 200) : null,
+  };
+}
+
+function errorSuffix(err) {
+  if (!err || err.code === null || err.code === undefined) return '';
+  return ` (Meta error ${err.code}${err.message ? `: ${err.message}` : ''})`;
 }
 /**
  * Send one WhatsApp text message to the owner. This is the single outbound
@@ -247,11 +286,24 @@ export async function sendWhatsAppText({ to, text, env = process.env, fetchImpl 
   }
 }
 
+/**
+ * One WhatsApp message to the owner, text first and the approved template as
+ * the fallback.
+ *
+ * The text body is the whole digest and is what the owner should get; the Cloud
+ * API only accepts it inside the 24-hour customer-service window, and outside
+ * it Meta refuses with error 131047. The template is the way through a closed
+ * window, so it is tried only when the text was refused - never as a second
+ * message beside a text that already arrived.
+ */
 export async function deliverWhatsApp({
   date = todayIso(),
   digestText = '',
   priceSheet = '',
   stats = {},
+  // The cities this message covers. Recorded on the result so the receipt can
+  // say which morning runs the one delivered message stood for.
+  cities = null,
   env = process.env,
   outboxDir = OUTBOX_DIR,
   fetchImpl,
@@ -264,11 +316,15 @@ export async function deliverWhatsApp({
   const { text, trimmed } = trimForWhatsApp(bodyText(digestText, priceSheet));
   const payload = buildWhatsAppPayload({ to: to || '<RADAR_TO_WA unset>', text });
   const url = `${WHATSAPP_API}/${phoneNumberId || '<WA_PHONE_NUMBER_ID unset>'}/messages`;
+  const cityList = Array.isArray(cities) && cities.length ? [...cities] : null;
 
+  let textResult = null;
   let templateResult = null;
   const notSent = async (reason) => ({
     channel: 'whatsapp',
     sent: false,
+    cities: cityList,
+    text: textResult,
     template: templateResult,
     reason,
     file: path.relative(
@@ -291,53 +347,119 @@ export async function deliverWhatsApp({
   if (missing.length) return notSent(`not sent: ${missing.join(', ')} unset`);
 
   const doFetch = fetchImpl || globalThis.fetch;
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  // 1. The text, which is the whole digest.
+  try {
+    const res = await doFetch(url, { method: 'POST', headers, body: JSON.stringify(payload) });
+    const responseBody = await res.text();
+    let messageId = null;
+    try {
+      messageId = JSON.parse(responseBody)?.messages?.[0]?.id || null;
+    } catch {
+      messageId = null;
+    }
+    textResult = {
+      sent: Boolean(res.ok),
+      status: res.status,
+      messageId,
+      error: res.ok ? null : metaError(responseBody),
+      reason: res.ok ? null : `not sent: WhatsApp API returned HTTP ${res.status}`,
+    };
+  } catch (err) {
+    textResult = {
+      sent: false,
+      status: null,
+      messageId: null,
+      error: null,
+      reason: `not sent: ${err.name}: ${err.message}`,
+    };
+  }
+
+  if (textResult.sent) {
+    return {
+      channel: 'whatsapp',
+      sent: true,
+      via: 'text',
+      to,
+      cities: cityList,
+      status: textResult.status,
+      messageId: textResult.messageId,
+      chars: text.length,
+      trimmed,
+      text: textResult,
+      template: null,
+    };
+  }
+
+  // 2. The approved template, which is the only thing a closed window accepts.
   if (templateName) {
     const params = templateParams({ date, digestText, priceSheet, stats });
     const tpl = {
       messaging_product: 'whatsapp',
       to: String(to).replace(/^\+/, ''),
       type: 'template',
-      template: { name: templateName, language: { code: templateLang }, components: [{ type: 'body', parameters: params.map((p) => ({ type: 'text', text: p })) }] },
+      template: {
+        name: templateName,
+        language: { code: templateLang },
+        components: [{ type: 'body', parameters: params.map((p) => ({ type: 'text', text: p })) }],
+      },
     };
     try {
-      const r = await doFetch(url, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(tpl) });
+      const r = await doFetch(url, { method: 'POST', headers, body: JSON.stringify(tpl) });
       const rb = await r.text();
       let id = null;
       try { id = JSON.parse(rb)?.messages?.[0]?.id || null; } catch { /* ignore */ }
-      templateResult = { template: templateName, sent: r.ok, status: r.status, messageId: id, error: r.ok ? null : rb.slice(0, 200) };
+      templateResult = {
+        template: templateName,
+        sent: r.ok,
+        status: r.status,
+        messageId: id,
+        error: r.ok ? null : metaError(rb),
+        body: r.ok ? null : rb.slice(0, 200),
+      };
     } catch (err) {
-      templateResult = { template: templateName, sent: false, error: String(err.message || err).slice(0, 200) };
-    }
-  }
-  try {
-    const res = await doFetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-    const bodyTextResponse = await res.text();
-    if (!res.ok) {
-      return {
-        ...(await notSent(`not sent: WhatsApp API returned HTTP ${res.status}`)),
-        status: res.status,
+      templateResult = {
+        template: templateName,
+        sent: false,
+        status: null,
+        messageId: null,
+        error: null,
+        body: String(err.message || err).slice(0, 200),
       };
     }
-    let messageId = null;
-    try {
-      messageId = JSON.parse(bodyTextResponse)?.messages?.[0]?.id || null;
-    } catch {
-      messageId = null;
-    }
-    return { channel: 'whatsapp', sent: true, to, status: res.status, messageId, chars: text.length, trimmed, template: templateResult };
-  } catch (err) {
+  }
+
+  if (templateResult && templateResult.sent) {
     return {
-      ...(await notSent(`not sent: ${err.name}: ${err.message}`)),
-      error: `${err.name}: ${err.message}`,
+      channel: 'whatsapp',
+      sent: true,
+      via: 'template',
+      to,
+      cities: cityList,
+      status: templateResult.status,
+      messageId: templateResult.messageId,
+      chars: text.length,
+      trimmed,
+      text: textResult,
+      template: templateResult,
+      // The text was refused and the template carried the morning instead. The
+      // refusal keeps its code; it is the only thing that says why.
+      textRefused: `${textResult.reason}${errorSuffix(textResult.error)}`,
     };
   }
+
+  const reason =
+    `${textResult.reason}${errorSuffix(textResult.error)}` +
+    (templateResult
+      ? `; template ${templateName} also refused${templateResult.status ? `: HTTP ${templateResult.status}` : ''}${errorSuffix(templateResult.error)}`
+      : '');
+  const out = await notSent(reason);
+  if (textResult.status) out.status = textResult.status;
+  if (textResult.error || (templateResult && templateResult.error)) {
+    out.error = (templateResult && templateResult.error) || textResult.error;
+  }
+  return out;
 }
 
 export function parseChannels(raw) {

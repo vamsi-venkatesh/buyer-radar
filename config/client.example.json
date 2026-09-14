@@ -14,7 +14,8 @@
     "title": "Buyer Radar",
     "maxChars": 1500,
     "topN": 10,
-    "sections": { "requirements": 6, "buyers": 6, "registrations": 4 }
+    "sections": { "requirements": 6, "buyers": 6, "registrations": 4 },
+    "combined": { "requirements": 6, "buyersPerCity": 2, "registrations": 4 }
   },
 
   "capacity": {

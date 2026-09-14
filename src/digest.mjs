@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { CLIENT, DIGEST, DIGEST_SECTIONS, REGISTRATIONS } from './config.mjs';
+import { CITIES, CLIENT, DIGEST, DIGEST_COMBINED, DIGEST_SECTIONS, REGISTRATIONS } from './config.mjs';
 import { DIGESTS_DIR } from './lib/paths.mjs';
 import { opener, describeSegment } from './model.mjs';
-import { todayIso } from './lib/normalise.mjs';
+import { normaliseCity, todayIso } from './lib/normalise.mjs';
 import { openStore } from './lib/store.mjs';
 import { catalogueItems } from './lib/catalogue.mjs';
 
@@ -389,6 +389,10 @@ export function renderDigest(
     // requirements reports the buyer layout alone, exactly as it did before the
     // demand lane existed.
     layout: layoutKey(plan),
+    // The ranked sets this digest was built from. The combined morning digest
+    // needs the leads themselves, not the rendered text, so it can re-rank
+    // requirements across cities and group buyers under a city heading.
+    sets,
   });
 
   let result = null;
@@ -438,23 +442,287 @@ export function renderPriceSheet(prices, { date = todayIso(), state = null } = {
   const head = `Mandi price sheet - ${date}${state ? ' - ' + state : ''} (INR per quintal; ~ = nearest mandi line)`;
   return [head, ...lines].join('\n');
 }
-export async function writeDigest(result, date = todayIso()) {
-  await mkdir(DIGESTS_DIR, { recursive: true });
-  if (result.priceSheet) {
-    await writeFile(path.join(DIGESTS_DIR, `${date}.prices.txt`), `${result.priceSheet}\n`, 'utf8');
+// ------------------------------------------------------- the combined digest
+//
+// A morning pass runs several cities one after another. Meta applies a
+// per-recipient frequency cap to a MARKETING template, so five messages is not
+// five messages - it is three that arrive and two that are refused. One message
+// per morning is therefore not a nicety, it is the only shape that delivers.
+//
+// The combination is not several digests glued together. Requirements are the
+// scarce thing, so they are re-ranked across every city and printed first, as
+// one series. Buyers are city-local and are printed under a city heading, a few
+// each. Mandi prices are per state and per mandi, not per city, so the same
+// quote arrives from several city runs and is printed once.
+
+/**
+ * One price row per commodity, market and arrival date, keeping the first
+ * sighting. Several city runs in one state read the same mandi table; without
+ * this the combined price block would print the same quote once per city.
+ */
+export function dedupePrices(prices) {
+  const seen = new Set();
+  const out = [];
+  for (const p of prices || []) {
+    const e = p.extra || {};
+    const key = [e.commodity || '', e.market || '', e.arrivalDate || '', e.modalPrice ?? ''].join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(p);
   }
-  const txt = path.join(DIGESTS_DIR, `${date}.txt`);
-  const idx = path.join(DIGESTS_DIR, `${date}.index.json`);
+  return out;
+}
+
+function dedupeById(leads) {
+  const seen = new Set();
+  const out = [];
+  for (const l of leads || []) {
+    if (seen.has(l.id)) continue;
+    seen.add(l.id);
+    out.push(l);
+  }
+  return out;
+}
+
+const byScore = (a, b) => (b.score || 0) - (a.score || 0) || String(a.id).localeCompare(String(b.id));
+
+/** Same shrink order as a single-city digest: layouts first, then registrations, then buyers, and a requirement last. */
+export function* combinedPlans(wanted) {
+  for (const requirementLayout of REQUIREMENT_LAYOUTS) {
+    for (const buyerLayout of LAYOUTS) {
+      yield { requirementLayout, buyerLayout, registrationLayout: REGISTRATION_LAYOUTS[0], ...wanted };
+    }
+    const base = {
+      requirementLayout,
+      buyerLayout: last(LAYOUTS),
+      registrationLayout: last(REGISTRATION_LAYOUTS),
+    };
+    for (let g = wanted.registrations - 1; g >= 0; g -= 1) yield { ...base, ...wanted, registrations: g };
+    for (let b = wanted.buyersPerCity - 1; b >= 0; b -= 1) {
+      yield { ...base, ...wanted, registrations: 0, buyersPerCity: b };
+    }
+  }
+  const base = {
+    requirementLayout: last(REQUIREMENT_LAYOUTS),
+    buyerLayout: last(LAYOUTS),
+    registrationLayout: last(REGISTRATION_LAYOUTS),
+  };
+  for (let r = wanted.requirements - 1; r >= 0; r -= 1) {
+    yield { ...base, requirements: r, buyersPerCity: 0, registrations: 0 };
+  }
+}
+
+function assembleCombined(plan, { date, cities, failedCities, requirements, buyersByCity, registrations, priceText }) {
+  const head = `${CLIENT.digest.title} - ${date}${cities.length ? ` - ${cities.join(', ')}` : ''}`;
+  const parts = [head];
+  // The failed cities are named above the cap's reach: a morning where two
+  // cities did not run must never read like a morning where they found nothing.
+  if (failedCities.length) parts.push(`Not run today: ${failedCities.join(', ')}.`);
+  parts.push('');
+
+  const req = requirements.slice(0, plan.requirements);
+  const blocks = [];
+  const reqBlock = section(HEADINGS.requirements, req, plan.requirementLayout, true, requirements.length);
+  if (reqBlock) blocks.push(reqBlock);
+
+  let n = 0;
+  let totalBuyers = 0;
+  const cityBlocks = [];
+  const chosenBuyers = [];
+  for (const entry of buyersByCity) {
+    totalBuyers += entry.buyers.length;
+    const chosen = entry.buyers.slice(0, plan.buyersPerCity);
+    if (!chosen.length) continue;
+    const lines = [entry.city];
+    for (const lead of chosen) {
+      n += 1;
+      chosenBuyers.push(lead);
+      lines.push(plan.buyerLayout.block(lead, n, false), '');
+    }
+    cityBlocks.push(lines.join('\n'));
+  }
+  if (cityBlocks.length) {
+    const heading =
+      totalBuyers > chosenBuyers.length
+        ? `${HEADINGS.buyers} (${chosenBuyers.length} of ${totalBuyers})`
+        : `${HEADINGS.buyers} (${chosenBuyers.length})`;
+    blocks.push([heading, '', ...cityBlocks].join('\n'));
+  }
+
+  const reg = registrations.slice(0, plan.registrations);
+  const regBlock = section(HEADINGS.registrations, reg, plan.registrationLayout, true, registrations.length);
+  if (regBlock) blocks.push(regBlock);
+
+  if (!blocks.length) parts.push('No new leads today.', '');
+  else parts.push(...blocks);
+
+  if (!requirements.length) parts.push('No requirement was posted anywhere we can read today.', '');
+  if (priceText) parts.push(priceText, '');
+  parts.push(FOOTER);
+
+  const index = {};
+  req.forEach((l, i) => { index[`R${i + 1}`] = l.id; });
+  chosenBuyers.forEach((l, i) => { index[`L${i + 1}`] = l.id; });
+  reg.forEach((l, i) => { index[`G${i + 1}`] = l.id; });
+
+  return {
+    text: parts.join('\n').replace(/\n{3,}/g, '\n\n').trim(),
+    index,
+    requirementsShown: req.length,
+    buyersShown: chosenBuyers.length,
+    registrationsShown: reg.length,
+    buyersConsidered: totalBuyers,
+  };
+}
+
+/**
+ * Combine one morning's per-city digests into the single message the owner is
+ * sent. Each entry is `{ city, sets, prices, full, priceSheet }` - `sets` and
+ * `prices` are what that city's run already ranked, `full` is its uncapped
+ * sheet. `failed` names the cities whose run threw.
+ *
+ * Composes text only. Nothing is sent anywhere.
+ */
+export function combineDigests(
+  cityDigests,
+  { date = todayIso(), maxChars = DIGEST.maxChars, failed = [], sections = DIGEST_COMBINED, showRegistrations = null } = {}
+) {
+  const entries = (cityDigests || []).filter(Boolean);
+  const cities = entries.map((c) => c.city).filter(Boolean);
+  const failedCities = (failed || []).map((f) => (typeof f === 'string' ? f : f.city)).filter(Boolean);
+
+  // A city's run merges the whole register, so its ranked sets carry leads from
+  // the cities that ran before it. De-duplicating by lead id is what makes the
+  // requirement series one series rather than several overlapping ones.
+  const requirements = diversifyTies(dedupeById(entries.flatMap((c) => c.sets?.requirements || [])).sort(byScore));
+  const registrationsAll = diversifyTies(dedupeById(entries.flatMap((c) => c.sets?.registrations || [])).sort(byScore));
+  const registrations =
+    (showRegistrations === null ? registrationsDue(date) : showRegistrations) ? registrationsAll : [];
+
+  const buyersByCity = entries.map((c) => ({
+    city: c.city,
+    buyers: (c.sets?.buyers || []).filter((l) => normaliseCity(l.city) === normaliseCity(c.city)),
+  }));
+
+  const prices = dedupePrices(entries.flatMap((c) => c.prices || []));
+  const priceText = priceBlock(prices);
+
+  const wanted = {
+    requirements: Math.min(sections.requirements ?? DIGEST_COMBINED.requirements, requirements.length),
+    buyersPerCity: sections.buyersPerCity ?? DIGEST_COMBINED.buyersPerCity,
+    registrations: Math.min(sections.registrations ?? 0, registrations.length),
+  };
+
+  const context = { date, cities, failedCities, requirements, buyersByCity, registrations, priceText };
+  let packed = null;
+  for (const plan of combinedPlans(wanted)) {
+    packed = assembleCombined(plan, context);
+    if (packed.text.length <= maxChars) break;
+  }
+
+  const fullParts = [
+    `${CLIENT.digest.title} - full sheet - ${date}${cities.length ? ` - ${cities.join(', ')}` : ''}`,
+    failedCities.length ? `Not run today: ${failedCities.join(', ')}.` : null,
+    '',
+  ].filter((l) => l !== null);
+  for (const entry of entries) {
+    fullParts.push(`===== ${entry.city} =====`, '', String(entry.full || entry.text || '').trim(), '');
+  }
+
+  return {
+    ...packed,
+    date,
+    cities,
+    failedCities,
+    full: fullParts.join('\n').replace(/\n{3,}/g, '\n\n').trim(),
+    priceSheet: renderPriceSheet(prices, { date, state: null }),
+    prices,
+    requirementsConsidered: requirements.length,
+    considered: requirements.length + packed.buyersConsidered + registrations.length,
+    shown: packed.requirementsShown + packed.buyersShown + packed.registrationsShown,
+    withContact: requirements.filter(
+      (l) => l.phone || l.email || (l.extra || {}).contact_phone || (l.extra || {}).contact_email
+    ).length,
+  };
+}
+
+/**
+ * The combined digest built from whatever is in the store, for the dashboard,
+ * `digest.render` and the owner's WhatsApp reply. Renders each named city's own
+ * digest from that city's leads, then combines them exactly as the morning pass
+ * does.
+ */
+export function combineFromLeads(leads, { date = todayIso(), cities = null, maxChars = DIGEST.maxChars } = {}) {
+  const all = leads || [];
+  const priceLeads = all.filter((l) => l.kind === 'price');
+  const buyerLeads = all.filter((l) => l.kind !== 'price');
+  const wanted = cities && cities.length
+    ? cities
+        .map((c) => Object.values(CITIES).find((k) => normaliseCity(k.name) === normaliseCity(c) || k.key === String(c).toLowerCase()))
+        .filter(Boolean)
+    : Object.values(CITIES).filter((c) => buyerLeads.some((l) => normaliseCity(l.city) === normaliseCity(c.name)));
+
+  const perCity = wanted.map((c) => {
+    const cityBuyers = buyerLeads.filter((l) => normaliseCity(l.city) === normaliseCity(c.name));
+    const cityPrices = priceLeads.filter((p) => !c.agmarknetState || !p.state || p.state === c.agmarknetState);
+    const digest = renderDigest(cityBuyers, { date, city: c.name, prices: cityPrices });
+    return {
+      city: c.name,
+      cityKey: c.key,
+      sets: digest.sets,
+      prices: cityPrices,
+      full: digest.full,
+      priceSheet: renderPriceSheet(cityPrices, { date, state: c.agmarknetState || null }),
+    };
+  });
+  return combineDigests(perCity, { date, maxChars });
+}
+
+export async function writeDigest(result, date = todayIso(), { digestsDir = DIGESTS_DIR, cityKey = null } = {}) {
+  await mkdir(digestsDir, { recursive: true });
+  if (result.priceSheet) {
+    await writeFile(path.join(digestsDir, `${date}.prices.txt`), `${result.priceSheet}\n`, 'utf8');
+  }
+  const txt = path.join(digestsDir, `${date}.txt`);
+  const idx = path.join(digestsDir, `${date}.index.json`);
   await writeFile(txt, `${result.text}\n`, 'utf8');
   await writeFile(idx, `${JSON.stringify(result.index, null, 2)}\n`, 'utf8');
   // The uncapped sheet: every requirement with its document link. WhatsApp
   // cannot carry it, the email can, and the owner can open the file himself.
   let full = null;
   if (result.full) {
-    full = path.join(DIGESTS_DIR, `${date}.full.txt`);
+    full = path.join(digestsDir, `${date}.full.txt`);
     await writeFile(full, `${result.full}\n`, 'utf8');
   }
-  return { txt, idx, full };
+  // A city also keeps a copy of its own digest under its own name. Several
+  // cities in one morning otherwise leave only the last one on disk, and the
+  // combined digest written at the end of the pass would overwrite even that.
+  let city = null;
+  if (cityKey) {
+    city = path.join(digestsDir, `${date}.${cityKey}.txt`);
+    await writeFile(city, `${result.text}\n`, 'utf8');
+    await writeFile(path.join(digestsDir, `${date}.${cityKey}.index.json`), `${JSON.stringify(result.index, null, 2)}\n`, 'utf8');
+    if (result.full) await writeFile(path.join(digestsDir, `${date}.${cityKey}.full.txt`), `${result.full}\n`, 'utf8');
+    if (result.priceSheet) {
+      await writeFile(path.join(digestsDir, `${date}.${cityKey}.prices.txt`), `${result.priceSheet}\n`, 'utf8');
+    }
+  }
+  return { txt, idx, full, city };
+}
+
+/**
+ * Write the combined morning digest. It deliberately lands on the same
+ * `<date>.txt`, `<date>.full.txt`, `<date>.prices.txt` and `<date>.index.json`
+ * the per-city runs wrote, and it is written after the last city, so everything
+ * that reads "the latest digest" - the dashboard's front page, the webhook's
+ * reply to the owner - hands back the one message the owner was actually sent.
+ * The per-city copies stay beside it under `<date>.<city>.txt`.
+ */
+export async function writeCombinedDigest(combined, date = todayIso(), { digestsDir = DIGESTS_DIR } = {}) {
+  const files = await writeDigest(combined, date, { digestsDir });
+  const combinedFile = path.join(digestsDir, `${date}.combined.txt`);
+  await writeFile(combinedFile, `${combined.text}\n`, 'utf8');
+  return { ...files, combined: combinedFile };
 }
 
 async function main() {

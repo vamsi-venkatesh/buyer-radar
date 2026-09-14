@@ -241,3 +241,10 @@ export const CAPACITY = CLIENT.capacity;
 // Section caps for the digest. The WhatsApp cap in DIGEST.maxChars still holds;
 // these decide what competes for the space inside it.
 export const DIGEST_SECTIONS = CLIENT.digest.sections;
+
+// Section caps for the ONE combined digest a morning pass sends after the last
+// city. The same character cap in DIGEST.maxChars applies to the whole thing, so
+// the buyer count is per city rather than overall: five cities at two buyers
+// each is ten buyer blocks, which is what a single message can carry beside the
+// requirements and the price block.
+export const DIGEST_COMBINED = CLIENT.digest.combined;

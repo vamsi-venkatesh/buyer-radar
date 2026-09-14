@@ -35,7 +35,7 @@ import { RUNS_DIR } from '../lib/paths.mjs';
 import { todayIso, STATUSES, KINDS, SEGMENTS, normaliseCity } from '../lib/normalise.mjs';
 import { validate } from './schema.mjs';
 import { filterLeads, setLeadStatus } from '../register.mjs';
-import { renderDigest, renderPriceSheet } from '../digest.mjs';
+import { combineFromLeads, renderDigest, renderPriceSheet } from '../digest.mjs';
 import { createPageFetcher } from '../llm/page.mjs';
 import { createCrawler } from '../lib/crawl.mjs';
 import { pdfToText, looksLikePdf } from '../lib/pdf-text.mjs';
@@ -534,13 +534,20 @@ export const TOOLS = [
     kind: 'read',
     cost: 'free',
     description:
-      'Render the morning digest from what is already in the store. Composes text and writes nothing, sends nothing and calls no model.',
+      'Render the morning digest from what is already in the store. With combined:true it renders the ONE message a morning pass sends across every city - requirements first, then a few buyers per city, then the mandi prices once. Composes text and writes nothing, sends nothing and calls no model.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
       properties: {
         date: { type: 'string', maxLength: 10, description: 'ISO date; defaults to today' },
         city: { type: 'string', maxLength: 60, description: 'City display name, to head the digest with' },
+        combined: { type: 'boolean', description: 'Render the combined morning digest across cities instead of one city' },
+        cities: {
+          type: 'array',
+          maxItems: 10,
+          items: { type: 'string', maxLength: 60 },
+          description: 'With combined:true, the cities to combine, in order. Defaults to every city with leads in the store.',
+        },
       },
     },
     outputSchema: {
@@ -555,6 +562,8 @@ export const TOOLS = [
         considered: { type: 'integer' },
         requirementsShown: { type: 'integer' },
         requirementsWithContact: { type: 'integer' },
+        combined: { type: 'boolean' },
+        cities: { type: 'array', items: { type: 'string' } },
       },
     },
     async handler(input, ctx) {
@@ -563,6 +572,24 @@ export const TOOLS = [
       const all = await store.allLeads();
       const prices = all.filter((l) => l.kind === 'price');
       const buyers = all.filter((l) => l.kind !== 'price');
+
+      if (input.combined) {
+        const result = combineFromLeads(all, { date, cities: input.cities || null });
+        return {
+          date,
+          text: result.text,
+          full: result.full,
+          priceSheet: result.priceSheet,
+          index: result.index,
+          shown: result.shown,
+          considered: result.considered,
+          requirementsShown: result.requirementsShown,
+          requirementsWithContact: result.withContact,
+          combined: true,
+          cities: result.cities,
+        };
+      }
+
       const cityName = input.city
         ? Object.values(CITIES).find((c) => normaliseCity(c.name) === normaliseCity(input.city))?.name || input.city
         : null;
@@ -578,6 +605,8 @@ export const TOOLS = [
         considered: result.considered,
         requirementsShown: result.requirementsShown,
         requirementsWithContact: result.withContact,
+        combined: false,
+        cities: cityName ? [cityName] : [],
       };
     },
   },

@@ -311,6 +311,7 @@ export async function run(
           digestText: digest.text,
           fullSheet: digest.full,
           priceSheet: digest.priceSheet,
+          cities: [city.name],
           stats: {
             leads: buyers.length,
             withPhone: buyers.filter((l) => l.phone).length,
@@ -322,14 +323,21 @@ export async function run(
           if (result.sent) {
             chain.add('digest.delivered', {
               channel: result.channel,
+              // One city delivering on its own still says which city the
+              // message stood for, in the same shape the combined delivery uses.
+              cities: [city.name],
               to: result.to || null,
+              via: result.via || null,
               bytes: result.bytes ?? null,
               chars: result.chars ?? null,
             });
           } else {
             chain.add('digest.not_sent', {
               channel: result.channel,
+              cities: [city.name],
               reason: result.reason,
+              errorCode: result.error?.code ?? null,
+              errorMessage: result.error?.message ?? null,
               file: result.file || null,
             });
           }
@@ -374,10 +382,38 @@ export async function run(
         `${JSON.stringify(bundle, null, 2)}\n`,
         'utf8'
       );
-      await writeDigest(digest, today);
+      await writeDigest(digest, today, { cityKey: city.key });
     }
 
-    return { runId, bundle, digest, summary, delivered, store: store.describe(), dry: Boolean(opts.dry) };
+    return {
+      runId,
+      bundle,
+      digest,
+      summary,
+      delivered,
+      store: store.describe(),
+      dry: Boolean(opts.dry),
+      // Everything the combined morning digest needs from this city, and
+      // nothing it does not. The scheduler collects one of these per city and
+      // hands the set to combineDigests, so the combination works from the
+      // ranked leads rather than from already-rendered messages.
+      delivery: {
+        city: city.name,
+        cityKey: city.key,
+        state: city.agmarknetState || null,
+        date: today,
+        sets: digest.sets,
+        prices,
+        full: digest.full,
+        priceSheet: digest.priceSheet,
+        stats: {
+          leads: buyers.length,
+          withPhone: buyers.filter((l) => l.phone).length,
+          requirements: requirements.length,
+          requirementsWithContact: requirements.filter((l) => l.phone || l.email).length,
+        },
+      },
+    };
   } finally {
     await store.close();
   }

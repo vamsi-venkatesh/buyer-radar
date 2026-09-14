@@ -73,6 +73,9 @@ export function loadClient({ file = existsSync(CLIENT_FILE) ? CLIENT_FILE : EXAM
   const business = { owner: 'the owner', homeCity: '', contactEmail: '', ...raw.business };
   const digest = { title: 'Buyer Radar', maxChars: 1500, topN: 10, ...raw.digest };
   digest.sections = { requirements: 6, buyers: 6, registrations: 4, ...(raw.digest || {}).sections };
+  // The combined morning digest carries every city inside the same character
+  // cap, so the buyer count is per city rather than overall.
+  digest.combined = { requirements: 6, buyersPerCity: 2, registrations: 4, ...(raw.digest || {}).combined };
 
   return {
     source: file,

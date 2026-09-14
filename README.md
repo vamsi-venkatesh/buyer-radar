@@ -336,6 +336,7 @@ instead of drifting.
 | `RADAR_RUN_AT` / `RADAR_TZ` | `07:00` / `Asia/Kolkata` | When the daily pass runs |
 | `RADAR_CITIES` / `RADAR_SOURCES` / `RADAR_LIMIT` | `bengaluru` / `overpass,news,agmarknet` / `200` | What it runs |
 | `RADAR_DELIVER` | - | `email`, `whatsapp`, or both. Empty writes the digest to a file |
+| `RADAR_DELIVER_MODE` | `combined` | `combined` sends ONE WhatsApp digest and ONE email after the last city; `per-city` sends one of each after every city, the old behaviour |
 | `RADAR_TO` / `RADAR_SMTP_URL` / `RADAR_FROM` | - | The owner's own address and SMTP submission over implicit TLS |
 | `WA_PHONE_NUMBER_ID` / `WA_TOKEN` / `RADAR_TO_WA` | - | WhatsApp Cloud API and the owner's own number |
 | `WA_VERIFY_TOKEN` / `WA_APP_SECRET` | - | The webhook. Without the secret it answers `503` and accepts nothing |
@@ -347,6 +348,44 @@ instead of drifting.
 
 Turn delivery on last, after reading a few days of `outbox/` files. Full
 first-run checklist: [docs/deploy.md](docs/deploy.md).
+
+### One message per morning
+
+A scheduled pass runs several cities one after another, and it used to send a
+WhatsApp digest and an email after each of them. The WhatsApp path tries the
+text first and falls back to the approved `WA_TEMPLATE` when the text is refused
+- outside the 24-hour customer-service window the Cloud API returns error 131047
+and the template is the only way through. An approved template is normally
+categorised **MARKETING**, and Meta applies a per-recipient frequency cap to
+marketing templates: on 2026-09-14 a five-city pass had its first three cities
+delivered and its last two refused with error 131049, *"This message was not
+delivered to maintain healthy ecosystem"*. The cap is Meta's, it is not
+published as a number, and nothing in this repository can raise it or test it -
+so the pass stopped competing with it.
+
+In the default `combined` mode the per-city runs deliver nothing, and after the
+last city one combined digest goes out: every city's posted requirements first,
+as one ranked series, then a few buyers under each city's own heading, then the
+mandi price block once, because a price is per state and per mandi and not per
+city. Same character cap, same five template parameters, same meanings - one
+message. The email is combined too and carries every city's uncapped sheet
+inlined.
+
+Each city still writes its own run row, its own evidence bundle and its own
+receipts, and its own digest is kept at `digests/<date>.<city>.txt`. The
+combined digest is written last, to `digests/<date>.txt`, so the dashboard's
+front page and the owner's WhatsApp reply hand back the message he was actually
+sent; `digest.render` with `combined: true` composes the same thing from the
+store. A city whose run throws does not stop the others and does not stop the
+delivery - it is named in the combined digest under *Not run today*.
+
+Either way what happened is recorded: a `digest.delivered` receipt or a
+`digest.not_sent { channel, reason }` receipt. A per-city delivery records it in
+that run's evidence bundle; the combined delivery records it in
+`runs/delivery_<date>.evidence.json`, and both the receipt and the stored event
+carry `cities: [...]` - the cities the one message stood for - plus
+`citiesFailed` and, when Meta refused it, `errorCode` and `errorMessage` taken
+from Meta's own response body. A refusal is never a silence.
 
 ## Sources and their terms
 

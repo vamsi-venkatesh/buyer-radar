@@ -245,6 +245,16 @@ test('digest.render composes text and writes nothing', async (t) => {
   assert.ok(Object.keys(res.output.index).length > 0);
 });
 
+test('digest.render combined renders the one message the morning pass sends', async () => {
+  const c = ctx();
+  const res = await callTool('digest.render', { date: DAY, combined: true }, c);
+  assert.equal(res.ok, true);
+  assert.equal(res.output.combined, true);
+  assert.ok(res.output.cities.length > 0, 'it names the cities it combined');
+  assert.match(res.output.text, new RegExp(`${CLIENT.digest.title} - 2026-09-11`));
+  assert.equal(res.output.text.split('Mandi prices (INR/quintal):').length - 1 <= 1, true, 'prices at most once');
+});
+
 test('contacts.extract is the same reader the demand lane uses', async () => {
   const c = ctx();
   const res = await callTool(
