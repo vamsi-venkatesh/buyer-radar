@@ -28,6 +28,7 @@ import { latestDigest } from './lib/digest-files.mjs';
 import { setLeadStatus } from './register.mjs';
 import { bodyText, sendWhatsAppText } from './deliver.mjs';
 import { recordOrder, ownerOrderId, orderLines, alertFailedLater } from './orders.mjs';
+import { digestFailedLater, EVENT_DIGEST_RESENT } from './digest-delivery.mjs';
 
 /** Meta's documented maximum payload is far below this; anything larger is refused. */
 export const MAX_WEBHOOK_BYTES = 1024 * 1024;
@@ -42,6 +43,7 @@ export const EVENT_WINDOW = 'whatsapp.window';
 export const EVENT_KINDS = [
   EVENT_INBOUND, EVENT_STATUS, EVENT_DUPLICATE, EVENT_REJECTED, EVENT_WINDOW,
   'whatsapp.command', 'whatsapp.reply', 'whatsapp.order', 'order.alert.resent',
+  EVENT_DIGEST_RESENT,
 ];
 
 // R<n> is a posted requirement, L<n> a buyer, G<n> a registration route - the
@@ -341,7 +343,7 @@ export async function processWebhookBatch(raw, ctx = {}) {
   const store = await storeFactory();
   const receipts = [];
   const events = [];
-  const summary = { inbound: 0, statuses: 0, duplicates: 0, replies: [], commands: [], orders: [], resent: [] };
+  const summary = { inbound: 0, statuses: 0, duplicates: 0, replies: [], commands: [], orders: [], resent: [], digestResent: [] };
   const owner = env.RADAR_TO_WA;
 
   try {
@@ -471,6 +473,21 @@ export async function processWebhookBatch(raw, ctx = {}) {
           }
         } catch (err) {
           receipts.push({ type: 'order.alert.resent', data: { messageId: id, ok: false, error: err.message } });
+        }
+
+        // The same law for the morning digest. A digest message the Cloud API
+        // accepted and Meta failed is not a digest the owner received: the
+        // record is rewritten, the approved template is tried once if the
+        // morning never spent that attempt, and if that fails too the email
+        // that went with the same digest stands as the delivery of record.
+        try {
+          const resent = await digestFailedLater(store, { messageId: id, error }, { env, fetchImpl, digestsDir });
+          if (resent) {
+            summary.digestResent.push(resent);
+            receipts.push({ type: EVENT_DIGEST_RESENT, data: resent });
+          }
+        } catch (err) {
+          receipts.push({ type: EVENT_DIGEST_RESENT, data: { messageId: id, ok: false, error: err.message } });
         }
       }
     }

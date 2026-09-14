@@ -177,6 +177,20 @@ export function fixtureStore({ leads = LEADS, runs = RUNS, events = EVENTS, orde
       if (!kind || !key) return false;
       return eventRows.some((e) => e.type === kind && e.key === key);
     },
+    async getEvent(kind, key) {
+      if (!kind || !key) return null;
+      for (let i = eventRows.length - 1; i >= 0; i -= 1) {
+        if (eventRows[i].type === kind && eventRows[i].key === key) return { ...eventRows[i] };
+      }
+      return null;
+    },
+    async updateEvent(kind, key, patch) {
+      if (!kind || !key) return null;
+      const i = eventRows.findIndex((e) => e.type === kind && e.key === key);
+      if (i === -1) return null;
+      eventRows[i] = { ...eventRows[i], ...patch };
+      return { ...eventRows[i] };
+    },
     async allOrders() {
       return [...orderRows]
         .sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || '')))

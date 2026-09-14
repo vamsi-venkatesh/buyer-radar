@@ -387,6 +387,35 @@ carry `cities: [...]` - the cities the one message stood for - plus
 `citiesFailed` and, when Meta refused it, `errorCode` and `errorMessage` taken
 from Meta's own response body. A refusal is never a silence.
 
+**A 200 from the Cloud API is not a delivery, for the digest either.** The same
+refusal that reaches an order alert minutes late reaches the morning digest: the
+API answers `200` with a message id, the run ends, and Meta fails the message
+afterwards as a delivery status on the webhook. So every id the API accepts is
+written down as a `digest.message` event keyed on that id -
+`{ kind: 'text' | 'template', date, cities, templateAttempted, emailSent }` -
+and the ids also go on the `digest.delivered` receipt. When the webhook's
+`failed` status quotes one of those ids, `digestFailedLater`:
+
+1. rewrites the record to `sent: false, failedLater: true` with `errorCode`;
+2. if the failed message was the **text** and the morning never spent its one
+   template attempt, sends the approved `WA_TEMPLATE` once, there and then,
+   against the digest of the day that message was about - not the newest one -
+   and leaves a `digest.resent` receipt carrying the new message id. The
+   template gets a `digest.message` record of its own, so a failure of *its* own
+   is found too, and `templateAttempted: true` on it is what stops a third
+   message;
+3. if the template fails as well, records that and leaves the email - which went
+   out with the same digest - as the delivery of record.
+
+A redelivered status callback changes nothing: the rewritten record is the
+guard, so however many times Meta repeats itself there is one text, at most one
+template and one receipt. Today and Runs then read the truth rather than the
+send: `email only (WhatsApp failed: 131047)` instead of a tick, and
+`not delivered (...)` when the email did not go either.
+
+`WA_FAKE_FETCH_URL` diverts the template path as well as the reply path, so a
+fake-hooked environment cannot send one by accident from the webhook.
+
 ## Orders
 
 The radar finds buyers. This is the other direction: a buyer who has already
@@ -521,6 +550,38 @@ account to the workflow. Until it does, the node sits on its own branch with
 the emails: every order is still recorded, the buyer is still won in the
 register, and the owner is still told. The two exports in
 [`ops/n8n/`](ops/n8n/) show the workflow before and after this change.
+
+### Removing an order placed as a test
+
+Proving the loop end to end means placing an order through the form, and an
+order placed to prove the loop is not a buyer - it must not sit in the owner's
+register or be counted in his week as one.
+[`tools/remove-test-orders.mjs`](tools/remove-test-orders.mjs) takes it back out,
+and only it:
+
+```bash
+node tools/remove-test-orders.mjs                      # say what would go, change nothing
+node tools/remove-test-orders.mjs --apply
+node tools/remove-test-orders.mjs --apply --order ORD-3C384FB0
+```
+
+An order qualifies **only** when its stored contact name is exactly
+`TEST ORDER` - the marker is checked on the row, never on the id, because an id
+is something a caller typed. Naming a real order is refused with the reason
+printed; naming one that does not exist is said rather than silently skipped.
+The matching entries in the lead's `extra.orders` go with it, and so do the note
+lines that name a removed order; the **lead** itself is deleted only when every
+order against it was a test one, and a lead that also carries a real order keeps
+its row, its status and the rest of its fields.
+
+It never touches events. Every `order.received`, `order.alert` and `lead.won`
+stays exactly as it was, and so do the sealed evidence bundles under `runs/` -
+those are the proof that the loop ran, and the tool aborts if the event count
+moves. The register is a view of the business; the event log is the record of
+what happened, and they are allowed to differ for something that never was a
+real order. A dry run is the default, it prints exactly what it did, and running
+it twice removes nothing the second time. `DATABASE_URL` selects the database,
+as everywhere else.
 
 ## Sources and their terms
 
@@ -805,6 +866,7 @@ src/webhook.mjs       the WhatsApp webhook: signature, idempotency, owner comman
 src/orders.mjs        the order loop: one order, one won lead, one owner alert
 src/digest.mjs        the morning digest; src/report.mjs the weekly one
 src/deliver.mjs       delivery to the OWNER only - email and WhatsApp
+src/digest-delivery.mjs  what became of the digest, including the late failure
 src/cron.mjs          the scheduler: one daily pass, no system cron
 src/lib/*.mjs         stores, receipts, crawler, PDF text, contacts, quantities
 config/               the client profile, the registries and their probes, the price table
@@ -813,8 +875,9 @@ ops/n8n/              the order workflow, exported before and after the loop
 eval/llm/             the labelled prompt cases, the stub model, the scorer, the results
 eval/harness/         the service case set and its committed results
 tools/harness.mjs     one check per case, run against the service's own modules
-test/                 394 tests, node --test, saved and synthetic fixtures
-tools/                verify.mjs, validate.mjs, the probes, the fixture builders
+test/                 408 tests, node --test, saved and synthetic fixtures
+tools/                verify.mjs, validate.mjs, remove-test-orders.mjs, the probes,
+                      the fixture builders
 docs/memory.md        what is remembered, what is not, and for how long
 docs/adr/             six decisions, and why
 ```
@@ -825,7 +888,7 @@ output and are git-ignored.
 ## Tests
 
 ```bash
-npm test        # 394 tests
+npm test        # 408 tests
 npm run validate
 npm run harness # 119 service cases; exits 1 while the two known failures stand
 ```

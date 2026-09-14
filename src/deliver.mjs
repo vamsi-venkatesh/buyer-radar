@@ -293,6 +293,111 @@ export async function sendWhatsAppText({ to, text, env = process.env, fetchImpl 
 }
 
 /**
+ * Send the morning digest as the approved `WA_TEMPLATE` template, once.
+ *
+ * The template is the only thing a closed 24-hour window accepts, so it is the
+ * fallback in two places: here in the morning, when the text is refused in the
+ * POST itself, and later in the webhook, when Meta accepted the text with a 200
+ * and failed it afterwards. Both need the same one attempt against the same
+ * approved parameters, so there is one function that makes it.
+ *
+ * Returns null when no template is configured - there is nothing to try and
+ * nothing to report - and otherwise always a result object, sent true or false.
+ */
+export async function sendDigestTemplate({
+  date = todayIso(),
+  digestText = '',
+  priceSheet = '',
+  stats = {},
+  env = process.env,
+  fetchImpl,
+} = {}) {
+  const templateName = env.WA_TEMPLATE || '';
+  if (!templateName) return null;
+
+  const templateLang = env.WA_TEMPLATE_LANG || 'en';
+  const phoneNumberId = env.WA_PHONE_NUMBER_ID;
+  const token = env.WA_TOKEN;
+  const to = env.RADAR_TO_WA;
+  // The same local test hook sendWhatsAppText honours, for the same reason:
+  // with it set nothing may reach graph.facebook.com. It matters more here than
+  // in the morning, because this path also runs from the webhook, where a run
+  // is not watching and no one would see a real message go out.
+  const fake = env.WA_FAKE_FETCH_URL || '';
+  const missing = [
+    !fake && !phoneNumberId && 'WA_PHONE_NUMBER_ID',
+    !fake && !token && 'WA_TOKEN',
+    !to && 'RADAR_TO_WA',
+  ].filter(Boolean);
+  if (missing.length) {
+    return {
+      template: templateName,
+      sent: false,
+      status: null,
+      messageId: null,
+      error: null,
+      body: `not sent: ${missing.join(', ')} unset`,
+    };
+  }
+
+  const url = fake || `${WHATSAPP_API}/${phoneNumberId}/messages`;
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const doFetch = fetchImpl || globalThis.fetch;
+  const params = templateParams({ date, digestText, priceSheet, stats });
+  const tpl = {
+    messaging_product: 'whatsapp',
+    to: String(to).replace(/^\+/, ''),
+    type: 'template',
+    template: {
+      name: templateName,
+      language: { code: templateLang },
+      components: [{ type: 'body', parameters: params.map((p) => ({ type: 'text', text: p })) }],
+    },
+  };
+  try {
+    const r = await doFetch(url, { method: 'POST', headers, body: JSON.stringify(tpl) });
+    const rb = await r.text();
+    let id = null;
+    try { id = JSON.parse(rb)?.messages?.[0]?.id || null; } catch { /* ignore */ }
+    return {
+      template: templateName,
+      sent: r.ok,
+      status: r.status,
+      messageId: id,
+      error: r.ok ? null : metaError(rb),
+      body: r.ok ? null : rb.slice(0, 200),
+    };
+  } catch (err) {
+    return {
+      template: templateName,
+      sent: false,
+      status: null,
+      messageId: null,
+      error: null,
+      body: String(err.message || err).slice(0, 200),
+    };
+  }
+}
+
+/**
+ * Every message id the Cloud API accepted for one digest, and which kind of
+ * message each id stands for.
+ *
+ * An id is what a later delivery status is keyed on, so an accepted message
+ * that Meta fails afterwards can be found again. A refused attempt has no id
+ * and appears nowhere here.
+ */
+export function whatsAppMessageIds(result) {
+  const out = [];
+  if (result?.text?.sent && result.text.messageId) out.push({ kind: 'text', messageId: result.text.messageId });
+  if (result?.template?.sent && result.template.messageId) {
+    out.push({ kind: 'template', messageId: result.template.messageId });
+  }
+  return out;
+}
+
+/**
  * One WhatsApp message to the owner, text first and the approved template as
  * the fallback.
  *
@@ -332,6 +437,9 @@ export async function deliverWhatsApp({
     cities: cityList,
     text: textResult,
     template: templateResult,
+    // Nothing was accepted, so there is no id for a later status to be about.
+    messageIds: [],
+    templateAttempted: Boolean(templateResult),
     reason,
     file: path.relative(
       ROOT,
@@ -395,46 +503,15 @@ export async function deliverWhatsApp({
       trimmed,
       text: textResult,
       template: null,
+      // The id Meta answered with. A 200 is not a delivery: the status that
+      // says whether this message arrived quotes this id, minutes later.
+      messageIds: whatsAppMessageIds({ text: textResult, template: null }),
+      templateAttempted: false,
     };
   }
 
   // 2. The approved template, which is the only thing a closed window accepts.
-  if (templateName) {
-    const params = templateParams({ date, digestText, priceSheet, stats });
-    const tpl = {
-      messaging_product: 'whatsapp',
-      to: String(to).replace(/^\+/, ''),
-      type: 'template',
-      template: {
-        name: templateName,
-        language: { code: templateLang },
-        components: [{ type: 'body', parameters: params.map((p) => ({ type: 'text', text: p })) }],
-      },
-    };
-    try {
-      const r = await doFetch(url, { method: 'POST', headers, body: JSON.stringify(tpl) });
-      const rb = await r.text();
-      let id = null;
-      try { id = JSON.parse(rb)?.messages?.[0]?.id || null; } catch { /* ignore */ }
-      templateResult = {
-        template: templateName,
-        sent: r.ok,
-        status: r.status,
-        messageId: id,
-        error: r.ok ? null : metaError(rb),
-        body: r.ok ? null : rb.slice(0, 200),
-      };
-    } catch (err) {
-      templateResult = {
-        template: templateName,
-        sent: false,
-        status: null,
-        messageId: null,
-        error: null,
-        body: String(err.message || err).slice(0, 200),
-      };
-    }
-  }
+  templateResult = await sendDigestTemplate({ date, digestText, priceSheet, stats, env, fetchImpl });
 
   if (templateResult && templateResult.sent) {
     return {
@@ -449,6 +526,8 @@ export async function deliverWhatsApp({
       trimmed,
       text: textResult,
       template: templateResult,
+      messageIds: whatsAppMessageIds({ text: textResult, template: templateResult }),
+      templateAttempted: true,
       // The text was refused and the template carried the morning instead. The
       // refusal keeps its code; it is the only thing that says why.
       textRefused: `${textResult.reason}${errorSuffix(textResult.error)}`,

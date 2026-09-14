@@ -30,6 +30,7 @@ import { todayPage, leadsPage, pricesPage, runsPage, ordersPage, loginPage, notF
 import { recordOrder, orderRows, ordersToCsv } from '../orders.mjs';
 import { latestDigest } from '../lib/digest-files.mjs';
 import { handleWebhookRequest, webhookSummary, openWindow } from '../webhook.mjs';
+import { digestDeliveries } from '../digest-delivery.mjs';
 
 export const COOKIE_NAME = 'radar_token';
 export const DEFAULT_PORT = 4710;
@@ -385,11 +386,17 @@ async function handle(req, res, { token, digestsDir, runsDir, openStore: open })
     if (pathname === '/') {
       const digest = await latestDigest(digestsDir);
       const date = todayIso();
-      const windowOpen = openWindow(await store.allEvents());
+      const allEvents = await store.allEvents();
+      const windowOpen = openWindow(allEvents);
+      // What the owner was actually sent for the digest on this page - the
+      // late truth included, so a message Meta failed is not shown as sent.
+      const deliveries = digestDeliveries(allEvents);
+      const delivery = deliveries.find((d) => d.date === (digest.date || date)) || null;
       return send(
         res,
         200,
         todayPage({
+          delivery,
           date: digest.date && digest.date !== date ? `${date} (latest digest ${digest.date})` : date,
           digestText: digest.text,
           priceSheet: digest.priceSheet,
@@ -536,8 +543,9 @@ async function handle(req, res, { token, digestsDir, runsDir, openStore: open })
           bundleHash: r.bundleHash,
           hasBundle: bundleFiles.has(`${r.id}.evidence.json`),
         }));
-      const webhook = webhookSummary(await store.allEvents());
-      return send(res, 200, runsPage({ runs: rows, webhook }));
+      const runEvents = await store.allEvents();
+      const webhook = webhookSummary(runEvents);
+      return send(res, 200, runsPage({ runs: rows, webhook, deliveries: digestDeliveries(runEvents) }));
     }
 
     // -------------------------------------------------- /report/weekly

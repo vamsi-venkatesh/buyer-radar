@@ -15,6 +15,7 @@ import { createRunner, enrichLeads, writeOpeners } from './llm/stage.mjs';
 import * as openings from './sources/openings.mjs';
 import { SOURCES, STAGES } from './sources/all.mjs';
 import { createCrawler } from './lib/crawl.mjs';
+import { recordDigestMessages } from './digest-delivery.mjs';
 
 export function parseArgs(argv) {
   const out = { city: 'bengaluru', sources: ['overpass', 'news'], limit: 200, dry: false, deliver: [], noLlm: false };
@@ -323,6 +324,7 @@ export async function run(
           if (result.sent) {
             chain.add('digest.delivered', {
               channel: result.channel,
+              date: today,
               // One city delivering on its own still says which city the
               // message stood for, in the same shape the combined delivery uses.
               cities: [city.name],
@@ -330,10 +332,13 @@ export async function run(
               via: result.via || null,
               bytes: result.bytes ?? null,
               chars: result.chars ?? null,
+              messageId: result.messageId || null,
+              messageIds: result.messageIds || null,
             });
           } else {
             chain.add('digest.not_sent', {
               channel: result.channel,
+              date: today,
               cities: [city.name],
               reason: result.reason,
               errorCode: result.error?.code ?? null,
@@ -376,6 +381,19 @@ export async function run(
         bundleHash: bundle.hash,
       });
       await store.appendEvents(bundle.receipts.map((r) => ({ ...r, runId })));
+      // One lookup row per accepted WhatsApp message, so a status that fails it
+      // hours later can be matched back to this digest. Same rule as the
+      // combined delivery: a 200 from the Cloud API is not a delivery.
+      for (const result of delivered) {
+        if (result.channel !== 'whatsapp') continue;
+        await recordDigestMessages(store, {
+          date: today,
+          runId,
+          cities: [city.name],
+          whatsapp: result,
+          emailSent: delivered.some((r) => r.channel === 'email' && r.sent),
+        });
+      }
       await mkdir(RUNS_DIR, { recursive: true });
       await writeFile(
         path.join(RUNS_DIR, `${runId}.evidence.json`),

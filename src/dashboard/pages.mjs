@@ -7,6 +7,7 @@ import { page, esc, sparkline } from './layout.mjs';
 import { segmentLabel, STATUSES, SEGMENTS, KINDS } from '../lib/normalise.mjs';
 import { describeSegment } from '../model.mjs';
 import { shortDate } from '../lib/week.mjs';
+import { deliveryLabel } from '../digest-delivery.mjs';
 
 const STATUS_BUTTONS = ['contacted', 'quoted', 'won', 'lost', 'ignored'];
 
@@ -29,7 +30,23 @@ function windowBanner(windowOpen) {
   return `<p class="muted">WhatsApp window open until ${esc(`${until} UTC on ${day}`)} - a free-form reply can be sent until then; after that only an approved template.</p>`;
 }
 
-export function todayPage({ date, digestText, priceSheet, counts, funnel, windowOpen = null, message, messageKind }) {
+/**
+ * What the owner was actually sent, in one line.
+ *
+ * A 200 from the WhatsApp Cloud API is not a delivery, so this never shows a
+ * tick on the strength of the send alone: a message Meta failed afterwards
+ * reads "email only (WhatsApp failed: 131047)", which is what happened.
+ */
+function deliveryLine(row) {
+  if (!row) return '<p class="muted">No delivery recorded for this digest.</p>';
+  const label = deliveryLabel(row);
+  const bad = row.whatsappFailedLater || label.startsWith('not delivered');
+  return `<p class="${bad ? 'blocked' : 'muted'}">Delivered: ${esc(label)}${
+    row.cities && row.cities.length ? ` &middot; ${esc(row.cities.join(', '))}` : ''
+  }</p>`;
+}
+
+export function todayPage({ date, digestText, priceSheet, counts, funnel, windowOpen = null, delivery = null, message, messageKind }) {
   const body = `
 ${flash(message, messageKind)}
 <section>
@@ -60,6 +77,7 @@ ${flash(message, messageKind)}
       ? `<pre class="plain">${esc(digestText)}</pre><p class="muted">Written by the last run. Use the Register tab to change a status.</p>`
       : '<p class="muted">No digest file yet. Run the pipeline to write one.</p>'
   }
+  ${deliveryLine(delivery)}
 </section>
 
 <section>
@@ -427,7 +445,36 @@ function openingsCell(openings) {
   }`;
 }
 
-export function runsPage({ runs, webhook = null }) {
+/**
+ * One row per morning: what was sent, and what Meta said about it afterwards.
+ *
+ * This is the page the owner checks when he did not get his digest, so it
+ * carries the late truth rather than the send. A row where the Cloud API
+ * answered 200 and Meta then failed the message says so, with Meta's code.
+ */
+function deliverySection(deliveries) {
+  if (!deliveries || !deliveries.length) return '';
+  return `
+<section>
+  <h2>Digest delivery</h2>
+  <div class="scroll"><table>
+  <thead><tr><th>Day</th><th>Delivered</th><th>Cities</th></tr></thead>
+  <tbody>${deliveries
+    .map((d) => {
+      const label = deliveryLabel(d);
+      const bad = d.whatsappFailedLater || label.startsWith('not delivered');
+      return `<tr>
+    <td>${esc(d.date)}</td>
+    <td${bad ? ' class="blocked"' : ''}>${esc(label)}</td>
+    <td class="muted">${esc((d.cities || []).join(', ') || '-')}</td>
+  </tr>`;
+    })
+    .join('')}</tbody></table></div>
+  <p class="muted">A 200 from the WhatsApp Cloud API is not a delivery: Meta fails a message minutes later on the webhook, and that failure is what this column reports.</p>
+</section>`;
+}
+
+export function runsPage({ runs, webhook = null, deliveries = [] }) {
   const body = `
 <section>
   <h2>${runs.length} runs</h2>
@@ -461,6 +508,8 @@ export function runsPage({ runs, webhook = null }) {
   }
   <p class="muted">Verify a downloaded bundle with <code>node tools/verify.mjs runs/&lt;runId&gt;.evidence.json</code>.</p>
 </section>
+
+${deliverySection(deliveries)}
 
 ${webhookSection(webhook)}
 

@@ -20,6 +20,7 @@ import { nextRunAt, waitUntil, zonedParts, parseTimeOfDay } from './lib/schedule
 import { parseChannels, deliver as deliverDefault } from './deliver.mjs';
 import { combineDigests, writeCombinedDigest } from './digest.mjs';
 import { appendDayBundle } from './lib/receipts.mjs';
+import { recordDigestMessages } from './digest-delivery.mjs';
 import { openStore } from './lib/store.mjs';
 import { todayIso } from './lib/normalise.mjs';
 import { run } from './run.mjs';
@@ -138,18 +139,26 @@ export async function deliverCombined(
     });
   }
 
+  const emailSent = delivered.some((r) => r.channel === 'email' && r.sent);
+
   const entries = delivered.map((result) =>
     result.sent
       ? {
           type: 'digest.delivered',
           data: {
             channel: result.channel,
+            date,
             cities: combined.cities,
             citiesFailed: combined.failedCities,
             to: result.to || null,
             via: result.via || null,
             bytes: result.bytes ?? null,
             chars: result.chars ?? null,
+            // A 200 from the Cloud API is not a delivery. The id is recorded
+            // because the status that says whether this message arrived quotes
+            // it, minutes later, on the webhook.
+            messageId: result.messageId || null,
+            messageIds: result.messageIds || null,
             // A template send means the text was refused first. The refusal is
             // recorded even on a delivery that succeeded.
             textRefused: result.textRefused || null,
@@ -159,6 +168,7 @@ export async function deliverCombined(
           type: 'digest.not_sent',
           data: {
             channel: result.channel,
+            date,
             cities: combined.cities,
             citiesFailed: combined.failedCities,
             reason: result.reason,
@@ -177,6 +187,19 @@ export async function deliverCombined(
       await store.appendEvents(
         entries.map((e) => ({ type: e.type, at: new Date().toISOString(), key: null, runId: `delivery_${date}`, ...e.data }))
       );
+      // One lookup row per accepted WhatsApp message. Without it the webhook
+      // has nothing to match a failed status against and the morning would keep
+      // its tick for a message that never arrived.
+      for (const result of delivered) {
+        if (result.channel !== 'whatsapp') continue;
+        await recordDigestMessages(store, {
+          date,
+          runId: `delivery_${date}`,
+          cities: combined.cities,
+          whatsapp: result,
+          emailSent,
+        });
+      }
     } finally {
       await store.close();
     }

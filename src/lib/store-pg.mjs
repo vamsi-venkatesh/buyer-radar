@@ -349,6 +349,35 @@ export async function createPgStore(connectionString) {
       return rows.length > 0;
     },
 
+    /**
+     * The event recorded under this (type, key), or null. Served by the same
+     * unique index the idempotency check uses. It is how a WhatsApp message id
+     * is looked back up when Meta fails the message after accepting it, long
+     * after the run that sent it has finished.
+     */
+    async getEvent(kind, key) {
+      if (!kind || !key) return null;
+      const { rows } = await pool.query(
+        'SELECT * FROM events WHERE type = $1 AND event_key = $2 ORDER BY id DESC LIMIT 1',
+        [kind, key]
+      );
+      return rows[0] ? eventFromRow(rows[0]) : null;
+    },
+
+    /**
+     * Merge fields into a keyed event's payload. Events are otherwise
+     * append-only; this exists for the one row that records state rather than a
+     * happening - what became of a message we sent.
+     */
+    async updateEvent(kind, key, patch) {
+      if (!kind || !key) return null;
+      const { rows } = await pool.query(
+        'UPDATE events SET payload = payload || $3::jsonb WHERE type = $1 AND event_key = $2 RETURNING *',
+        [kind, key, JSON.stringify(pgSafe(patch || {}))]
+      );
+      return rows[0] ? eventFromRow(rows[0]) : null;
+    },
+
     // ---------------------------------------------------------- the LLM stage
 
     async getLlmCache(key) {

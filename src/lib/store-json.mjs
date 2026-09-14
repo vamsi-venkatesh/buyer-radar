@@ -95,6 +95,35 @@ export function createJsonStore({ dataDir = DATA_DIR } = {}) {
       return all.some((e) => e.type === kind && e.key === key);
     },
 
+    /**
+     * The event recorded under this (type, key), or null. Used to look a
+     * WhatsApp message id back up when Meta fails the message after accepting
+     * it, long after the run that sent it has finished.
+     */
+    async getEvent(kind, key) {
+      if (!kind || !key) return null;
+      const all = await readJson(eventsFile, []);
+      for (let i = all.length - 1; i >= 0; i -= 1) {
+        if (all[i].type === kind && all[i].key === key) return all[i];
+      }
+      return null;
+    },
+
+    /**
+     * Merge fields into a keyed event. Events are otherwise append-only; this
+     * exists for the one row that is a record of state rather than of a
+     * happening - what became of a message we sent.
+     */
+    async updateEvent(kind, key, patch) {
+      if (!kind || !key) return null;
+      const all = await readJson(eventsFile, []);
+      const i = all.findIndex((e) => e.type === kind && e.key === key);
+      if (i === -1) return null;
+      all[i] = { ...all[i], ...patch };
+      await writeJson(eventsFile, all);
+      return all[i];
+    },
+
     // ---------------------------------------------------------------- orders
 
     async allOrders() {

@@ -456,3 +456,63 @@ test('the runs page shows a webhook section and Today shows an open window', asy
   const today = await request('/', { headers: auth });
   assert.match(today.text, /WhatsApp window open until/);
 });
+
+// --------------------------------------------- the digest's own late failure
+
+test('a failed status for a digest message resends the template and receipts it', async (t) => {
+  const fake = await fakeCloudApi(t);
+  const store = fixtureStore({ events: [] });
+  const { post, runsDir } = await withServer(t, {
+    store,
+    env: { WA_FAKE_FETCH_URL: fake.url, WA_TOKEN: 'test-token', WA_PHONE_NUMBER_ID: '1', WA_TEMPLATE: 'buyer_radar_digest' },
+  });
+
+  // The morning: the Cloud API accepted the text and the run wrote the id down.
+  await store.appendEvents([
+    { type: 'digest.delivered', at: '2026-09-10T01:30:00.000Z', key: null, channel: 'email', date: '2026-09-10' },
+    {
+      type: 'digest.message',
+      at: '2026-09-10T01:30:00.000Z',
+      key: 'wamid.DIGEST1',
+      messageId: 'wamid.DIGEST1',
+      kind: 'text',
+      date: '2026-09-10',
+      cities: ['Bengaluru'],
+      templateAttempted: false,
+      emailSent: true,
+      sent: true,
+      failedLater: false,
+      errorCode: null,
+    },
+  ]);
+
+  const body = statusBody({
+    id: 'wamid.DIGEST1',
+    status: 'failed',
+    errors: [{ code: 131047, title: 'Re-engagement message' }],
+  });
+  assert.equal((await post(body)).status, 200);
+
+  // One template went out, for the day the failed message was about.
+  assert.equal(fake.calls.length, 1);
+  const sent = JSON.parse(fake.calls[0].body);
+  assert.equal(sent.type, 'template');
+  assert.equal(sent.template.name, 'buyer_radar_digest');
+
+  const record = await store.getEvent('digest.message', 'wamid.DIGEST1');
+  assert.equal(record.sent, false, 'a message Meta failed is not a message that was sent');
+  assert.equal(record.failedLater, true);
+  assert.equal(record.errorCode, 131047);
+  assert.ok(record.resentAs);
+
+  const bundle = await webhookBundle(runsDir);
+  const receipt = bundle.receipts.find((r) => r.type === 'digest.resent');
+  assert.ok(receipt, 'the resend leaves a receipt');
+  assert.equal(receipt.resent, true);
+  assert.equal(receipt.resentMessageId, record.resentAs);
+  assert.equal(verifyBundle(bundle).ok, true);
+
+  // A redelivered callback resends nothing.
+  assert.equal((await post(body)).status, 200);
+  assert.equal(fake.calls.length, 1, 'one template, however many times Meta redelivers the status');
+});
