@@ -29,7 +29,7 @@ requirement.
 - **Scores every lead by written rules**, not by a model. The bands, the points
   and the worked examples are in [docs/scoring.md](docs/scoring.md).
 - **Asks a model only when the answer could change the outcome**, under a daily
-  rupee cap, through a cache, with every call and every skip receipted.
+  cap, through a cache, with every call and every skip receipted.
 - **Hands the owner one morning digest** - WhatsApp-shaped, capped at 1,500
   characters - and a dashboard he reads on his phone. It never messages a buyer.
 
@@ -175,7 +175,6 @@ Run against DeepSeek on **2026-09-11**, prompt `enrich/2026-09-11a`:
 | size accuracy | 93.3% (28/30) |
 | every field correct | 28/30 |
 | mean tokens | 979 in, 90 out |
-| total cost | Rs 3.30 |
 
 **Read that with its caveat.** Thirty cases is a smoke test, not a benchmark:
 the confidence interval on 30 trials is wide, the cases were written by the same
@@ -500,8 +499,8 @@ a newspaper's page is the newspaper's.
 A cached answer is free, so the cache is checked first and only a call that would
 cost money is put to the rules.
 
-**The cap.** Spend is capped per day in rupees by `LLM_DAILY_BUDGET_INR`
-(default 200), computed from the tokens the provider reported and the price table
+**The cap.** Spend is capped per day by `LLM_DAILY_BUDGET_INR`, computed from
+the tokens the provider reported and the price table
 in `config/llm-prices.json`. That table **states its source and its date, and was
 written from prior knowledge rather than fetched from a pricing page** - check it
 before treating any cost figure as exact. The day's total lives in the store, so
@@ -519,10 +518,10 @@ llm.invalid_output   { ..., reason, repairAttempted: true }
 llm.disabled         { reason }
 ```
 
-The run summary and the dashboard's Model column print the four numbers together:
+The run summary and the dashboard's Model column print the counts together:
 
 ```
-llm  deepseek/deepseek-chat: 4 calls, 5 not needed, 0 cache hits, Rs 0.5072 spent, 0 skipped by budget
+llm  deepseek/deepseek-chat: 4 calls, 5 not needed, 0 cache hits, 0 skipped by budget
 ```
 
 A prompt's `version:` is part of the cache key, and the loader **refuses a prompt

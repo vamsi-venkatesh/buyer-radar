@@ -114,7 +114,7 @@ produce supplier from one configuration file.
   (`docs/scoring.md`), dedup on normalised phone then name plus city, and a merge
   that never overwrites a status or a note.
 - **A gated model stage.** `needsModel()` decides before every call; answers are
-  cached on the prompt version, spend is capped per day in rupees and persisted,
+  cached on the prompt version, spend is capped per day and persisted,
   and every call, cache hit, refusal and skip is receipted.
 - **Sealed evidence bundles** for runs, status changes, webhook batches and
   out-of-run tool calls, with the hash recipe published and `tools/verify.mjs` to

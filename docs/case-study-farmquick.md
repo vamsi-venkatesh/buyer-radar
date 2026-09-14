@@ -69,11 +69,11 @@ That is a bad day's output. It is also the only kind of output worth having: a
 lane that looked productive by guessing would tell the owner nothing on the day
 there really was something to find.
 
-## What the model was used for, and what it cost
+## What the model was used for
 
 The model stage went live on **2026-09-11** against DeepSeek. In its first real
-exercise it made **13 calls for Rs 0.92** - 8,699 input tokens, 568 output -
-against a daily cap of Rs 200.
+exercise it made **13 calls** - 8,699 input tokens, 568 output - under the daily
+cap, through the cache, with a receipt for each call.
 
 Those 13 calls produced 3 enrichments and 10 openers. Of the 3 enrichments, one
 came back at confidence 0.85 and was allowed to move the score; the other two, at
@@ -87,8 +87,8 @@ None was sent anywhere, because nothing in this codebase can send to a buyer.
 
 The enrichment prompt was then scored against 30 labelled synthetic pages:
 **JSON validity 100%, segment 100%, deadline 100%, size 93.3%, 28 of 30 with
-every field correct**, at a mean of 979 input and 90 output tokens, for Rs 3.30
-total. That result is committed - `eval/llm/results/2026-09-11.real.md` and the
+every field correct**, at a mean of 979 input and 90 output tokens. That result
+is committed - `eval/llm/results/2026-09-11.real.md` and the
 `.json` beside it, with every case's answer, tokens and timing - so the numbers
 above can be read off the run rather than taken on trust. Thirty cases is a smoke
 test and not a benchmark; the caveat is in the README and it applies here too.
